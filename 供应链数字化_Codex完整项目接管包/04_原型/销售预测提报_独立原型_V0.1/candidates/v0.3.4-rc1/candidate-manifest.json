@@ -1,0 +1,182 @@
+{
+  "files": [
+    {
+      "file": "assets/black-shaping-shorts.png",
+      "sha256": "a09ea9d941927e253105bd4b7f1ee8cbaaea2bda34f0ac084b8d6c41e909e330"
+    },
+    {
+      "file": "assets/blue-sports-bra.png",
+      "sha256": "8e88a78c6313c308caaaafc10bb38e31e564fd808467ddb117d5ebe5139e26ea"
+    },
+    {
+      "file": "assets/nude-lifting-shorts.png",
+      "sha256": "062a5cac512d67daebed984e56652d157366a2eb640908a31d2f716cd136386b"
+    },
+    {
+      "file": "assets/README.md",
+      "sha256": "4613365488941cb860f2cf78680510937b78ad84601fff9473b9ef0e3fc73509"
+    },
+    {
+      "file": "enterprise-theme.js",
+      "sha256": "ceebf9d74a54e57b8f4d3db7bbc26cfcafde84821e7acea34f2f333cabd33a95"
+    },
+    {
+      "file": "index.html",
+      "sha256": "621c09a5e420e6932e03436abd30e922594d866da0484139d6ebd34603cf6447"
+    },
+    {
+      "file": "storage-config.js",
+      "sha256": "7366e21fa14acd4577cb9082338d8b889170f112c9c2abb7a7e20e12b835638a"
+    },
+    {
+      "file": "storage-scope.js",
+      "sha256": "f5d8e9ab644d79749303adf64dffe0fa3d56977b65f423028b1edb03450ac8a9"
+    },
+    {
+      "file": "v019.css",
+      "sha256": "7d146148f471852525e75ba09bc4014402e8994bfa5c496037d989157ed1ba49"
+    },
+    {
+      "file": "v020.css",
+      "sha256": "f843ffa34781d87361ec0be844ce6c84b61ef527949e209ff6bf0134ffa97175"
+    },
+    {
+      "file": "v021.css",
+      "sha256": "3ef3e0d6aaf4afebea4234a6bb52ad89e35c51848d707ef5a7a90c07147aa561"
+    },
+    {
+      "file": "v021.js",
+      "sha256": "09614b3240c6d86d984c81872bec5d12a7ed9e6e2a3dea75008353f081aa536a"
+    },
+    {
+      "file": "v022.css",
+      "sha256": "2b14cffe3a4577b0c4141583cbdd45b30b114c99889b4df5f1dd32084774e3ab"
+    },
+    {
+      "file": "v022.js",
+      "sha256": "781968ca4ba29f5e1b5bbeafb3936cc76abf9327ca002ba8dea3982d9e260b88"
+    },
+    {
+      "file": "v024-core.js",
+      "sha256": "309691b6a588cda64f2fd4ba8212c0754c8e06ee1411ccdbc5a27700dfe6e672"
+    },
+    {
+      "file": "v024.css",
+      "sha256": "311978338dda8a4f245dfbea13607c421155d8cec24512ad721ef9590f7273cf"
+    },
+    {
+      "file": "v024.js",
+      "sha256": "2e2545dd339523a617752d588887d6ea1b0dc1cb079293e8bf9105a3a3a37739"
+    },
+    {
+      "file": "v025.css",
+      "sha256": "dcd108f7bce4cea15b5b7bd48425cca910825a56b73b5f369a4da55069f67bd5"
+    },
+    {
+      "file": "v026-insights.js",
+      "sha256": "d5bf77d478afaef8bbd576a23e258d9c015bcec122497f163c67274c0a5bf48e"
+    },
+    {
+      "file": "v026.css",
+      "sha256": "d497087f90b5577ef99d7c1fccb3270c931908c6956030d34aadc587d717bb8e"
+    },
+    {
+      "file": "v027.css",
+      "sha256": "afe32941e4173591aaff11016123e4c523fce473f732af477275b198ddc181c3"
+    },
+    {
+      "file": "v027.js",
+      "sha256": "770436587c3e4308dacf9bf9417199bc8b709d43a84e3b6bba2d8c7f9a4d1a8a"
+    },
+    {
+      "file": "v028.css",
+      "sha256": "7954e35ede3e660996f1ee48081cfa9aa331e4ace1a81f1518ee5eb7e1491d8f"
+    },
+    {
+      "file": "v029.css",
+      "sha256": "6b0fb6f679aa56d95c8b03f629e23f6cc5d61495499f7a8611f2a68fd6728da9"
+    },
+    {
+      "file": "v030.css",
+      "sha256": "48413d2ba18bf21262ea80887fe5665907ab539b2ba2ada989a6ae17f8cf3f8f"
+    },
+    {
+      "file": "v030.js",
+      "sha256": "985851db08c7ed9aa976bd7fc6381cf73eb41254053cf0503347c7586e2fb25b"
+    },
+    {
+      "file": "v031-workspace.js",
+      "sha256": "c5a0490ca90362f515ede51b103bfa6ae859f3b64f0d0a6bcdf91345b7355984"
+    },
+    {
+      "file": "v031.css",
+      "sha256": "cb182676808068e2c24d30ac9045c5bfdbc3c1eea3ae749cb916c328d17f2f19"
+    },
+    {
+      "file": "v031.js",
+      "sha256": "1960370d69c9ae9f004ceb0148675a7c599f3a0050ef31f662cdcad13f9795bf"
+    },
+    {
+      "file": "v032-presentation.js",
+      "sha256": "6896ccc8bf088061d397ddd13a26b976f1f83904bcfa8ed15b90402fe4cdf0cd"
+    },
+    {
+      "file": "v032-timeline.js",
+      "sha256": "d15b687aae401e407ba5926f2a572e9850b9b871689418173621aafaf1eca222"
+    },
+    {
+      "file": "v032.css",
+      "sha256": "db1171d6d47d911139847da1dde8fab2b20a15fb7c73f3557425725ebd9b4cda"
+    },
+    {
+      "file": "v032.js",
+      "sha256": "51d956f33d16c4d9726b8feb19dfcb0553025d53ee9468c574d6da05819f4ff0"
+    },
+    {
+      "file": "v033-controls.js",
+      "sha256": "e66c0cc5436877f97349a2267833276412235e62849339966a7b2a1211423f3b"
+    },
+    {
+      "file": "v033.css",
+      "sha256": "784cf34155519904bc640de0b52c0613902db6ef04bdaebde528b0e4fcc8b101"
+    },
+    {
+      "file": "v033.js",
+      "sha256": "32dcd87c5d3d74849b6dc9798b594da55d2815bc59f5a89f0467943fcc136790"
+    },
+    {
+      "file": "v034-controls.js",
+      "sha256": "0f9fc0e77845fc0e0e129c4ebb51484d63af95c4c6bb8537a10e7faa8553fb92"
+    },
+    {
+      "file": "v034.css",
+      "sha256": "f2596bd8abc06bb5d6878e8001f05990066cd13c195309d429dded5b38882cf1"
+    },
+    {
+      "file": "vendor/antd-5.27.6.min.js",
+      "sha256": "9f9e6433a625af86ceb647013179eaaf1dbf297a9e86a41c3ec5e7f79f02ce8f"
+    },
+    {
+      "file": "vendor/antd-icons-5.6.1.min.js",
+      "sha256": "7d2f4cb67c22091b37f71614795c99121ea1c52c00349a5f389a5f70a64607ca"
+    },
+    {
+      "file": "vendor/dayjs-1.11.13.min.js",
+      "sha256": "9cfdb93f38afcf2d076abecd66d32bfd3383cdf1967654ebc26a26605daf4173"
+    },
+    {
+      "file": "vendor/echarts-6.0.0.min.js",
+      "sha256": "baa8dfe7e1d9336b98e8986ba7e20ea15e7cdbea1ef42a59d59478632fa45a1d"
+    },
+    {
+      "file": "vendor/react-18.3.1.min.js",
+      "sha256": "d949f1c3687aedadcedac85261865f29b17cd273997e7f6b2bfc53b2f9d4c4dd"
+    },
+    {
+      "file": "vendor/react-dom-18.3.1.min.js",
+      "sha256": "35f4f974f4b2bcd44da73963347f8952e341f83909e4498227d4e26b98f66f0d"
+    }
+  ],
+  "version": "0.3.4-rc1",
+  "status": "pending_user_review"
+}

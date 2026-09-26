@@ -1,0 +1,665 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PMC V0.1 亚马逊与多平台双流程校准原型</title>
+  <style>
+    :root {
+      --primary: #1677ff;
+      --primary-bg: #e6f4ff;
+      --success: #389e0d;
+      --success-bg: #f6ffed;
+      --warning: #d48806;
+      --warning-bg: #fff7e6;
+      --error: #cf1322;
+      --error-bg: #fff1f0;
+      --text: #1f2937;
+      --sub: #5f6b7a;
+      --muted: #8c96a3;
+      --border: #d9d9d9;
+      --soft: #edf0f5;
+      --bg: #f3f6fb;
+      --white: #fff;
+      --radius: 6px;
+      --nav: 246px;
+      --top: 56px;
+      --shadow: 0 8px 22px rgba(21, 34, 50, .12);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--text);
+      background: var(--bg);
+      font: 13px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+    }
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+    .app { min-height: 100vh; display: grid; grid-template-columns: var(--nav) 1fr; }
+    .sidebar { background: #fff; border-right: 1px solid var(--soft); min-width: 0; display: flex; flex-direction: column; }
+    .brand { height: var(--top); display: flex; align-items: center; gap: 10px; padding: 0 16px; border-bottom: 1px solid var(--soft); font-size: 15px; font-weight: 650; }
+    .brand-icon { width: 28px; height: 28px; border-radius: 5px; background: var(--primary); color: #fff; display: grid; place-items: center; font-weight: 700; }
+    .nav { padding: 10px 8px; display: grid; gap: 4px; }
+    .nav-group { margin: 10px 10px 4px; color: var(--sub); font-weight: 650; display: flex; align-items: center; gap: 7px; }
+    .nav-button {
+      width: 100%;
+      min-height: 36px;
+      border: 0;
+      border-radius: var(--radius);
+      color: var(--text);
+      background: transparent;
+      text-align: left;
+      padding: 7px 12px 7px 34px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-button:hover { background: #f5f8ff; color: var(--primary); }
+    .nav-button.active { background: var(--primary-bg); color: var(--primary); font-weight: 650; }
+    .nav-note { margin: auto 12px 14px; color: var(--sub); border: 1px solid var(--soft); border-radius: var(--radius); padding: 10px; font-size: 12px; background: #fafcff; }
+    .main { min-width: 0; display: flex; flex-direction: column; }
+    .topbar { height: var(--top); background: #fff; border-bottom: 1px solid var(--soft); display: flex; justify-content: space-between; align-items: center; padding: 0 20px; gap: 12px; }
+    .breadcrumb { color: var(--sub); font-size: 12px; }
+    .top-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .page { display: none; overflow: auto; flex: 1; padding: 18px 20px 28px; }
+    .page.active { display: block; }
+    .page-header { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; margin-bottom: 14px; }
+    h1 { margin: 0; font-size: 20px; line-height: 1.25; }
+    .subtitle { margin-top: 6px; color: var(--sub); max-width: 980px; }
+    .actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+    .btn {
+      height: 32px;
+      padding: 0 13px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: #fff;
+      color: var(--text);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+    .btn:hover { border-color: var(--primary); color: var(--primary); }
+    .btn.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .btn.text { border-color: transparent; background: transparent; color: var(--primary); padding-inline: 4px; }
+    .btn.danger { color: var(--error); border-color: #ffccc7; }
+    .seg { display: inline-flex; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: #fff; }
+    .seg button { height: 32px; border: 0; background: #fff; padding: 0 13px; color: var(--sub); border-right: 1px solid var(--border); }
+    .seg button:last-child { border-right: 0; }
+    .seg button.active { color: var(--primary); background: var(--primary-bg); font-weight: 650; }
+    .section { background: #fff; border: 1px solid var(--soft); border-radius: var(--radius); margin-bottom: 14px; }
+    .section-header { min-height: 44px; padding: 10px 14px; border-bottom: 1px solid var(--soft); display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+    .section-title { font-weight: 650; display: flex; gap: 8px; align-items: center; }
+    .section-body { padding: 14px; }
+    .toolbar { display: flex; justify-content: space-between; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+    .filters { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .field { display: inline-flex; align-items: center; gap: 6px; color: var(--sub); }
+    .input, .select, .textarea, .field input, .field select {
+      height: 32px;
+      min-width: 118px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: #fff;
+      padding: 0 9px;
+      color: var(--text);
+    }
+    .textarea { height: auto; min-height: 74px; padding: 8px 9px; resize: vertical; }
+    .grid { display: grid; gap: 14px; }
+    .cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .metric { border: 1px solid var(--soft); border-radius: var(--radius); padding: 12px; min-height: 82px; background: #fff; }
+    .metric-label { color: var(--sub); display: flex; justify-content: space-between; gap: 8px; }
+    .metric-value { margin-top: 8px; font-size: 24px; line-height: 1; font-weight: 650; }
+    .metric-note { margin-top: 8px; color: var(--muted); font-size: 12px; }
+    .tag { display: inline-flex; align-items: center; min-height: 22px; padding: 1px 7px; border-radius: 4px; border: 1px solid var(--border); background: #fafafa; color: var(--sub); font-size: 12px; white-space: nowrap; }
+    .tag.blue { color: #0958d9; border-color: #91caff; background: var(--primary-bg); }
+    .tag.green { color: var(--success); border-color: #b7eb8f; background: var(--success-bg); }
+    .tag.orange { color: var(--warning); border-color: #ffd591; background: var(--warning-bg); }
+    .tag.red { color: var(--error); border-color: #ffa39e; background: var(--error-bg); }
+    .alert { padding: 9px 12px; border-radius: var(--radius); border: 1px solid #91caff; background: var(--primary-bg); display: flex; gap: 8px; align-items: flex-start; }
+    .alert.warning { border-color: #ffd591; background: var(--warning-bg); }
+    .alert.error { border-color: #ffa39e; background: var(--error-bg); }
+    .flow { display: grid; grid-template-columns: repeat(5, minmax(150px, 1fr)); gap: 8px; }
+    .flow-item { border: 1px solid var(--soft); border-radius: var(--radius); padding: 10px; background: #fff; min-height: 76px; }
+    .flow-item.current { border-color: var(--primary); background: var(--primary-bg); }
+    .flow-title { font-weight: 650; }
+    .flow-note { margin-top: 4px; color: var(--sub); font-size: 12px; }
+    .table-wrap { overflow: auto; border: 1px solid var(--soft); border-radius: var(--radius); background: #fff; }
+    table { width: 100%; min-width: 1100px; border-collapse: collapse; }
+    th, td { border-bottom: 1px solid var(--soft); padding: 8px 10px; text-align: left; vertical-align: middle; white-space: nowrap; }
+    th { position: sticky; top: 0; z-index: 1; background: #fafafa; color: var(--sub); font-weight: 600; }
+    tr:hover td { background: #f7fbff; }
+    td input[type="number"], td input[type="text"] { width: 92px; height: 28px; border: 1px solid var(--border); border-radius: 4px; padding: 0 7px; }
+    .product { display: grid; grid-template-columns: 58px 1fr; gap: 10px; align-items: center; min-width: 280px; }
+    .thumb { width: 58px; height: 58px; border: 1px solid #d6e4ff; border-radius: 6px; background: linear-gradient(135deg, #e6f4ff, #f6ffed); display: grid; place-items: center; color: #174a7c; font-weight: 700; text-align: center; line-height: 1.15; padding: 5px; }
+    .p-name { font-weight: 650; }
+    .p-sub { color: var(--sub); font-size: 12px; line-height: 1.45; }
+    .tabs { display: flex; gap: 18px; overflow-x: auto; border-bottom: 1px solid var(--soft); margin-bottom: 14px; }
+    .tab { border: 0; background: transparent; height: 38px; color: var(--sub); border-bottom: 2px solid transparent; padding: 0 2px; white-space: nowrap; }
+    .tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 650; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    .split { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 14px; align-items: start; }
+    .kv-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .kv { border: 1px solid var(--soft); border-radius: var(--radius); padding: 10px; background: #fff; }
+    .kv-label { color: var(--sub); font-size: 12px; }
+    .kv-value { margin-top: 5px; font-weight: 650; }
+    .formula { border: 1px dashed #adc6ff; border-radius: var(--radius); background: #f9fbff; padding: 10px 12px; line-height: 1.75; }
+    .drawer-mask, .modal-mask { position: fixed; inset: 0; background: rgba(15,31,53,.35); z-index: 20; display: none; }
+    .drawer-mask.open, .modal-mask.open { display: block; }
+    .drawer { position: fixed; top: 0; right: 0; height: 100vh; width: min(760px, 92vw); background: #fff; z-index: 21; box-shadow: var(--shadow); display: flex; flex-direction: column; transform: translateX(100%); transition: transform .18s ease; }
+    .drawer.open { transform: translateX(0); }
+    .drawer-header, .drawer-footer { padding: 14px 16px; border-bottom: 1px solid var(--soft); display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+    .drawer-footer { border-top: 1px solid var(--soft); border-bottom: 0; justify-content: flex-end; }
+    .drawer-title { font-size: 16px; font-weight: 650; }
+    .drawer-body { padding: 16px; overflow: auto; flex: 1; }
+    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .form-item { display: grid; gap: 6px; }
+    .form-item.full { grid-column: 1/-1; }
+    .form-item label { color: var(--sub); font-size: 12px; }
+    .toast { position: fixed; top: 68px; left: 50%; transform: translateX(-50%) translateY(-8px); opacity: 0; pointer-events: none; z-index: 40; transition: .16s; background: #fff; border: 1px solid var(--soft); box-shadow: var(--shadow); padding: 9px 14px; border-radius: var(--radius); }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .muted { color: var(--sub); }
+    .small { font-size: 12px; }
+    @media (max-width: 1180px) {
+      .cols-4, .cols-3, .flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .split { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 760px) {
+      :root { --nav: 80px; }
+      .brand span, .nav-group span, .nav-button span:last-child, .nav-note { display: none; }
+      .nav-button { padding: 7px 8px; justify-content: center; }
+      .topbar { height: auto; min-height: var(--top); align-items: flex-start; flex-direction: column; padding: 10px 12px; }
+      .page { padding: 14px 12px 24px; }
+      .page-header { flex-direction: column; }
+      .cols-4, .cols-3, .cols-2, .flow, .form-grid, .kv-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand"><div class="brand-icon">F</div><span>FBA计划管理</span></div>
+      <nav class="nav">
+        <div class="nav-group">▾ <span>多平台计划管理</span></div>
+        <button class="nav-button active" data-page="dashboard" type="button">首页 <span>双流程</span></button>
+        <button class="nav-button" data-page="amazon-sales" type="button">亚马逊销售预测 <span>AMZ</span></button>
+        <button class="nav-button" data-page="amazon-stock" type="button">FBA备货分析 <span>FBA</span></button>
+        <button class="nav-button" data-page="multi-sales" type="button">多平台销量计划 <span>非AMZ</span></button>
+        <button class="nav-button" data-page="multi-stock" type="button">多平台备货分析 <span>截图</span></button>
+        <button class="nav-button" data-page="activity" type="button">活动备货 <span>预留</span></button>
+        <div class="nav-group">▾ <span>基础设置</span></div>
+        <button class="nav-button" data-page="settings" type="button">FBA/多平台基础设置 <span>配置</span></button>
+        <button class="nav-button" data-page="correction" type="button">原型假设与纠偏 <span>清单</span></button>
+      </nav>
+      <div class="nav-note">V1.1校准：亚马逊与非亚马逊多平台流程分开；采购输出仍为采购需求/计划结果，不默认正式PR。</div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <div class="breadcrumb" id="breadcrumb">首页 / 双流程工作台</div>
+          <div class="small muted">依据材料：首期亚马逊成熟品预测；非AMZ渠道负责人模板提报；截图显示多平台备货分析存在独立筛选、手动更新和批量确认。</div>
+        </div>
+        <div class="top-actions">
+          <div class="seg">
+            <button class="active" data-flow="amazon" type="button">亚马逊/FBA</button>
+            <button data-flow="multi" type="button">非亚马逊多平台</button>
+          </div>
+          <span class="tag orange">业务验证型</span>
+        </div>
+      </header>
+
+      <section class="page active" id="page-dashboard">
+        <div class="page-header">
+          <div>
+            <h1>双流程工作台</h1>
+            <div class="subtitle">不再用一条通用计划流覆盖全部渠道。工作台同时展示亚马逊/FBA流程和非亚马逊多平台流程。</div>
+          </div>
+          <div class="actions">
+            <button class="btn primary" data-page-jump="amazon-sales" type="button">处理亚马逊预测</button>
+            <button class="btn" data-page-jump="multi-stock" type="button">进入多平台备货分析</button>
+            <button class="btn" data-page-jump="settings" type="button">基础设置</button>
+          </div>
+        </div>
+
+        <div class="grid cols-4">
+          <div class="metric"><div class="metric-label"><span>AMZ待确认预测</span><span class="tag blue">销售</span></div><div class="metric-value" id="mAmzForecast">2</div><div class="metric-note">首期成熟品/子体ASIN</div></div>
+          <div class="metric"><div class="metric-label"><span>FBA备货风险</span><span class="tag orange">PMC</span></div><div class="metric-value" id="mFbaRisk">2</div><div class="metric-note">水位、LT、FBA在途</div></div>
+          <div class="metric"><div class="metric-label"><span>非AMZ待确认需求</span><span class="tag blue">运营</span></div><div class="metric-value" id="mMultiNeed">2</div><div class="metric-note">渠道负责人模板提报</div></div>
+          <div class="metric"><div class="metric-label"><span>多平台待下PO</span><span class="tag orange">采购</span></div><div class="metric-value" id="mMultiPo">3</div><div class="metric-note">仅展示PR/PO关系待确认</div></div>
+        </div>
+
+        <div class="grid cols-2" style="margin-top:14px">
+          <div class="section">
+            <div class="section-header"><div class="section-title">亚马逊/FBA流程</div><span class="tag green">首期主链</span></div>
+            <div class="section-body">
+              <div class="flow">
+                <div class="flow-item current"><div class="flow-title">销售预测</div><div class="flow-note">成熟品、父子ASIN、系统基线与人工覆盖</div></div>
+                <div class="flow-item"><div class="flow-title">FBA库存/在途</div><div class="flow-note">FBA可售、FBA货件、广州仓可用</div></div>
+                <div class="flow-item"><div class="flow-title">FBA备货分析</div><div class="flow-note">水位15-28天、LT、过货建议</div></div>
+                <div class="flow-item"><div class="flow-title">采购缺口</div><div class="flow-note">缺口、MOQ、供应周期</div></div>
+                <div class="flow-item"><div class="flow-title">采购需求输出</div><div class="flow-note">不默认正式PR</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="section">
+            <div class="section-header"><div class="section-title">非亚马逊多平台流程</div><span class="tag orange">独立流程</span></div>
+            <div class="section-body">
+              <div class="flow">
+                <div class="flow-item current"><div class="flow-title">渠道提报</div><div class="flow-note">eBay/Temu/独立站按负责人模板填需求</div></div>
+                <div class="flow-item"><div class="flow-title">运营变更</div><div class="flow-note">运营销售预测变更、活动备货</div></div>
+                <div class="flow-item"><div class="flow-title">多平台备货分析</div><div class="flow-note">手动更新、批量确认、断货筛选</div></div>
+                <div class="flow-item"><div class="flow-title">多平台备货计划</div><div class="flow-note">需求确认后创建计划</div></div>
+                <div class="flow-item"><div class="flow-title">采购需求输出</div><div class="flow-note">待下PO/PR仅展示关系</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-header"><div class="section-title">我的待办</div><button class="btn text" data-page-jump="multi-stock" type="button">查看多平台备货分析</button></div>
+          <div class="section-body">
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>待办</th><th>流程</th><th>业务对象</th><th>状态</th><th>责任角色</th><th>操作</th></tr></thead>
+                <tbody id="todoBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="page-amazon-sales">
+        <div class="page-header">
+          <div>
+            <h1>亚马逊销售预测</h1>
+            <div class="subtitle">首期按亚马逊成熟品预测建模，强调父子ASIN、Listing标签、系统基线预测、人工覆盖和活动影响。</div>
+          </div>
+          <div class="actions"><button class="btn" id="amzForecastBasis" type="button">预测依据</button><button class="btn primary" id="confirmAmzForecast" type="button">确认预测</button></div>
+        </div>
+        <div class="section">
+          <div class="section-header"><div class="section-title">预测填报列表</div><span class="tag orange">不同于非AMZ模板提报</span></div>
+          <div class="section-body">
+            <div class="toolbar">
+              <div class="filters">
+                <label class="field">站点<select><option>美国(US)</option><option>英国(UK)</option></select></label>
+                <label class="field">商品标签<select><option>成熟期</option><option>成长窗</option><option>导入期观察</option></select></label>
+                <label class="field">预测状态<select><option>待确认</option><option>已确认</option></select></label>
+              </div>
+              <span class="tag blue">子体ASIN为预测单元</span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>商品</th><th>父体ASIN</th><th>子体ASIN</th><th>SKU</th><th>生命周期</th><th>近60日ADU</th><th>系统基线</th><th>人工覆盖</th><th>活动影响</th><th>最终预测</th><th>审批状态</th><th>操作</th></tr></thead>
+                <tbody id="amzSalesBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="page-amazon-stock">
+        <div class="page-header">
+          <div>
+            <h1>FBA备货分析</h1>
+            <div class="subtitle">亚马逊链路关注FBA库存、FBA在途、广州仓可过货、备货水位、海运LT、过货建议和采购缺口。</div>
+          </div>
+          <div class="actions"><button class="btn" id="runFbaCalc" type="button">重新计算</button><button class="btn primary" id="confirmFbaPlan" type="button">确认FBA备货结果</button></div>
+        </div>
+        <div class="section">
+          <div class="section-header"><div class="section-title">FBA备货结果</div><span id="fbaStatus"></span></div>
+          <div class="section-body">
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>商品</th><th>SKU</th><th>站点</th><th>最终预测</th><th>FBA可售</th><th>FBA在途</th><th>广州仓可用</th><th>备货水位</th><th>海运LT</th><th>FBA可售天数</th><th>过货建议量</th><th>采购缺口</th><th>MOQ</th><th>风险</th><th>操作</th></tr></thead>
+                <tbody id="amzStockBody"></tbody>
+              </table>
+            </div>
+            <div class="alert warning" style="margin-top:12px"><span>!</span><div>FBA备货/过货建议不是非AMZ备货计划；广州仓、FBA、在途均为库存事实快照与计划口径，不是PMC库存主数据。</div></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="page-multi-sales">
+        <div class="page-header">
+          <div>
+            <h1>多平台销量计划</h1>
+            <div class="subtitle">非亚马逊渠道不套用首期AMZ预测模型，第一版按平台/国家/渠道负责人模板提报和运营变更处理。</div>
+          </div>
+          <div class="actions"><button class="btn" id="openOpsChange" type="button">运营销售预测变更</button><button class="btn primary" id="batchConfirmDemand" type="button">批量确认需求</button></div>
+        </div>
+        <div class="section">
+          <div class="section-header"><div class="section-title">渠道提报需求</div><span class="tag orange">非AMZ独立提报</span></div>
+          <div class="section-body">
+            <div class="toolbar">
+              <div class="filters">
+                <label class="field">平台<select><option>eBay</option><option>Temu</option><option>独立站</option></select></label>
+                <label class="field">国家<select><option>英国(UK)</option><option>美国(US)</option></select></label>
+                <label class="field">计划人员<select><option>运营一组</option><option>渠道负责人待确认</option></select></label>
+              </div>
+              <span class="tag blue">按模板填写，不同于AMZ系统预测</span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>平台</th><th>国家</th><th>SKU</th><th>SPU</th><th>自定义SKU</th><th>产品名称</th><th>产品等级</th><th>需求数量</th><th>是否需要备货</th><th>是否备料</th><th>新老SKU关系</th><th>组合SKU</th><th>确认状态</th><th>操作</th></tr></thead>
+                <tbody id="multiSalesBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="page-multi-stock">
+        <div class="page-header">
+          <div>
+            <h1>多平台备货分析</h1>
+            <div class="subtitle">按截图校准为非AMZ多平台备货分析页：筛选、创建计划、手动更新、批量确认、断货SKU筛选和导出销量。</div>
+          </div>
+          <div class="actions"><button class="btn primary" id="createMultiPlan" type="button">创建计划</button><button class="btn" id="manualOne" type="button">手动更新（单条）</button><button class="btn" id="manualAll" type="button">手动更新（全量）</button><button class="btn" id="multiBatchConfirm" type="button">批量确认</button></div>
+        </div>
+        <div class="section">
+          <div class="section-body">
+            <div class="toolbar">
+              <div class="filters">
+                <label class="field">SKU<input placeholder="请输入" /></label>
+                <label class="field">产品等级<input placeholder="产品等级" /></label>
+                <label class="field">产品名称<input placeholder="产品名称" /></label>
+                <label class="field">国家<select><option>全部</option><option>美国(US)</option><option>英国(UK)</option></select></label>
+                <label class="field">是否需要备货<select><option>全部</option><option>是</option><option>否</option></select></label>
+                <label class="field">需求数量<input placeholder="最小值" style="width:82px" />-<input placeholder="最大值" style="width:82px" /></label>
+                <label class="field">计划人员<select><option>全部</option><option>运营一组</option></select></label>
+                <label class="field">是否备料<select><option>全部</option><option>正常备货</option><option>无需备料</option></select></label>
+                <label class="field">是否有新老sku关系<select><option>全部</option><option>是</option><option>否</option></select></label>
+                <label class="field">是否组合sku<select><option>全部</option><option>是</option><option>否</option></select></label>
+                <label class="field">需求数量是否确认<select><option>全部</option><option>已确认</option><option>未确认</option></select></label>
+              </div>
+              <div class="actions">
+                <button class="btn primary" type="button">查询</button>
+                <button class="btn" type="button">重置</button>
+                <button class="btn primary" type="button">保存</button>
+                <button class="btn" type="button">高级搜索</button>
+              </div>
+            </div>
+            <div class="toolbar">
+              <div class="filters">
+                <button class="btn" id="outSkuFilter" type="button">断货SKU筛选</button>
+                <button class="btn" type="button">导出</button>
+                <button class="btn" type="button">导出销量</button>
+              </div>
+              <span id="multiStockStatus"></span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th><input type="checkbox" /></th><th>图片</th><th>产品信息/SKU</th><th>状态</th><th>产品名称/分类</th><th>需求数量</th><th>待下PO</th><th>供应LT</th><th>库存可售天数</th><th>库存信息</th><th>操作</th></tr></thead>
+                <tbody id="multiStockBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="page-activity">
+        <div class="page-header"><div><h1>活动备货</h1><div class="subtitle">保留为非AMZ/AMZ共同影响需求的活动输入入口，本版只做占位，不把活动备货规则定稿。</div></div></div>
+        <div class="section"><div class="section-body"><div class="alert warning"><span>!</span><div>活动备货会影响销售预测或渠道提报，但活动优先级、审批和冻结点仍需业务确认。</div></div></div></div>
+      </section>
+
+      <section class="page" id="page-settings">
+        <div class="page-header">
+          <div><h1>FBA/多平台基础设置</h1><div class="subtitle">设置页按流程分开，不做一个统一大规则引擎。这里只验证计划计算所需输入。</div></div>
+          <div class="actions"><button class="btn" id="resetSettings" type="button">恢复默认</button><button class="btn primary" id="saveSettings" type="button">保存并应用</button></div>
+        </div>
+        <div class="section">
+          <div class="section-body">
+            <div class="tabs">
+              <button class="tab active" data-tab="settings" data-target="set-amz" type="button">亚马逊/FBA参数</button>
+              <button class="tab" data-tab="settings" data-target="set-multi" type="button">多平台参数</button>
+              <button class="tab" data-tab="settings" data-target="set-inventory" type="button">库存参与口径</button>
+            </div>
+            <div class="panel active" id="set-amz">
+              <div class="table-wrap"><table><thead><tr><th>参数</th><th>对象</th><th>当前值</th><th>来源</th><th>Owner</th><th>原型假设</th></tr></thead><tbody id="amzSetBody"></tbody></table></div>
+            </div>
+            <div class="panel" id="set-multi">
+              <div class="table-wrap"><table><thead><tr><th>参数</th><th>对象</th><th>当前值</th><th>来源</th><th>Owner</th><th>原型假设</th></tr></thead><tbody id="multiSetBody"></tbody></table></div>
+            </div>
+            <div class="panel" id="set-inventory">
+              <div class="table-wrap"><table><thead><tr><th>库存类型</th><th>亚马逊/FBA参与</th><th>非AMZ参与</th><th>取数口径</th><th>来源</th><th>Owner</th></tr></thead><tbody id="inventorySetBody"></tbody></table></div>
+              <div class="alert warning" style="margin-top:12px"><span>!</span><div>这是计划库存口径，不是库存主数据维护。各库存节点权威来源和Owner仍需确认。</div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="page-correction">
+        <div class="page-header"><div><h1>原型假设与业务纠偏</h1><div class="subtitle">本页把本次双流程原型的具体假设列成可纠偏问题。</div></div></div>
+        <div class="section">
+          <div class="section-body">
+            <div class="table-wrap"><table><thead><tr><th>页面</th><th>当前原型设计</th><th>需要业务纠偏</th><th>业务填写</th></tr></thead><tbody id="correctionBody"></tbody></table></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="drawer-mask" id="drawerMask"></div>
+  <aside class="drawer" id="drawer" role="dialog" aria-modal="true">
+    <div class="drawer-header"><div class="drawer-title" id="drawerTitle">详情</div><button class="btn text" id="closeDrawer" type="button">关闭</button></div>
+    <div class="drawer-body" id="drawerBody"></div>
+    <div class="drawer-footer" id="drawerFooter"></div>
+  </aside>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const state = {
+      page: "dashboard",
+      amzForecastConfirmed: false,
+      fbaConfirmed: false,
+      multiConfirmedCount: 1,
+      multiPlanCreated: false
+    };
+
+    const amzSales = [
+      { product: "连体塑身衣", spu: "AD6159", sku: "AD615910100M-B91", parentAsin: "B0PARENT6159", childAsin: "B0US6159M", stage: "成熟期", adu: 17.3, base: 520, manual: 550, activity: 80, status: "待确认" },
+      { product: "连体塑身衣", spu: "AD6159", sku: "AD615910100L-B70", parentAsin: "B0PARENT6159", childAsin: "B0US6159L", stage: "成长窗", adu: 10.3, base: 310, manual: 310, activity: 0, status: "待确认" },
+      { product: "假小子塑胸背心上衣", spu: "AC3635", sku: "AC3635A-81-S", parentAsin: "B0PARENT3635", childAsin: "B0US3635S", stage: "成熟期", adu: 8.0, base: 240, manual: 220, activity: 40, status: "已确认" }
+    ];
+
+    const fbaRows = [
+      { product: "连体塑身衣", spu: "AD6159", sku: "AD615910100M-B91", site: "美国(US)", finalForecast: 630, fba: 180, inbound: 120, gz: 260, water: "28天", seaLt: "40天", sellDays: 14, transfer: 300, gap: 330, moq: 300, risk: "水位不足/MOQ放大" },
+      { product: "连体塑身衣", spu: "AD6159", sku: "AD615910100L-B70", site: "美国(US)", finalForecast: 310, fba: 70, inbound: 160, gz: 110, water: "28天", seaLt: "40天", sellDays: 22, transfer: 100, gap: 80, moq: 100, risk: "供应LT缺失" },
+      { product: "假小子塑胸背心上衣", spu: "AC3635", sku: "AC3635A-81-S", site: "美国(US)", finalForecast: 260, fba: 90, inbound: 40, gz: 120, water: "21天", seaLt: "40天", sellDays: 20, transfer: 150, gap: 130, moq: 150, risk: "正常" }
+    ];
+
+    const multiSales = [
+      { platform: "eBay", country: "英国(UK)", sku: "9994115", spu: "H-LS00128", customSku: "H-LS00128 ASSHOD", product: "LED蜂窝灯地下车库白色147造型", level: "-", demand: 200, need: "是", material: "正常备货", relation: "否", combo: "否", confirmed: "已确认" },
+      { platform: "Temu", country: "美国(US)", sku: "10004267", spu: "SCN000002", customSku: "SCN000002 U0010F", product: "布艺清洗机 V6 黑盖 5配件 美规", level: "-", demand: 0, need: "否", material: "无需备料", relation: "否", combo: "否", confirmed: "未确认" },
+      { platform: "eBay", country: "美国(US)", sku: "10004314", spu: "AM-FA-00002", customSku: "AM-FA-00002", product: "压实洗插头 长枪+10米出水管", level: "-", demand: 120, need: "是", material: "正常备货", relation: "是", combo: "否", confirmed: "未确认" }
+    ];
+
+    const multiStock = [
+      { sku: "10004267", spu: "SCN000002", customSku: "SCN000002 U0010F", country: "美国(US)", product: "布艺清洗机，V6，黑盖，5配件，美规", category: "智能清洁 >> 布艺清洗机 >> V6", productStatus: "正常", salesStatus: "在售", activeStatus: "新品", level: "-", demand: 0, backupDays: "0.00天", demandStatus: "未确认", material: "无需备料", openPr: 0, waitFpo: 0, supplyLt: "0天", totalSellDays: "0.00", ltGap: 0, inventory: "采购在途0.00天 / 本地仓可用0.00天 / 海外仓可用0.00天 / 断货天数0天" },
+      { sku: "9994115", spu: "H-LS00128", customSku: "H-LS00128 ASSHOD", country: "英国(UK)", product: "LED蜂窝灯地下车库白色147造型（含外框）6500K冷白光", category: "海外仓家居类 >> 灯类", productStatus: "正常", salesStatus: "在售", activeStatus: "-", level: "-", demand: 200, backupDays: "30.00天", demandStatus: "已确认", material: "正常备货", openPr: 0, waitFpo: 0, supplyLt: "113天", totalSellDays: "0.00", ltGap: 0, inventory: "采购在途0.00天 / 本地仓可用0.00天 / 海外仓在途0.00天 / 断货天数0天" },
+      { sku: "10004314", spu: "AM-FA-00002", customSku: "AM-FA-00002", country: "美国(US)", product: "压实洗插头，长枪+10米出水管+泡沫壶", category: "配件 >> 清洗机配件", productStatus: "正常", salesStatus: "在售", activeStatus: "-", level: "-", demand: 120, backupDays: "18.00天", demandStatus: "未确认", material: "正常备货", openPr: 1, waitFpo: 0, supplyLt: "35天", totalSellDays: "8.00", ltGap: 20, inventory: "采购在途15.00天 / 本地仓可用8.00天 / 海外仓可用0.00天 / 断货天数2天" }
+    ];
+
+    const settings = {
+      amz: [
+        ["FBA备货水位", "站点/SKU", "15-28天", "FBA基础设置", "PMC待确认", "用于FBA备货分析"],
+        ["海运LT", "站点/物流方式", "40天", "物流/历史口径", "物流Owner待确认", "用于LT风险判断"],
+        ["FBA货件参与", "货件状态", "STA + WORKING", "领星FBA货件", "运营/仓储待确认", "需去重申发差异"]
+      ],
+      multi: [
+        ["需求提报模板", "平台/国家/SKU", "渠道负责人填写", "人工模板/运营", "运营待确认", "非AMZ不套用AMZ预测模型"],
+        ["是否需要备货", "SKU/国家", "是/否", "运营提报+系统判断", "PMC待确认", "截图已有筛选项"],
+        ["需求确认", "SKU/计划", "未确认/已确认", "批量确认", "运营/PMC待确认", "影响创建备货计划"]
+      ],
+      inventory: [
+        ["广州仓/本地仓", "参与", "参与", "可用量+可用锁定量-FBA申发差异", "领星/WMS", "库存Owner待确认"],
+        ["FBA库存", "参与", "不参与", "FBA可售+待调仓", "领星", "FBA Owner待确认"],
+        ["海外仓库存", "仅展示", "参与", "海外仓可用/在途", "海外仓/WMS", "海外仓Owner待确认"],
+        ["采购在途", "参与", "参与", "待到货量+次品量+待采购量", "采购/SCM", "采购Owner待确认"]
+      ]
+    };
+
+    const corrections = [
+      ["整体流程", "亚马逊/FBA与非亚马逊多平台拆成两条流程", "是否还有第三类渠道流程，或多平台内部还需按平台继续拆分"],
+      ["亚马逊销售预测", "首期按成熟品、父子ASIN、系统预测+人工覆盖+活动影响", "预测粒度、审批和冻结规则是否正确"],
+      ["FBA备货分析", "展示FBA可售、FBA在途、广州仓可用、备货水位、海运LT、过货建议、采购缺口", "哪些库存参与、过货建议公式、采购缺口是否正确"],
+      ["多平台销量计划", "非AMZ由平台/国家负责人填需求数量和是否备货", "字段是否贴合现有模板，是否需要店铺/账号/仓库"],
+      ["多平台备货分析", "按截图设计筛选、手动更新、批量确认、断货SKU筛选、待下PO、供应LT和库存可售天数", "是否还缺少原系统字段或按钮"],
+      ["采购输出", "统一保持采购需求/计划结果，不默认正式PR", "PR由谁创建、在哪个系统创建、审批和转PO如何处理"]
+    ];
+
+    function tag(text, tone) { return `<span class="tag ${tone || ''}">${text}</span>`; }
+    function product(row) {
+      return `<div class="product"><div class="thumb">${row.product.slice(0,2)}</div><div><div class="p-name">${row.product}</div><div class="p-sub">${row.spu || ''}</div><div class="p-sub">${row.sku}</div></div></div>`;
+    }
+    function toast(text) {
+      const el = document.getElementById("toast");
+      el.textContent = text;
+      el.classList.add("show");
+      clearTimeout(toast.timer);
+      toast.timer = setTimeout(() => el.classList.remove("show"), 1800);
+    }
+    function pageToName(page) {
+      return {
+        dashboard: "首页 / 双流程工作台",
+        "amazon-sales": "多平台计划管理 / 亚马逊销售预测",
+        "amazon-stock": "多平台计划管理 / FBA备货分析",
+        "multi-sales": "多平台计划管理 / 多平台销量计划",
+        "multi-stock": "多平台计划管理 / 多平台备货分析",
+        activity: "多平台计划管理 / 活动备货",
+        settings: "基础设置 / FBA与多平台基础设置",
+        correction: "原型假设与纠偏"
+      }[page] || page;
+    }
+    function switchPage(page) {
+      state.page = page;
+      document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+      document.getElementById(`page-${page}`).classList.add("active");
+      document.querySelectorAll(".nav-button").forEach(b => b.classList.toggle("active", b.dataset.page === page));
+      document.getElementById("breadcrumb").textContent = pageToName(page);
+    }
+    function openDrawer(title, body, footer) {
+      document.getElementById("drawerTitle").textContent = title;
+      document.getElementById("drawerBody").innerHTML = body;
+      document.getElementById("drawerFooter").innerHTML = footer || `<button class="btn primary" id="drawerOk" type="button">关闭</button>`;
+      document.getElementById("drawerMask").classList.add("open");
+      document.getElementById("drawer").classList.add("open");
+      const ok = document.getElementById("drawerOk");
+      if (ok) ok.addEventListener("click", closeDrawer);
+    }
+    function closeDrawer() {
+      document.getElementById("drawerMask").classList.remove("open");
+      document.getElementById("drawer").classList.remove("open");
+    }
+    function renderDashboard() {
+      document.getElementById("mAmzForecast").textContent = state.amzForecastConfirmed ? "0" : "2";
+      document.getElementById("mFbaRisk").textContent = state.fbaConfirmed ? "0" : "2";
+      document.getElementById("mMultiNeed").textContent = String(multiSales.length - state.multiConfirmedCount);
+      document.getElementById("mMultiPo").textContent = state.multiPlanCreated ? "1" : "3";
+      const todos = [
+        ["确认AMZ成熟品预测", "亚马逊/FBA", "AD6159 / AC3635", state.amzForecastConfirmed ? "已确认" : "待确认", "销售", "amazon-sales"],
+        ["处理FBA备货风险", "亚马逊/FBA", "水位不足 / LT缺失", state.fbaConfirmed ? "已确认" : "待处理", "PMC", "amazon-stock"],
+        ["确认非AMZ需求数量", "非亚马逊多平台", "eBay / Temu / 独立站", state.multiConfirmedCount === multiSales.length ? "已确认" : "未确认", "运营", "multi-sales"],
+        ["创建多平台备货计划", "非亚马逊多平台", "多平台备货分析", state.multiPlanCreated ? "已创建" : "待创建", "PMC", "multi-stock"]
+      ];
+      document.getElementById("todoBody").innerHTML = todos.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${tag(r[3], r[3].includes("已") ? "green" : "orange")}</td><td>${r[4]}</td><td><button class="btn text" data-page-jump="${r[5]}" type="button">处理</button></td></tr>`).join("");
+    }
+    function renderAmzSales() {
+      document.getElementById("amzSalesBody").innerHTML = amzSales.map((r, i) => {
+        const finalForecast = Number(r.manual) + Number(r.activity);
+        const status = state.amzForecastConfirmed ? "已确认" : r.status;
+        return `<tr><td>${product(r)}</td><td>${r.parentAsin}</td><td>${r.childAsin}</td><td>${r.sku}</td><td>${r.stage}</td><td>${r.adu}</td><td>${r.base}</td><td><input type="number" value="${r.manual}" data-amz-manual="${i}" /></td><td><input type="number" value="${r.activity}" data-amz-activity="${i}" /></td><td><strong>${finalForecast}</strong></td><td>${tag(status, status === "已确认" ? "green" : "orange")}</td><td><button class="btn text" data-amz-detail="${i}" type="button">明细</button></td></tr>`;
+      }).join("");
+    }
+    function renderFba() {
+      document.getElementById("fbaStatus").innerHTML = tag(state.fbaConfirmed ? "已确认" : "存在风险", state.fbaConfirmed ? "green" : "orange");
+      document.getElementById("amzStockBody").innerHTML = fbaRows.map((r, i) => `<tr><td>${product(r)}</td><td>${r.sku}</td><td>${r.site}</td><td>${r.finalForecast}</td><td>${r.fba}</td><td>${r.inbound}</td><td>${r.gz}</td><td>${r.water}</td><td>${r.seaLt}</td><td>${r.sellDays}</td><td><strong>${r.transfer}</strong></td><td>${r.gap}</td><td>${r.moq}</td><td>${r.risk === "正常" ? tag("正常", "green") : tag(r.risk, "orange")}</td><td><button class="btn text" data-fba-calc="${i}" type="button">计算明细</button></td></tr>`).join("");
+    }
+    function renderMultiSales() {
+      document.getElementById("multiSalesBody").innerHTML = multiSales.map((r, i) => {
+        const confirmed = i < state.multiConfirmedCount ? "已确认" : r.confirmed;
+        return `<tr><td>${r.platform}</td><td>${r.country}</td><td>${r.sku}</td><td>${r.spu}</td><td>${r.customSku}</td><td>${r.product}</td><td>${r.level}</td><td><input type="number" value="${r.demand}" data-multi-demand="${i}" /></td><td>${r.need}</td><td>${r.material}</td><td>${r.relation}</td><td>${r.combo}</td><td>${tag(confirmed, confirmed === "已确认" ? "green" : "orange")}</td><td><button class="btn text" data-multi-detail="${i}" type="button">查看</button></td></tr>`;
+      }).join("");
+    }
+    function renderMultiStock() {
+      document.getElementById("multiStockStatus").innerHTML = tag(state.multiPlanCreated ? "多平台备货计划已创建" : "需求待确认", state.multiPlanCreated ? "green" : "orange");
+      document.getElementById("multiStockBody").innerHTML = multiStock.map((r, i) => `<tr><td><input type="checkbox" /></td><td><div class="thumb">${r.product.slice(0,2)}</div></td><td><div>SKU: <a href="#" data-multi-stock="${i}">${r.sku}</a></div><div>SPU: ${r.spu}</div><div>自定义SKU: ${r.customSku}</div><div>国家: ${r.country}</div></td><td><div>商品状态: ${r.productStatus}</div><div>销售状态: ${r.salesStatus}</div><div>活跃状态: ${r.activeStatus}</div><div>产品等级: ${r.level}</div></td><td><div>${r.product}</div><div class="muted">${r.category}</div></td><td><input type="number" value="${r.demand}" data-stock-demand="${i}" /><div>${r.material} / 备货${r.backupDays}</div><div>${tag(r.demandStatus, r.demandStatus === "已确认" ? "green" : "red")}</div></td><td><a href="#">未完结PR数: ${r.openPr}</a><br /><a href="#">待下PO: ${r.waitFpo}</a><br /><a href="#">历史采购记录</a></td><td><a href="#">${r.supplyLt}</a><br /><strong class="${r.supplyLt === "0天" ? "red" : ""}">总可售天数: ${r.totalSellDays}</strong><br />LT内缺货数量: ${r.ltGap}</td><td>${r.inventory}</td><td>${r.inventory}</td><td><button class="btn text" data-multi-stock="${i}" type="button">更多明细</button></td></tr>`).join("");
+    }
+    function renderSettings() {
+      document.getElementById("amzSetBody").innerHTML = settings.amz.map(r => `<tr>${r.map(x => `<td>${x}</td>`).join("")}</tr>`).join("");
+      document.getElementById("multiSetBody").innerHTML = settings.multi.map(r => `<tr>${r.map(x => `<td>${x}</td>`).join("")}</tr>`).join("");
+      document.getElementById("inventorySetBody").innerHTML = settings.inventory.map(r => `<tr>${r.map(x => `<td>${x}</td>`).join("")}</tr>`).join("");
+    }
+    function renderCorrections() {
+      document.getElementById("correctionBody").innerHTML = corrections.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td><input type="text" placeholder="正确 / 错误 / 修改为..." style="width:220px" /></td></tr>`).join("");
+    }
+    function renderAll() { renderDashboard(); renderAmzSales(); renderFba(); renderMultiSales(); renderMultiStock(); renderSettings(); renderCorrections(); }
+    function openFbaCalc(i) {
+      const r = fbaRows[i];
+      openDrawer("FBA备货计算明细", `<div class="formula"><div><strong>最终预测</strong>：${r.finalForecast}</div><div><strong>FBA可售+FBA在途</strong>：${r.fba}+${r.inbound}=${r.fba + r.inbound}</div><div><strong>广州仓可过货</strong>：${r.gz}</div><div><strong>可售天数</strong>：${r.sellDays}天，对比备货水位${r.water}</div><div><strong>过货建议</strong>：${r.transfer}</div><div><strong>采购缺口</strong>：${r.gap}，MOQ ${r.moq}</div></div><div class="alert warning" style="margin-top:12px"><span>!</span><div>该公式用于验证FBA过货/备货逻辑，不适用于非AMZ多平台提报流程。</div></div>`);
+    }
+    function openMultiDetail(i) {
+      const r = multiStock[i];
+      openDrawer("多平台备货明细", `<div class="kv-grid"><div class="kv"><div class="kv-label">产品信息</div><div class="kv-value">${r.sku} / ${r.spu}<br />${r.customSku}</div></div><div class="kv"><div class="kv-label">国家</div><div class="kv-value">${r.country}</div></div><div class="kv"><div class="kv-label">需求数量</div><div class="kv-value">${r.demand}</div></div><div class="kv"><div class="kv-label">待下PO</div><div class="kv-value">未完结PR数 ${r.openPr} / 待FPO ${r.waitFpo}</div></div><div class="kv"><div class="kv-label">供应LT</div><div class="kv-value">${r.supplyLt}</div></div><div class="kv"><div class="kv-label">库存信息</div><div class="kv-value">${r.inventory}</div></div></div><div class="alert warning" style="margin-top:12px"><span>!</span><div>这里按截图复刻多平台备货分析结构，用于让业务确认非AMZ字段、按钮和状态，而不是复用AMZ预测模型。</div></div>`);
+    }
+    document.body.addEventListener("click", e => {
+      const jump = e.target.closest("[data-page-jump]");
+      if (jump) switchPage(jump.dataset.pageJump);
+      const nav = e.target.closest(".nav-button");
+      if (nav) switchPage(nav.dataset.page);
+      const flow = e.target.closest("[data-flow]");
+      if (flow) {
+        document.querySelectorAll("[data-flow]").forEach(b => b.classList.remove("active"));
+        flow.classList.add("active");
+        switchPage(flow.dataset.flow === "amazon" ? "amazon-stock" : "multi-stock");
+      }
+      const tab = e.target.closest(".tab");
+      if (tab) {
+        const group = tab.dataset.tab;
+        document.querySelectorAll(`.tab[data-tab="${group}"]`).forEach(b => b.classList.remove("active"));
+        tab.classList.add("active");
+        document.querySelectorAll(`#set-amz,#set-multi,#set-inventory`).forEach(p => p.classList.remove("active"));
+        document.getElementById(tab.dataset.target).classList.add("active");
+      }
+      const amzDetail = e.target.closest("[data-amz-detail]");
+      if (amzDetail) {
+        const r = amzSales[Number(amzDetail.dataset.amzDetail)];
+        openDrawer("亚马逊预测依据", `<div class="formula"><div>最终预测 = 人工覆盖 ${r.manual} + 活动影响 ${r.activity} = ${Number(r.manual)+Number(r.activity)}</div><div>系统基线 = ${r.base}，近60日ADU = ${r.adu}</div><div>父体ASIN ${r.parentAsin} / 子体ASIN ${r.childAsin}</div></div><div class="alert warning" style="margin-top:12px"><span>!</span><div>已批活动、已批人工、系统基线的优先级来自需求稿，审批人和冻结点仍需确认。</div></div>`);
+      }
+      const fbaCalc = e.target.closest("[data-fba-calc]");
+      if (fbaCalc) openFbaCalc(Number(fbaCalc.dataset.fbaCalc));
+      const multiDetail = e.target.closest("[data-multi-detail],[data-multi-stock]");
+      if (multiDetail) { e.preventDefault(); openMultiDetail(Number(multiDetail.dataset.multiDetail || multiDetail.dataset.multiStock)); }
+    });
+    document.body.addEventListener("input", e => {
+      const amzManual = e.target.closest("[data-amz-manual]");
+      if (amzManual) { amzSales[Number(amzManual.dataset.amzManual)].manual = Number(amzManual.value || 0); renderAmzSales(); return; }
+      const amzActivity = e.target.closest("[data-amz-activity]");
+      if (amzActivity) { amzSales[Number(amzActivity.dataset.amzActivity)].activity = Number(amzActivity.value || 0); renderAmzSales(); return; }
+      const multiDemand = e.target.closest("[data-multi-demand]");
+      if (multiDemand) { multiSales[Number(multiDemand.dataset.multiDemand)].demand = Number(multiDemand.value || 0); renderMultiSales(); return; }
+    });
+    document.getElementById("confirmAmzForecast").addEventListener("click", () => { state.amzForecastConfirmed = true; renderAll(); toast("亚马逊预测已确认，可进入FBA备货分析"); switchPage("amazon-stock"); });
+    document.getElementById("amzForecastBasis").addEventListener("click", () => openDrawer("预测依据", `<div class="formula">首期亚马逊成熟品：父子ASIN映射、近60日去季节化ADU、Clean ADU、动态alpha、季节修正、人工覆盖、活动影响。</div>`));
+    document.getElementById("runFbaCalc").addEventListener("click", () => { toast("已按FBA库存/在途/水位重新计算"); renderFba(); });
+    document.getElementById("confirmFbaPlan").addEventListener("click", () => { state.fbaConfirmed = true; renderAll(); toast("FBA备货结果已确认，形成采购需求/计划结果"); });
+    document.getElementById("openOpsChange").addEventListener("click", () => openDrawer("运营销售预测变更", `<div class="form-grid"><div class="form-item"><label>平台</label><select class="select"><option>eBay</option><option>Temu</option></select></div><div class="form-item"><label>SKU</label><input class="input" value="9994115" /></div><div class="form-item"><label>原需求</label><input class="input" value="200" /></div><div class="form-item"><label>调整后需求</label><input class="input" value="260" /></div><div class="form-item full"><label>变更原因</label><textarea class="textarea">运营活动补货</textarea></div></div>`));
+    document.getElementById("batchConfirmDemand").addEventListener("click", () => { state.multiConfirmedCount = multiSales.length; renderAll(); toast("多平台需求数量已批量确认"); });
+    document.getElementById("createMultiPlan").addEventListener("click", () => { state.multiPlanCreated = true; renderAll(); toast("多平台备货计划已创建"); });
+    document.getElementById("manualOne").addEventListener("click", () => toast("已手动更新当前选中SKU"));
+    document.getElementById("manualAll").addEventListener("click", () => toast("已手动更新全量多平台备货数据"));
+    document.getElementById("multiBatchConfirm").addEventListener("click", () => { state.multiConfirmedCount = multiSales.length; multiStock.forEach(r => r.demandStatus = "已确认"); renderAll(); toast("多平台备货分析已批量确认"); });
+    document.getElementById("outSkuFilter").addEventListener("click", () => toast("已筛选断货SKU：10004314"));
+    document.getElementById("saveSettings").addEventListener("click", () => toast("基础设置已保存并应用到后续计划快照"));
+    document.getElementById("resetSettings").addEventListener("click", () => toast("已恢复默认设置"));
+    document.getElementById("closeDrawer").addEventListener("click", closeDrawer);
+    document.getElementById("drawerMask").addEventListener("click", closeDrawer);
+    renderAll();
+  </script>
+</body>
+</html>

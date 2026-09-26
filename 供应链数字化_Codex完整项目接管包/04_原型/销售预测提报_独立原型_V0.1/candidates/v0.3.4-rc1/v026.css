@@ -1,0 +1,15 @@
+.forecast-table .date-col .source-tag { font-size:11px; line-height:14px; }
+.forecast-line-heading { display:flex; flex-direction:column; align-items:flex-start; gap:3px; }
+.forecast-line-heading .forecast-toggle-action { padding:0; height:22px; min-height:22px; white-space:nowrap; }
+.forecast-line-heading .forecast-toggle-action svg { font-size:10px; }
+.history-tail > td { padding-bottom:36px; }
+.forecast-table .history-tail > td.date-col { padding-bottom:36px; }
+.history-loader-floating { position:absolute; bottom:4px; left:calc(100% + 8px); width:max-content; z-index:3; }
+.history-load-actions { display:flex; flex-direction:row; gap:6px; align-items:center; max-width:none; }
+.history-load-actions button { white-space:nowrap; padding:0 8px; height:24px; min-height:24px; }
+.insight-copy-code { display:inline-flex; align-items:center; gap:2px; max-width:100%; white-space:nowrap; font-size:12px; }
+.insight-copy-action { display:inline-flex; opacity:0; pointer-events:none; }
+.insight-copy-code:hover .insight-copy-action,.insight-copy-code:focus-within .insight-copy-action { opacity:1; pointer-events:auto; }
+.range-current { position:relative; }
+.forecast-range-picker-host { display:inline-flex; }
+.range-current #rangeDisplay { display:none; }

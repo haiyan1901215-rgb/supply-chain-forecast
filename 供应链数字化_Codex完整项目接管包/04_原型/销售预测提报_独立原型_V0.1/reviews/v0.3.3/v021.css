@@ -1,0 +1,6 @@
+.forecast-table .date-col .delta { font-size:11px; line-height:16px; font-weight:400; }
+.forecast-table .history-label small { font-size:11px; line-height:17px; white-space:normal; }
+.forecast-toggle-host { display:inline-flex; align-items:center; vertical-align:middle; margin-right:4px; }
+.summary-forecast .forecast-toggle-host { margin-top:2px; }
+.forecast-table .line-cell.line-system { white-space:nowrap; }
+.range-bar { border-top:1px solid var(--line); }

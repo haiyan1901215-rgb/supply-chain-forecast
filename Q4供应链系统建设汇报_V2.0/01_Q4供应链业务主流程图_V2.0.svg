@@ -1,0 +1,145 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2880" height="1800" viewBox="0 0 2880 1800" role="img" aria-label="Q4供应链建设｜业务主流程"><defs><marker id="arrow-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#008DD5"/></marker><marker id="arrow-ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#18384E"/></marker><marker id="arrow-text" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3C566B"/></marker><marker id="arrow-muted" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6B7F90"/></marker><marker id="arrow-line" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#D5E1E9"/></marker><marker id="arrow-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#078E99"/></marker><marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#54963C"/></marker><marker id="arrow-orange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#DC8226"/></marker><marker id="arrow-purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#7B60A8"/></marker></defs><style>text{font-family:"PingFang SC","Microsoft YaHei",sans-serif}</style>
+<rect x="0" y="0" width="2880" height="1800" rx="0" fill="white" stroke="none" stroke-width="2" />
+<rect x="64" y="58" width="9" height="64" rx="0" fill="#008DD5" stroke="none" stroke-width="2" />
+<text x="95" y="108" font-size="51" fill="#008DD5" font-weight="650" text-anchor="start">Q4供应链建设｜业务主流程</text>
+<text x="2816" y="96" font-size="25" fill="#6B7F90" font-weight="500" text-anchor="end">2026 Q4 / V2.0</text>
+<path d="M64 145 L2816 145" fill="none" stroke="#008DD5" stroke-width="3"  />
+<text x="64" y="193" font-size="27" fill="#3C566B" font-weight="400" text-anchor="start">P0打通PMC计划至SCM采购与供应商执行；P1同步建设MRP，并接入MES执行数据</text>
+<text x="2816" y="193" font-size="23" fill="#6B7F90" font-weight="400" text-anchor="end">01 / 方案校准版</text>
+<rect x="64" y="225" width="2752" height="128" rx="0" fill="#F3F8FB" stroke="none" stroke-width="2" />
+<text x="90" y="264" font-size="27" fill="#18384E" font-weight="600" text-anchor="start">统一业务依据</text>
+<text x="352" y="264" font-size="26" fill="#078E99" font-weight="400" text-anchor="start">商品主数据 / PLM：SKU、版本、商品关系、BOM与技术资料</text>
+<text x="1500" y="264" font-size="26" fill="#078E99" font-weight="400" text-anchor="start">领星 / 库存 / 数仓：销量、库存、在途、AI基准与到货事实</text>
+<text x="352" y="313" font-size="26" fill="#3C566B" font-weight="400" text-anchor="start">供应商数据：产能、交期、成本、准交率与质量；PMC调用，采购结合这些依据进行分配</text>
+<path d="M64 390 L1779 390" fill="none" stroke="#008DD5" stroke-width="5"  />
+<text x="64" y="378" font-size="25" fill="#008DD5" font-weight="600" text-anchor="start">P0 必须打通：计划 → PR → PO → 供应商执行状态</text>
+<path d="M1804 390 L2816 390" fill="none" stroke="#54963C" stroke-width="5"  />
+<text x="1804" y="378" font-size="25" fill="#54963C" font-weight="600" text-anchor="start">执行协同：接入已有能力，按节点分阶段落地</text>
+<path d="M 64 413 H 374 L 399 462 L 374 511 H 64 L 86 462 Z" fill="#008DD5"/>
+<text x="235.5" y="474" font-size="31" fill="white" font-weight="600" text-anchor="middle">销量预测</text>
+<text x="231.5" y="552" font-size="23" fill="#008DD5" font-weight="600" text-anchor="middle">销售 / PMC · 计划平台</text>
+<text x="76" y="604" font-size="26" fill="#3C566B" font-weight="400" text-anchor="start">周期发起、日级填报</text>
+<text x="76" y="647" font-size="26" fill="#3C566B" font-weight="400" text-anchor="start">AI基准、人工修正与活动</text>
+<text x="76" y="690" font-size="26" fill="#3C566B" font-weight="400" text-anchor="start">销售确认、PMC审核</text>
+<path d="M76 717 L387 717" fill="none" stroke="#D5E1E9" stroke-width="1.2"  />
+<text x="76" y="750" font-size="21" fill="#6B7F90" font-weight="400" text-anchor="start">核心交付物</text>
+<text x="76" y="790" font-size="25" fill="#18384E" font-weight="600" text-anchor="start">预测单 / 预测版本</text>
+<path d="M 409 413 H 719 L 744 462 L 719 511 H 409 L 431 462 Z" fill="#008DD5"/>
+<text x="580.5" y="474" font-size="31" fill="white" font-weight="600" text-anchor="middle">备货计划</text>
+<text x="576.5" y="552" font-size="23" fill="#008DD5" font-weight="600" text-anchor="middle">PMC · 计划中枢</text>
+<text x="421" y="604" font-size="26" fill="#3C566B" font-weight="400" text-anchor="start">校准库存、在途与时效</text>
+<text x="421" y="647" font-size="26" fill="#3C566B" font-weight="400" text-anchor="start">水位、SKU版本拆解</text>
+<text x="421" y="690" font-size="26" fill="#3C566B" font-weight="400" text-anchor="start">供货能力校准、计划审批</text>
+<path d="M421 717 L732 717" fill="none" stroke="#D5E1E9" stroke-width="1.2"  />
+<text x="421" y="750" font-size="21" fill="#6B7F90" font-weight="400" text-anchor="start">核心交付物</text>
+<text x="421" y="790" font-size="25" fill="#18384E" font-weight="600" text-anchor="start">最终计划单 / 采购需求</text>
+<path d="M 754 413 H 1064 L 1089 462 L 1064 511 H 754 L 776 462 Z" fill="#008DD5"/>
+<text x="925.5" y="474" font-size="31" fill="white" font-weight="600" text-anchor="middle">采购需求 / PR</text>
+<text x="921.5" y="552" font-size="23" fill="#008DD5" font-weight="600" text-anchor="middle">PMC确认 · SCM管理</text>
+<text x="766" y="604" font-size="26" fill="#3C566B" font-weight="400" text-anchor="start">计划需求进入采购计划</text>
+<text x="766" y="647" font-size="26" fill="#3C566B" font-weight="400" text-anchor="start">PR生成、审核与状态</text>
+<text x="766" y="690" font-size="26" fill="#3C566B" font-weight="400" text-anchor="start">拆分 / 合并、PR转PO</text>
+<path d="M766 717 L1077 717" fill="none" stroke="#D5E1E9" stroke-width="1.2"  />
+<text x="766" y="750" font-size="21" fill="#6B7F90" font-weight="400" text-anchor="start">核心交付物</text>
+<text x="766" y="790" font-size="25" fill="#18384E" font-weight="600" text-anchor="start">已确认PR</text>
+<path d="M 1099 413 H 1409 L 1434 462 L 1409 511 H 1099 L 1121 462 Z" fill="#DC8226"/>
+<text x="1270.5" y="474" font-size="31" fill="white" font-weight="600" text-anchor="middle">采购分配 / PO</text>
+<text x="1266.5" y="552" font-size="23" fill="#DC8226" font-weight="600" text-anchor="middle">采购 · SCM</text>
+<text x="1111" y="604" font-size="26" fill="#3C566B" font-weight="400" text-anchor="start">产能、成本、交期分配</text>
+<text x="1111" y="647" font-size="26" fill="#3C566B" font-weight="400" text-anchor="start">版本、工厂库存与包装</text>
+<text x="1111" y="690" font-size="26" fill="#3C566B" font-weight="400" text-anchor="start">PO审核、交期确认</text>
+<path d="M1111 717 L1422 717" fill="none" stroke="#D5E1E9" stroke-width="1.2"  />
+<text x="1111" y="750" font-size="21" fill="#6B7F90" font-weight="400" text-anchor="start">核心交付物</text>
+<text x="1111" y="790" font-size="25" fill="#18384E" font-weight="600" text-anchor="start">采购订单PO</text>
+<path d="M 1444 413 H 1754 L 1779 462 L 1754 511 H 1444 L 1466 462 Z" fill="#DC8226"/>
+<text x="1615.5" y="474" font-size="31" fill="white" font-weight="600" text-anchor="middle">供应商执行</text>
+<text x="1611.5" y="552" font-size="23" fill="#DC8226" font-weight="600" text-anchor="middle">供应商 · SCM协同</text>
+<text x="1456" y="604" font-size="26" fill="#3C566B" font-weight="400" text-anchor="start">接单及要求货期确认</text>
+<text x="1456" y="647" font-size="26" fill="#3C566B" font-weight="400" text-anchor="start">BOM、工艺与技术资料</text>
+<text x="1456" y="690" font-size="26" fill="#3C566B" font-weight="400" text-anchor="start">到料、执行状态及异常</text>
+<path d="M1456 717 L1767 717" fill="none" stroke="#D5E1E9" stroke-width="1.2"  />
+<text x="1456" y="750" font-size="21" fill="#6B7F90" font-weight="400" text-anchor="start">核心交付物</text>
+<text x="1456" y="790" font-size="25" fill="#18384E" font-weight="600" text-anchor="start">接单 / 交期 / 执行状态</text>
+<path d="M 1789 413 H 2099 L 2124 462 L 2099 511 H 1789 L 1811 462 Z" fill="#54963C"/>
+<text x="1960.5" y="474" font-size="31" fill="white" font-weight="600" text-anchor="middle">生产 / MES</text>
+<text x="1956.5" y="552" font-size="23" fill="#54963C" font-weight="600" text-anchor="middle">工厂 · 已有MES协同</text>
+<text x="1801" y="604" font-size="26" fill="#3C566B" font-weight="400" text-anchor="start">订单关联、下达与开工</text>
+<text x="1801" y="647" font-size="26" fill="#3C566B" font-weight="400" text-anchor="start">扫菲 / 工序进度同步</text>
+<text x="1801" y="690" font-size="26" fill="#3C566B" font-weight="400" text-anchor="start">延期预警、完工回传</text>
+<path d="M1801 717 L2112 717" fill="none" stroke="#D5E1E9" stroke-width="1.2"  />
+<text x="1801" y="750" font-size="21" fill="#6B7F90" font-weight="400" text-anchor="start">核心交付物</text>
+<text x="1801" y="790" font-size="25" fill="#18384E" font-weight="600" text-anchor="start">生产订单 / 进度</text>
+<path d="M 2134 413 H 2444 L 2469 462 L 2444 511 H 2134 L 2156 462 Z" fill="#078E99"/>
+<text x="2305.5" y="474" font-size="31" fill="white" font-weight="600" text-anchor="middle">品控与发货</text>
+<text x="2301.5" y="552" font-size="23" fill="#078E99" font-weight="600" text-anchor="middle">QC / 供应商 · 执行协同</text>
+<text x="2146" y="604" font-size="26" fill="#3C566B" font-weight="400" text-anchor="start">首扎、中期、尾期检验</text>
+<text x="2146" y="647" font-size="26" fill="#3C566B" font-weight="400" text-anchor="start">成品检验、问题与退货</text>
+<text x="2146" y="690" font-size="26" fill="#3C566B" font-weight="400" text-anchor="start">质量放行、供应商发货</text>
+<path d="M2146 717 L2457 717" fill="none" stroke="#D5E1E9" stroke-width="1.2"  />
+<text x="2146" y="750" font-size="21" fill="#6B7F90" font-weight="400" text-anchor="start">核心交付物</text>
+<text x="2146" y="790" font-size="25" fill="#18384E" font-weight="600" text-anchor="start">质量记录 / 发货单</text>
+<path d="M 2479 413 H 2789 L 2814 462 L 2789 511 H 2479 L 2501 462 Z" fill="#078E99"/>
+<text x="2650.5" y="474" font-size="31" fill="white" font-weight="600" text-anchor="middle">收货与入库</text>
+<text x="2646.5" y="552" font-size="23" fill="#078E99" font-weight="600" text-anchor="middle">仓储 · 库存 / 领星等</text>
+<text x="2491" y="604" font-size="26" fill="#3C566B" font-weight="400" text-anchor="start">仓库收货、到货核对</text>
+<text x="2491" y="647" font-size="26" fill="#3C566B" font-weight="400" text-anchor="start">入库检验、库存更新</text>
+<text x="2491" y="690" font-size="26" fill="#3C566B" font-weight="400" text-anchor="start">到货与库存事实回流</text>
+<path d="M2491 717 L2802 717" fill="none" stroke="#D5E1E9" stroke-width="1.2"  />
+<text x="2491" y="750" font-size="21" fill="#6B7F90" font-weight="400" text-anchor="start">核心交付物</text>
+<text x="2491" y="790" font-size="25" fill="#18384E" font-weight="600" text-anchor="start">入库单 / 库存结果</text>
+<path d="M2638 808 L2638 853 L565 853 L565 808" fill="none" stroke="#078E99" stroke-width="2.6" stroke-dasharray="8 6" marker-end="url(#arrow-teal)"/>
+<rect x="1233.5" y="836" width="812.9999999999999" height="34" rx="0" fill="white" stroke="none" stroke-width="2" />
+<text x="1640" y="860" font-size="25" fill="#078E99" font-weight="500" text-anchor="middle">订单、交期、到料、生产、质量及库存回流 → PMC滚动校准下一轮计划</text>
+<rect x="64" y="910" width="2752" height="324" rx="6" fill="#FBF9FE" stroke="#AE99C7" stroke-width="2" />
+<text x="92" y="959" font-size="32" fill="#7B60A8" font-weight="650" text-anchor="start">P1同步建设｜MRP面辅料计划域</text>
+<text x="799" y="959" font-size="27" fill="#3C566B" font-weight="400" text-anchor="start">由成衣采购计划驱动，与SCM采购执行、工厂齐料衔接</text>
+<text x="94" y="1030" font-size="30" fill="#18384E" font-weight="600" text-anchor="start">成衣采购计划 + BOM</text>
+<text x="94" y="1080" font-size="26" fill="#3C566B" font-weight="400" text-anchor="start">统一物料身份、规格</text>
+<text x="94" y="1124" font-size="26" fill="#3C566B" font-weight="400" text-anchor="start">供应商与采购 / 备料周期</text>
+<path d="M549 1038 L610 1038" fill="none" stroke="#7B60A8" stroke-width="2.6"  marker-end="url(#arrow-purple)"/>
+<text x="642" y="1030" font-size="30" fill="#18384E" font-weight="600" text-anchor="start">MRP需求计算</text>
+<text x="642" y="1080" font-size="26" fill="#3C566B" font-weight="400" text-anchor="start">物料库存、在途、安全库存</text>
+<text x="642" y="1124" font-size="26" fill="#3C566B" font-weight="400" text-anchor="start">损耗率 → 净需求与建议</text>
+<path d="M1097 1038 L1158 1038" fill="none" stroke="#7B60A8" stroke-width="2.6"  marker-end="url(#arrow-purple)"/>
+<text x="1190" y="1030" font-size="30" fill="#18384E" font-weight="600" text-anchor="start">面辅料需求计划</text>
+<text x="1190" y="1080" font-size="26" fill="#3C566B" font-weight="400" text-anchor="start">面料 / 辅料需求</text>
+<text x="1190" y="1124" font-size="26" fill="#3C566B" font-weight="400" text-anchor="start">采购建议、备料与发料需求</text>
+<path d="M1645 1038 L1706 1038" fill="none" stroke="#7B60A8" stroke-width="2.6"  marker-end="url(#arrow-purple)"/>
+<text x="1738" y="1030" font-size="30" fill="#18384E" font-weight="600" text-anchor="start">SCM物料采购</text>
+<text x="1738" y="1080" font-size="26" fill="#3C566B" font-weight="400" text-anchor="start">供应商选择、PO与交期</text>
+<text x="1738" y="1124" font-size="26" fill="#3C566B" font-weight="400" text-anchor="start">材料供应商接单、到货跟进</text>
+<path d="M2193 1038 L2254 1038" fill="none" stroke="#7B60A8" stroke-width="2.6"  marker-end="url(#arrow-purple)"/>
+<text x="2286" y="1030" font-size="30" fill="#18384E" font-weight="600" text-anchor="start">到料 / 齐料 / 发料</text>
+<text x="2286" y="1080" font-size="26" fill="#3C566B" font-weight="400" text-anchor="start">来料IQC、预计 / 实际到料</text>
+<text x="2286" y="1124" font-size="26" fill="#3C566B" font-weight="400" text-anchor="start">缺料预警，发往成衣工厂</text>
+<text x="94" y="1192" font-size="26" fill="#7B60A8" font-weight="500" text-anchor="start">责任：MRP计算净需求并组织备料 / 发料；有净缺口交SCM采购，现有可用物料直接备料；到料与齐料支撑生产。</text>
+<text x="64" y="1300" font-size="34" fill="#008DD5" font-weight="650" text-anchor="start">四个建设域与交付重点</text>
+<path d="M64 1328 L725 1328" fill="none" stroke="#008DD5" stroke-width="4"  />
+<text x="64" y="1378" font-size="31" fill="#18384E" font-weight="650" text-anchor="start">PMC计划域</text>
+<text x="64" y="1422" font-size="24" fill="#008DD5" font-weight="600" text-anchor="start">P0</text>
+<text x="64" y="1470" font-size="27" fill="#3C566B" font-weight="400" text-anchor="start">预测、备货、审批与计划执行</text>
+<text x="64" y="1517" font-size="27" fill="#3C566B" font-weight="400" text-anchor="start">日级预测 → 最终备货计划</text>
+<path d="M757 1328 L1418 1328" fill="none" stroke="#7B60A8" stroke-width="4"  />
+<text x="757" y="1378" font-size="31" fill="#18384E" font-weight="650" text-anchor="start">MRP面辅料计划域</text>
+<text x="757" y="1422" font-size="24" fill="#7B60A8" font-weight="600" text-anchor="start">P1</text>
+<text x="757" y="1470" font-size="27" fill="#3C566B" font-weight="400" text-anchor="start">主数据、需求计算、备料与发料</text>
+<text x="757" y="1517" font-size="27" fill="#3C566B" font-weight="400" text-anchor="start">成衣计划 → 面辅料需求计划</text>
+<path d="M1450 1328 L2111 1328" fill="none" stroke="#DC8226" stroke-width="4"  />
+<text x="1450" y="1378" font-size="31" fill="#18384E" font-weight="650" text-anchor="start">SCM采购域</text>
+<text x="1450" y="1422" font-size="24" fill="#DC8226" font-weight="600" text-anchor="start">P0</text>
+<text x="1450" y="1470" font-size="27" fill="#3C566B" font-weight="400" text-anchor="start">采购计划、PR / PO、供应商分配</text>
+<text x="1450" y="1517" font-size="27" fill="#3C566B" font-weight="400" text-anchor="start">需求承接 → 可执行采购订单</text>
+<path d="M2143 1328 L2804 1328" fill="none" stroke="#54963C" stroke-width="4"  />
+<text x="2143" y="1378" font-size="31" fill="#18384E" font-weight="650" text-anchor="start">供应商执行与生产协同</text>
+<text x="2143" y="1422" font-size="24" fill="#54963C" font-weight="600" text-anchor="start">P0状态 / P1 MES</text>
+<text x="2143" y="1470" font-size="27" fill="#3C566B" font-weight="400" text-anchor="start">接单、技术资料、生产、QC与发货</text>
+<text x="2143" y="1517" font-size="27" fill="#3C566B" font-weight="400" text-anchor="start">执行状态 → 质量 / 入库反馈</text>
+<text x="64" y="1598" font-size="28" fill="#008DD5" font-weight="600" text-anchor="start">单据闭环</text>
+<text x="265" y="1598" font-size="29" fill="#18384E" font-weight="600" text-anchor="start">预测单 → 计划单 → PR → PO → 生产订单 → 发货单 → 入库单</text>
+<text x="64" y="1650" font-size="26" fill="#DC8226" font-weight="600" text-anchor="start">范围控制</text>
+<text x="265" y="1650" font-size="25" fill="#3C566B" font-weight="400" text-anchor="start">Q4先跑通计划、采购与供应商执行；MRP同步建设，MES利用已有系统，QC / 入库按关键节点接入。</text>
+<text x="265" y="1695" font-size="25" fill="#6B7F90" font-weight="400" text-anchor="start">不建设完整WMS、OMS、PMS；不在PMC建设数据清洗平台。审批以单据状态流转承载。</text>
+<path d="M64 1742 L2816 1742" fill="none" stroke="#D5E1E9" stroke-width="1.4"  />
+<text x="64" y="1778" font-size="22" fill="#6B7F90" font-weight="400" text-anchor="start">依据：本次《第四季度供应链系统建设方案》 · 目标业务蓝图与分级建设范围 · 2026.09.16</text>
+<text x="2816" y="1778" font-size="22" fill="#008DD5" font-weight="500" text-anchor="end">供应链数字化</text>
+</svg>

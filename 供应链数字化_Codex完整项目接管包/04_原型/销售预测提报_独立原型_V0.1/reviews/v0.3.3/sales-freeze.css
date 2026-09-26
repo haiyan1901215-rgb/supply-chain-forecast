@@ -1,0 +1,38 @@
+.app .forecast-table .sales-listing,.app .forecast-table .sales-tags { margin:3px 0 0; }
+.app .forecast-table .metric label {font-size:12px;font-weight:400;color:var(--muted);}
+.app .forecast-table .metric strong {font-size:14px;font-weight:600;color:var(--text);}
+.app .forecast-table .final-value > span:first-child {font-size:14px;font-weight:600;color:var(--text);}
+.app .forecast-table .final-value .source-tag {font-size:12px;font-weight:400;}
+.app .forecast-table .line-final.line-cell {font-weight:600;}
+.activity-preview-compact {font-size:12px;line-height:18px;}
+.activity-preview-field + .activity-preview-field {margin-top:8px;}
+.activity-preview-field > span {color:var(--muted);display:block;margin-bottom:2px;}
+.activity-preview-field > div {white-space:pre-wrap;overflow-wrap:anywhere;}
+.activity-preview-field:nth-child(2) > div {font-size:14px;font-weight:600;}
+.app .forecast-table .product-identifiers .biz-code::before,
+.app .forecast-table .child-store::before,
+.app .range-section-separator {
+  content:'丨';display:inline-flex;align-items:center;justify-content:center;
+  flex:0 0 12px;width:12px;height:18px;margin:0 3px;padding:0;
+  font:400 12px/18px Arial,sans-serif;color:var(--muted-2);vertical-align:middle;
+}
+.app .forecast-table .product-identifiers {column-gap:0;}
+.app .forecast-table .store-icon {color:var(--blue);}
+.app .forecast-table .product-note {align-items:flex-start;gap:2px;}
+.app .forecast-table .product-note > span {height:auto;min-height:22px;line-height:22px;}
+.app .forecast-table .note-display {align-items:flex-start;line-height:22px;vertical-align:top;}
+.app .forecast-table .note-display button {line-height:22px;align-self:flex-start;}
+#pmcRoleBar {padding:0 12px;border-bottom:1px solid var(--line);background:var(--surface);flex:none;}
+.pmc-role-bar {display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:40px;}
+.pmc-workspace {flex:1;min-height:0;overflow:auto;background:var(--surface);padding:12px 16px;}
+.pmc-workspace[hidden] {display:none;}
+.pmc-toolbar {display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap;}
+.pmc-title {font-size:14px;font-weight:600;margin:0;}
+.pmc-muted {font-size:12px;color:var(--muted);}
+.pmc-review {padding:12px 16px;background:var(--surface);border-left:2px solid var(--line);}
+.pmc-review-head {display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-bottom:12px;}
+.pmc-review-head strong {font-size:14px;font-weight:600;}
+.pmc-review-head label {display:block;font-size:12px;color:var(--muted);margin-bottom:4px;}
+.pmc-review-actions {display:flex;justify-content:flex-end;gap:8px;margin-top:12px;}
+.pmc-history {margin-top:10px;font-size:12px;color:var(--muted);}
+.pmc-source {font-size:12px;font-weight:400;color:var(--muted);display:block;}

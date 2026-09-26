@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2560" height="1440" viewBox="0 0 2560 1440" role="img" aria-label="供应商执行｜从接单到交付"><defs><marker id="arrow-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#008DD5"/></marker><marker id="arrow-ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#18384E"/></marker><marker id="arrow-text" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3C566B"/></marker><marker id="arrow-muted" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6B7F90"/></marker><marker id="arrow-line" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#D5E1E9"/></marker><marker id="arrow-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#078E99"/></marker><marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#54963C"/></marker><marker id="arrow-orange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#DC8226"/></marker><marker id="arrow-purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#7B60A8"/></marker></defs><style>text{font-family:"PingFang SC","Microsoft YaHei",sans-serif}</style>
+<rect x="0" y="0" width="2560" height="1440" rx="0" fill="white" stroke="none" stroke-width="2" />
+<rect x="64" y="57" width="9" height="64" rx="0" fill="#008DD5" stroke="none" stroke-width="2" />
+<text x="95" y="107" font-size="49" fill="#008DD5" font-weight="650" text-anchor="start">供应商执行｜从接单到交付</text>
+<text x="2496" y="94" font-size="25" fill="#6B7F90" font-weight="500" text-anchor="end">2026 Q4 / V3.0</text>
+<path d="M64 144 L2496 144" fill="none" stroke="#008DD5" stroke-width="3"  />
+<text x="64" y="193" font-size="27" fill="#3C566B" font-weight="400" text-anchor="start">用订单及执行状态承接采购要求，减少群聊、库存表和重复核对</text>
+<text x="2496" y="193" font-size="23" fill="#6B7F90" font-weight="400" text-anchor="end">08 / 模块展开</text>
+<text x="64" y="283" font-size="32" fill="#18384E" font-weight="650" text-anchor="start">业务动作</text>
+<rect x="64" y="348" width="452" height="172" rx="5" fill="white" stroke="#DC8226" stroke-width="2" />
+<rect x="64" y="348" width="5" height="172" rx="0" fill="#DC8226" stroke="none" stroke-width="2" />
+<text x="290" y="394" font-size="34" fill="#18384E" font-weight="600" text-anchor="middle">接单与货期确认</text>
+<text x="290" y="444" font-size="27" fill="#3C566B" font-weight="400" text-anchor="middle">确认PO、SKU与数量</text>
+<text x="290" y="483" font-size="27" fill="#3C566B" font-weight="400" text-anchor="middle">确认承诺交期</text>
+<text x="64" y="322" font-size="24" fill="#DC8226" font-weight="650" text-anchor="start">01</text>
+<path d="M516 434 L557 434" fill="none" stroke="#DC8226" stroke-width="3"  marker-end="url(#arrow-orange)"/>
+<rect x="557" y="348" width="452" height="172" rx="5" fill="white" stroke="#DC8226" stroke-width="2" />
+<rect x="557" y="348" width="5" height="172" rx="0" fill="#DC8226" stroke="none" stroke-width="2" />
+<text x="783" y="394" font-size="34" fill="#18384E" font-weight="600" text-anchor="middle">技术资料就绪</text>
+<text x="783" y="444" font-size="27" fill="#3C566B" font-weight="400" text-anchor="middle">BOM、工艺、纸样、尺寸</text>
+<text x="783" y="483" font-size="27" fill="#3C566B" font-weight="400" text-anchor="middle">包装与发货要求</text>
+<text x="557" y="322" font-size="24" fill="#DC8226" font-weight="650" text-anchor="start">02</text>
+<path d="M1009 434 L1050 434" fill="none" stroke="#DC8226" stroke-width="3"  marker-end="url(#arrow-orange)"/>
+<rect x="1050" y="348" width="452" height="172" rx="5" fill="white" stroke="#DC8226" stroke-width="2" />
+<rect x="1050" y="348" width="5" height="172" rx="0" fill="#DC8226" stroke="none" stroke-width="2" />
+<text x="1276" y="394" font-size="34" fill="#18384E" font-weight="600" text-anchor="middle">物料与交期协同</text>
+<text x="1276" y="444" font-size="27" fill="#3C566B" font-weight="400" text-anchor="middle">预计 / 实际到料</text>
+<text x="1276" y="483" font-size="27" fill="#3C566B" font-weight="400" text-anchor="middle">缺料与交付风险反馈</text>
+<text x="1050" y="322" font-size="24" fill="#DC8226" font-weight="650" text-anchor="start">03</text>
+<path d="M1502 434 L1543 434" fill="none" stroke="#DC8226" stroke-width="3"  marker-end="url(#arrow-orange)"/>
+<rect x="1543" y="348" width="452" height="172" rx="5" fill="white" stroke="#DC8226" stroke-width="2" />
+<rect x="1543" y="348" width="5" height="172" rx="0" fill="#DC8226" stroke="none" stroke-width="2" />
+<text x="1769" y="394" font-size="34" fill="#18384E" font-weight="600" text-anchor="middle">生产与质量协同</text>
+<text x="1769" y="444" font-size="27" fill="#3C566B" font-weight="400" text-anchor="middle">与MES关联生产状态</text>
+<text x="1769" y="483" font-size="27" fill="#3C566B" font-weight="400" text-anchor="middle">按QC结果处理与放行</text>
+<text x="1543" y="322" font-size="24" fill="#DC8226" font-weight="650" text-anchor="start">04</text>
+<path d="M1995 434 L2036 434" fill="none" stroke="#DC8226" stroke-width="3"  marker-end="url(#arrow-orange)"/>
+<rect x="2036" y="348" width="452" height="172" rx="5" fill="white" stroke="#DC8226" stroke-width="2" />
+<rect x="2036" y="348" width="5" height="172" rx="0" fill="#DC8226" stroke="none" stroke-width="2" />
+<text x="2262" y="394" font-size="34" fill="#18384E" font-weight="600" text-anchor="middle">发货履约</text>
+<text x="2262" y="444" font-size="27" fill="#3C566B" font-weight="400" text-anchor="middle">形成发货单</text>
+<text x="2262" y="483" font-size="27" fill="#3C566B" font-weight="400" text-anchor="middle">数量、日期与目的地</text>
+<text x="2036" y="322" font-size="24" fill="#DC8226" font-weight="650" text-anchor="start">05</text>
+<path d="M2262 520 L2262 634 L290 634 L290 520" fill="none" stroke="#078E99" stroke-width="4"  marker-end="url(#arrow-teal)"/>
+<rect x="987.6" y="602" width="564.8" height="37" rx="0" fill="white" stroke="none" stroke-width="2" />
+<text x="1270" y="627" font-size="26" fill="#078E99" font-weight="500" text-anchor="middle">延期、缺料、质量异常 → 采购协调并反馈PMC</text>
+<path d="M64 746 L1212 746" fill="none" stroke="#DC8226" stroke-width="3"  />
+<path d="M1324 746 L2496 746" fill="none" stroke="#DC8226" stroke-width="3"  />
+<text x="64" y="799" font-size="33" fill="#18384E" font-weight="650" text-anchor="start">供应商需要明确的任务</text>
+<text x="1324" y="799" font-size="33" fill="#18384E" font-weight="650" text-anchor="start">质量与异常协同</text>
+<text x="64" y="864" font-size="29" fill="#3C566B" font-weight="400" text-anchor="start">采购订单、商品与版本、需求数量</text>
+<text x="64" y="926" font-size="29" fill="#3C566B" font-weight="400" text-anchor="start">要求货期与供应商承诺货期</text>
+<text x="64" y="988" font-size="29" fill="#3C566B" font-weight="400" text-anchor="start">有效的BOM、工艺和包装技术资料</text>
+<text x="64" y="1050" font-size="29" fill="#3C566B" font-weight="400" text-anchor="start">发货要求及异常反馈责任</text>
+<text x="1324" y="864" font-size="29" fill="#3C566B" font-weight="400" text-anchor="start">来料、首扎、中期、尾期及成品节点</text>
+<text x="1324" y="926" font-size="29" fill="#3C566B" font-weight="400" text-anchor="start">质量问题、返工、退货与放行结果</text>
+<text x="1324" y="988" font-size="29" fill="#3C566B" font-weight="400" text-anchor="start">供应商质量档案与交付表现</text>
+<text x="1324" y="1050" font-size="29" fill="#3C566B" font-weight="400" text-anchor="start">具体QC系统接入节点分阶段联评</text>
+<rect x="64" y="1165" width="2432" height="100" rx="0" fill="#F3F8FB" stroke="none" stroke-width="2" />
+<text x="91" y="1228" font-size="30" fill="#DC8226" font-weight="650" text-anchor="start">交接结果</text>
+<text x="300" y="1228" font-size="29" fill="#18384E" font-weight="600" text-anchor="start">供应商交期、到料、生产、质量与发货状态进入统一执行反馈</text>
+<text x="64" y="1331" font-size="25" fill="#6B7F90" font-weight="400" text-anchor="start">图中QC表示业务协同，不表示本季度重建完整质量管理系统。</text>
+<path d="M64 1384 L2496 1384" fill="none" stroke="#D5E1E9" stroke-width="1.3"  />
+<text x="64" y="1420" font-size="22" fill="#6B7F90" font-weight="400" text-anchor="start">Q4供应链产品建设方案 · 汇报分层版 · 目标业务蓝图，按P0 / P1推进</text>
+<text x="2496" y="1420" font-size="22" fill="#008DD5" font-weight="500" text-anchor="end">08 / 10</text>
+</svg>

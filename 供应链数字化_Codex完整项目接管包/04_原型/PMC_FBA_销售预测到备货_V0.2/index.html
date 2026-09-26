@@ -1,0 +1,1378 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PMC FBA 销售预测到备货原型 V0.2</title>
+  <style>
+    :root {
+      --bg: #f4f6fa;
+      --panel: #ffffff;
+      --panel-soft: #f8fafc;
+      --panel-warm: #fffaf0;
+      --line: #d8e0eb;
+      --line-strong: #b6c3d4;
+      --text: #1f2937;
+      --muted: #5f6f85;
+      --weak: #8a99ad;
+      --primary: #1677ff;
+      --primary-soft: #e6f4ff;
+      --green: #168a4a;
+      --green-soft: #eaf8f0;
+      --orange: #c66a0a;
+      --orange-soft: #fff7e6;
+      --red: #c9362b;
+      --red-soft: #fff1f0;
+      --cyan: #0f7f90;
+      --cyan-soft: #e8f7fa;
+      --purple: #6d5bd0;
+      --purple-soft: #f2f0ff;
+      --shadow: 0 14px 34px rgba(15, 23, 42, .12);
+      --radius: 8px;
+      --sidebar: 236px;
+      --header: 56px;
+      --tabs: 38px;
+      --control: 32px;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      height: 100vh;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    button, input, select, textarea { font: inherit; }
+
+    button {
+      height: var(--control);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--text);
+      padding: 0 12px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    button:hover { border-color: var(--primary); color: var(--primary); }
+    button.primary { border-color: var(--primary); background: var(--primary); color: #fff; }
+    button.primary:hover { color: #fff; }
+    button.text { border-color: transparent; background: transparent; color: var(--muted); padding: 0 8px; }
+    button.icon { width: 32px; padding: 0; display: inline-grid; place-items: center; font-weight: 700; }
+    button.warning { border-color: #ffd591; background: var(--orange-soft); color: #ad5b00; }
+    button.danger { border-color: #ffccc7; background: #fff; color: var(--red); }
+
+    input, select, textarea {
+      height: var(--control);
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--text);
+      padding: 0 10px;
+      outline: none;
+    }
+
+    textarea {
+      height: 76px;
+      padding: 8px 10px;
+      resize: vertical;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(22,119,255,.12);
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: var(--sidebar) minmax(0, 1fr);
+      height: 100vh;
+      transition: grid-template-columns .18s ease;
+    }
+
+    .app.collapsed { grid-template-columns: 68px minmax(0, 1fr); }
+
+    .sidebar {
+      min-width: 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      background: #111827;
+      color: #e5edf8;
+    }
+
+    .brand {
+      height: var(--header);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 14px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      white-space: nowrap;
+    }
+
+    .mark {
+      width: 30px;
+      height: 30px;
+      border-radius: 7px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, #1677ff, #0f7f90);
+      color: #fff;
+      font-weight: 800;
+      flex: none;
+    }
+
+    .brand-title { display: flex; flex-direction: column; min-width: 0; }
+    .brand-title strong { font-size: 14px; line-height: 18px; overflow: hidden; text-overflow: ellipsis; }
+    .brand-title span { color: #9eafc6; font-size: 11px; overflow: hidden; text-overflow: ellipsis; }
+
+    .side-tools {
+      padding: 10px 12px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .side-tools button {
+      background: rgba(255,255,255,.08);
+      border-color: rgba(255,255,255,.12);
+      color: #dbe7f6;
+    }
+
+    .menu { flex: 1; overflow: auto; padding: 8px; }
+    .menu-group { padding: 12px 10px 6px; color: #7f8ea5; font-size: 11px; }
+
+    .nav-item {
+      width: 100%;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: 0;
+      border-radius: 6px;
+      background: transparent;
+      color: #c8d4e5;
+      text-align: left;
+      padding: 0 10px;
+      margin-bottom: 4px;
+    }
+
+    .nav-item:hover { background: rgba(255,255,255,.08); color: #fff; }
+    .nav-item.active { background: #1677ff; color: #fff; }
+    .nav-ico { width: 18px; text-align: center; flex: none; opacity: .92; }
+    .menu-sub { margin-left: 28px; color: #9fb0c6; font-size: 12px; line-height: 24px; }
+
+    .app.collapsed .brand-title,
+    .app.collapsed .menu-label,
+    .app.collapsed .menu-group,
+    .app.collapsed .menu-sub { display: none; }
+
+    .main {
+      min-width: 0;
+      display: grid;
+      grid-template-rows: var(--header) var(--tabs) minmax(0, 1fr);
+      overflow: hidden;
+    }
+
+    .header {
+      height: var(--header);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 18px;
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .header-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .crumb { color: var(--muted); white-space: nowrap; }
+    .scenario {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+    .scenario select { min-width: 148px; }
+
+    .header-right { display: flex; align-items: center; gap: 8px; color: var(--muted); }
+    .avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    .tabs {
+      height: var(--tabs);
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+      overflow-x: auto;
+      overflow-y: hidden;
+      background: #f8fafc;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .tab {
+      height: var(--tabs);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 14px;
+      border-right: 1px solid var(--line);
+      color: var(--muted);
+      background: #f8fafc;
+      cursor: pointer;
+      white-space: nowrap;
+      flex: none;
+    }
+
+    .tab.active {
+      background: #fff;
+      color: var(--primary);
+      box-shadow: inset 0 -2px 0 var(--primary);
+      font-weight: 600;
+    }
+
+    .tab .close { color: var(--weak); font-weight: 700; }
+
+    .workspace {
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg);
+    }
+
+    .page {
+      min-height: 0;
+      overflow: auto;
+      padding: 12px;
+      display: none;
+    }
+    .page.active { display: block; }
+
+    .toolbar, .filter, .batch-summary, .section, .note-panel {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 16px;
+      padding: 16px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      margin-bottom: 12px;
+    }
+
+    .hero h1, .page-title h1 {
+      margin: 0 0 8px;
+      font-size: 18px;
+      line-height: 24px;
+      font-weight: 700;
+    }
+
+    .hero-meta {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(150px, 1fr));
+      gap: 8px 14px;
+      color: var(--muted);
+    }
+
+    .hero-meta b { color: var(--text); font-weight: 600; }
+    .hero-actions { display: flex; align-items: flex-start; gap: 8px; }
+
+    .progress-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .metric {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 12px;
+      min-width: 0;
+    }
+
+    .metric span { display: block; color: var(--muted); margin-bottom: 6px; }
+    .metric strong { font-size: 24px; line-height: 28px; }
+    .metric small { color: var(--weak); margin-left: 4px; }
+
+    .filter {
+      padding: 10px;
+      margin-bottom: 10px;
+      display: grid;
+      grid-template-columns: repeat(6, minmax(128px, 1fr)) auto;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .filter .wide { grid-column: span 2; }
+
+    .toolbar {
+      min-height: 44px;
+      padding: 6px 10px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .actions-left, .actions-right, .segmented, .inline-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .segmented {
+      gap: 0;
+      background: #eef3f9;
+      padding: 2px;
+      border-radius: 6px;
+    }
+
+    .segmented button {
+      height: 28px;
+      border-color: transparent;
+      background: transparent;
+      padding: 0 10px;
+    }
+
+    .segmented button.active {
+      background: #fff;
+      border-color: var(--line);
+      color: var(--primary);
+      box-shadow: 0 1px 4px rgba(15,23,42,.08);
+    }
+
+    .table-shell {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .table-scroll {
+      overflow: auto;
+      max-height: calc(100vh - 260px);
+      min-height: 220px;
+    }
+
+    table {
+      border-collapse: separate;
+      border-spacing: 0;
+      width: max-content;
+      min-width: 100%;
+      font-size: 12px;
+    }
+
+    th, td {
+      height: 34px;
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      padding: 0 8px;
+      white-space: nowrap;
+      vertical-align: middle;
+      background: #fff;
+    }
+
+    thead th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: #f3f6fa;
+      color: #39475b;
+      font-weight: 600;
+      text-align: left;
+    }
+
+    thead tr.group th {
+      top: 0;
+      height: 30px;
+      text-align: center;
+      color: #26364d;
+      border-bottom: 1px solid var(--line-strong);
+    }
+
+    thead tr.fields th { top: 30px; }
+    tbody tr:hover td { background: #f8fbff; }
+
+    .sticky-1 { position: sticky; left: 0; z-index: 3; }
+    .sticky-2 { position: sticky; left: 52px; z-index: 3; }
+    .sticky-3 { position: sticky; left: 172px; z-index: 3; }
+    thead .sticky-1, thead .sticky-2, thead .sticky-3 { z-index: 5; }
+
+    .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .muted { color: var(--muted); }
+    .weak { color: var(--weak); }
+    .danger-text { color: var(--red); }
+    .warning-text { color: var(--orange); }
+    .success-text { color: var(--green); }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      height: 22px;
+      padding: 0 7px;
+      border-radius: 5px;
+      border: 1px solid var(--line);
+      background: var(--panel-soft);
+      color: #344258;
+      max-width: 120px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tag.green { background: var(--green-soft); color: var(--green); border-color: #b7ebc6; }
+    .tag.orange { background: var(--orange-soft); color: var(--orange); border-color: #ffd591; }
+    .tag.red { background: var(--red-soft); color: var(--red); border-color: #ffa39e; }
+    .tag.blue { background: var(--primary-soft); color: var(--primary); border-color: #91caff; }
+    .tag.purple { background: var(--purple-soft); color: var(--purple); border-color: #cbc4ff; }
+
+    .link {
+      color: var(--primary);
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .link:hover { text-decoration: underline; }
+
+    .copy {
+      visibility: hidden;
+      margin-left: 6px;
+      color: var(--weak);
+      font-weight: 700;
+    }
+    tr:hover .copy, .identifier:hover .copy { visibility: visible; }
+
+    .readonly { background: #fbfdff; color: #26364d; }
+    .input-cell { background: #fffaf0; }
+    .formula-error { color: var(--red); background: #fff1f0; font-weight: 600; }
+
+    .source-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      height: 20px;
+      padding: 0 6px;
+      border-radius: 10px;
+      background: #eef3f9;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .footer-bar {
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 10px;
+      background: #fff;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+    }
+
+    .page-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(360px, .6fr);
+      gap: 12px;
+      align-items: start;
+    }
+
+    .section {
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+    .section h2 {
+      margin: 0 0 10px;
+      font-size: 15px;
+      line-height: 22px;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .field {
+      min-width: 0;
+      padding: 8px;
+      background: var(--panel-soft);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+    }
+    .field span { display: block; color: var(--muted); font-size: 12px; margin-bottom: 4px; }
+    .field b { font-weight: 600; overflow-wrap: anywhere; }
+
+    .timeline {
+      display: grid;
+      grid-template-columns: 28px minmax(0, 1fr);
+      gap: 0 8px;
+    }
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--primary);
+      margin: 5px auto 0;
+      box-shadow: 0 0 0 4px var(--primary-soft);
+    }
+    .time-line {
+      width: 1px;
+      background: var(--line);
+      margin: 6px auto 0;
+      min-height: 30px;
+    }
+    .event { padding-bottom: 10px; }
+    .event b { display: block; margin-bottom: 2px; }
+    .event span { color: var(--muted); }
+
+    .drawer-mask, .modal-mask {
+      position: fixed;
+      inset: 0;
+      display: none;
+      background: rgba(15,23,42,.32);
+      z-index: 20;
+    }
+    .drawer-mask.open, .modal-mask.open { display: block; }
+    .drawer {
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: min(760px, 92vw);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+      box-shadow: var(--shadow);
+    }
+    .drawer-header, .modal-header {
+      min-height: 52px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .drawer-header h2, .modal-header h2 { margin: 0; font-size: 16px; }
+    .drawer-body {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      padding: 12px 16px;
+      background: var(--bg);
+    }
+    .drawer-footer, .modal-footer {
+      padding: 10px 16px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      background: #fff;
+    }
+    .modal {
+      width: min(720px, 92vw);
+      max-height: 88vh;
+      margin: 7vh auto 0;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .modal-body {
+      padding: 14px 16px;
+      overflow: auto;
+      background: #fff;
+    }
+
+    .radio-list {
+      display: grid;
+      gap: 8px;
+    }
+    .radio-row {
+      display: grid;
+      grid-template-columns: 18px minmax(0, 1fr);
+      gap: 8px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+    }
+    .radio-row.active { border-color: var(--primary); background: var(--primary-soft); }
+
+    .check-list {
+      display: grid;
+      gap: 8px;
+      margin: 10px 0;
+    }
+    .check-item {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--panel-soft);
+    }
+
+    .pill-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(8, minmax(110px, 1fr));
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .flow-step {
+      min-height: 64px;
+      padding: 9px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      position: relative;
+    }
+    .flow-step.active { border-color: var(--primary); background: var(--primary-soft); }
+    .flow-step span { display: block; color: var(--muted); font-size: 12px; }
+    .flow-step b { display: block; margin-top: 4px; }
+
+    .comparison {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .calc-box {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      overflow: hidden;
+      background: #fff;
+    }
+    .calc-row {
+      min-height: 36px;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      padding: 0 10px;
+      border-bottom: 1px solid var(--line);
+    }
+    .calc-row:last-child { border-bottom: 0; }
+    .calc-row.total { background: var(--primary-soft); color: var(--primary); font-weight: 700; }
+
+    @media (max-width: 900px) {
+      body { overflow: hidden; }
+      .app { grid-template-columns: 68px minmax(0, 1fr); }
+      .brand-title, .menu-label, .menu-group, .menu-sub { display: none; }
+      .header { padding: 0 10px; }
+      .crumb, .header-right .muted { display: none; }
+      .hero, .page-grid { grid-template-columns: 1fr; }
+      .hero-meta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .filter { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .filter .wide { grid-column: span 2; }
+      .progress-grid, .comparison { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .flow { grid-template-columns: repeat(4, minmax(110px, 1fr)); overflow-x: auto; }
+      .table-scroll { max-height: calc(100vh - 310px); }
+    }
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="mark">P</div>
+        <div class="brand-title">
+          <strong>PMC计划管理</strong>
+          <span>Amazon FBA 销售预测到备货</span>
+        </div>
+      </div>
+      <div class="side-tools">
+        <button class="icon" id="collapseBtn" title="折叠主导航">☰</button>
+        <button class="text"><span class="menu-label">V0.2 业务验证</span></button>
+      </div>
+      <nav class="menu">
+        <div class="menu-group">销售端</div>
+        <button class="nav-item active" data-page="batch"><span class="nav-ico">①</span><span class="menu-label">预测批次</span></button>
+        <button class="nav-item" data-page="home"><span class="nav-ico">②</span><span class="menu-label">销售填报首页</span></button>
+        <button class="nav-item" data-page="forecast"><span class="nav-ico">③</span><span class="menu-label">预测填报表</span></button>
+        <div class="menu-sub">Child ASIN 预测详情</div>
+        <div class="menu-group">PMC端</div>
+        <button class="nav-item" data-page="review"><span class="nav-ico">④</span><span class="menu-label">预测审核</span></button>
+        <button class="nav-item" data-page="supply"><span class="nav-ico">⑤</span><span class="menu-label">需求转供给</span></button>
+        <button class="nav-item" data-page="plan"><span class="nav-ico">⑥</span><span class="menu-label">备货计划</span></button>
+        <div class="menu-group">治理</div>
+        <button class="nav-item" data-page="log"><span class="nav-ico">⑦</span><span class="menu-label">操作日志</span></button>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <header class="header">
+        <div class="header-left">
+          <span class="crumb">PMC计划管理 / Amazon FBA / 09月09日滚动预测</span>
+          <div class="scenario">
+            <span class="muted">计划场景</span>
+            <select>
+              <option>Amazon FBA</option>
+              <option disabled>多平台（待规则确认）</option>
+              <option disabled>新品首单（IPD主流程）</option>
+              <option>老品翻单</option>
+            </select>
+          </div>
+        </div>
+        <div class="header-right">
+          <span class="source-chip">证据：9月9日会议 + FBA销售填报</span>
+          <div class="avatar">赵</div>
+          <span class="muted">销售运营</span>
+        </div>
+      </header>
+      <div class="tabs" id="workspaceTabs">
+        <div class="tab active" data-page="batch">预测批次<span class="close">×</span></div>
+        <div class="tab" data-page="forecast">预测填报表<span class="close">×</span></div>
+        <div class="tab" data-page="review">PMC预测审核<span class="close">×</span></div>
+        <div class="tab" data-page="supply">需求转供给<span class="close">×</span></div>
+        <div class="tab" data-page="plan">备货计划<span class="close">×</span></div>
+      </div>
+
+      <section class="workspace">
+        <div class="page active" id="page-batch">
+          <div class="hero">
+            <div>
+              <h1>9月9日滚动预测</h1>
+              <div class="hero-meta">
+                <div>预测批次：<b>20260909</b></div>
+                <div>预测周期：<b>2026/09/14 - 2027/06/27</b></div>
+                <div>当前状态：<b>销售填报中</b></div>
+                <div>周期规则：<b>可配置，待采购与总办确认</b></div>
+              </div>
+            </div>
+            <div class="hero-actions">
+              <button>导出Excel</button>
+              <button class="primary" data-page="home">进入填报</button>
+            </div>
+          </div>
+          <div class="flow">
+            <div class="flow-step active"><span>01</span><b>生成预测批次</b></div>
+            <div class="flow-step"><span>02</span><b>基础资料快照</b></div>
+            <div class="flow-step"><span>03</span><b>AI预测 + 历史库存</b></div>
+            <div class="flow-step"><span>04</span><b>销售异议调整</b></div>
+            <div class="flow-step"><span>05</span><b>提交检查</b></div>
+            <div class="flow-step"><span>06</span><b>PMC审核</b></div>
+            <div class="flow-step"><span>07</span><b>需求转供给</b></div>
+            <div class="flow-step"><span>08</span><b>备货计划</b></div>
+          </div>
+          <div class="page-grid">
+            <div class="section">
+              <h2>本批次业务边界</h2>
+              <div class="info-grid">
+                <div class="field"><span>销售管理维度</span><b>Parent ASIN / Child ASIN / 账号 / 站点</b></div>
+                <div class="field"><span>PMC聚合维度</span><b>SKU / 首版SKU</b></div>
+                <div class="field"><span>默认采用规则</span><b>无特殊说明时采用 AI 预测</b></div>
+                <div class="field"><span>活动口径</span><b>AI 已包含活动量，界面展示构成</b></div>
+                <div class="field"><span>版本采购</span><b>默认最新版本下单，回退旧版本需原因</b></div>
+                <div class="field"><span>MOQ处理</span><b>不足 MOQ 需凑单或销售确认</b></div>
+              </div>
+            </div>
+            <div class="note-panel section">
+              <h2>待确认不写死</h2>
+              <div class="check-list">
+                <div class="check-item"><span>预测到 2027/06/27 是否成为常规规则</span><b class="warning-text">待确认</b></div>
+                <div class="check-item"><span>180天内新品翻单是否转 PMC</span><b class="warning-text">待确认</b></div>
+                <div class="check-item"><span>MOQ跨渠道凑单的分摊口径</span><b class="warning-text">待确认</b></div>
+                <div class="check-item"><span>共享SKU库存分配最终责任边界</span><b class="warning-text">待确认</b></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="page" id="page-home">
+          <div class="hero">
+            <div>
+              <h1>销售填报首页</h1>
+              <div class="hero-meta">
+                <div>销售账号：<b>赵丽华</b></div>
+                <div>负责账号：<b>AMZ-BRABIC-US（品牌袋）</b></div>
+                <div>模板来源：<b>FBA基础信息&预测</b></div>
+                <div>填报方式：<b>默认AI，异议人工</b></div>
+              </div>
+            </div>
+            <div class="hero-actions">
+              <button>导出当前视图</button>
+              <button class="primary" data-page="forecast">打开预测填报表</button>
+            </div>
+          </div>
+          <div class="progress-grid">
+            <div class="metric"><span>待填报 Child ASIN</span><strong>1,286</strong><small>个</small></div>
+            <div class="metric"><span>已确认采用AI</span><strong>842</strong><small>个</small></div>
+            <div class="metric"><span>待处理</span><strong>444</strong><small>个</small></div>
+            <div class="metric"><span>异常需确认</span><strong class="warning-text">36</strong><small>个</small></div>
+          </div>
+          <div class="toolbar">
+            <div class="segmented">
+              <button class="active">全部</button>
+              <button>待填报</button>
+              <button>已填报</button>
+              <button>异常</button>
+            </div>
+            <div class="actions-right">
+              <button>查看异常</button>
+              <button class="primary" data-page="forecast">继续填报</button>
+            </div>
+          </div>
+          <div class="table-shell">
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr class="fields">
+                    <th style="width:130px">账号</th><th style="width:120px">Parent ASIN</th><th style="width:120px">Child ASIN</th><th style="width:110px">SKC</th>
+                    <th style="width:120px">当前SKU</th><th style="width:90px">采购标签</th><th style="width:90px">过货标签</th><th style="width:110px">最终预测</th>
+                    <th style="width:90px">采用来源</th><th style="width:90px">异常</th><th style="width:100px">状态</th><th style="width:120px">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>AMZ-BRABIC-US</td><td>B07HQGX677</td><td><span class="link" data-drawer="child">B07HQDXGS3</span></td><td>AD6032-B91</td><td>AD6032B00S-B91</td><td><span class="tag green">正常</span></td><td><span class="tag green">正常过货</span></td><td class="num">138</td><td><span class="tag blue">AI</span></td><td>-</td><td><span class="tag green">已确认</span></td><td><button data-drawer="child">查看</button></td></tr>
+                  <tr><td>AMZ-BRABIC-US</td><td>B07HQGX677</td><td><span class="link" data-drawer="child">B07HQ8RPPV</span></td><td>AD6032-B91</td><td>AD6032B00M-B91</td><td><span class="tag green">正常</span></td><td><span class="tag orange">需复核</span></td><td class="num">190</td><td><span class="tag purple">人工</span></td><td><span class="tag orange">偏高</span></td><td><span class="tag orange">待处理</span></td><td><button data-drawer="child">查看</button></td></tr>
+                  <tr><td>AMZ-BRABIC-US</td><td>B07HQGX677</td><td><span class="link" data-drawer="child">B07HQCZZB8</span></td><td>AD6032-B91</td><td>AD6032B00L-B91</td><td><span class="tag green">正常</span></td><td><span class="tag green">正常过货</span></td><td class="num">140</td><td><span class="tag blue">AI</span></td><td>-</td><td><span class="tag green">已确认</span></td><td><button data-drawer="child">查看</button></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="footer-bar"><span>共 1,286 个 Child ASIN，当前显示 1-20</span><span>20条/页  1 / 65  跳至 1 页</span></div>
+          </div>
+        </div>
+
+        <div class="page" id="page-forecast">
+          <div class="filter">
+            <select><option>计划场景：Amazon FBA</option></select>
+            <input value="预测批次：20260909" aria-label="预测批次">
+            <select><option>站点/销售市场：US</option><option>全部</option></select>
+            <select><option>账号：AMZ-BRABIC-US</option><option>全部</option></select>
+            <select><option>商品负责人：赵丽华</option><option>全部</option></select>
+            <select><option>状态：全部</option><option>待处理</option><option>异常</option></select>
+            <input class="wide" placeholder="Parent ASIN / Child ASIN / SKU / 销售SKU">
+            <button class="primary">查询</button>
+            <button>重置</button>
+          </div>
+          <div class="toolbar">
+            <div class="actions-left">
+              <button class="primary" data-modal="batch">批量操作</button>
+              <button data-modal="submitCheck">查看异常</button>
+              <button>保存草稿</button>
+            </div>
+            <div class="actions-right">
+              <button class="icon" title="下载">↓</button>
+              <button class="icon" title="列配置">☷</button>
+              <button class="icon" title="刷新">↻</button>
+              <button class="primary" data-modal="submitCheck">提交预测</button>
+            </div>
+          </div>
+          <div class="table-shell">
+            <div class="table-scroll">
+              <table class="forecast-table">
+                <thead>
+                  <tr class="group">
+                    <th class="sticky-1" colspan="3">基础信息</th>
+                    <th colspan="9">商品/平台基础资料</th>
+                    <th colspan="8">库存情况（只读）</th>
+                    <th colspan="7">历史销售（只读）</th>
+                    <th colspan="7">预测填报</th>
+                  </tr>
+                  <tr class="fields">
+                    <th class="sticky-1" style="width:52px">国家</th>
+                    <th class="sticky-2" style="width:120px">账号</th>
+                    <th class="sticky-3" style="width:120px">Child ASIN</th>
+                    <th style="width:120px">Parent ASIN</th>
+                    <th style="width:80px">SKP</th>
+                    <th style="width:110px">SKC</th>
+                    <th style="width:150px">首版SKU</th>
+                    <th style="width:140px">当前SKU</th>
+                    <th style="width:210px">销售SKU</th>
+                    <th style="width:105px">开卖日期</th>
+                    <th style="width:100px">采购标签</th>
+                    <th style="width:100px">过货标签</th>
+                    <th style="width:88px">南沙库存</th>
+                    <th style="width:88px">采购在途</th>
+                    <th style="width:88px">FBA在库</th>
+                    <th style="width:88px">FBA在途</th>
+                    <th style="width:88px">跟卖在库</th>
+                    <th style="width:88px">跟卖在途</th>
+                    <th style="width:74px">DOI</th>
+                    <th style="width:92px">FBA水位</th>
+                    <th style="width:84px">近3天</th>
+                    <th style="width:84px">近7天</th>
+                    <th style="width:84px">近15天</th>
+                    <th style="width:84px">近20天</th>
+                    <th style="width:84px">近30天</th>
+                    <th style="width:94px">加权日均</th>
+                    <th style="width:98px">基准ADU</th>
+                    <th style="width:98px">活动增量</th>
+                    <th style="width:108px">AI预测日均</th>
+                    <th style="width:120px">AI周期销量</th>
+                    <th style="width:120px">销售人工预测</th>
+                    <th style="width:110px">最终采用</th>
+                    <th style="width:92px">采用来源</th>
+                    <th style="width:160px">调整原因</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="sticky-1 readonly">US</td><td class="sticky-2 readonly">AMZ-BRABIC-US</td><td class="sticky-3 readonly"><span class="identifier link" data-drawer="child">B07HQDXGS3<span class="copy">⧉</span></span></td>
+                    <td class="readonly">B07HQGX677</td><td class="readonly">AD6032</td><td class="readonly">AD6032-B91</td><td class="readonly">AD603298100S-B91</td><td class="readonly">AD6032B00S-B91</td><td class="readonly">BRABIC-AD603298100S-B91-FZYT08</td><td class="readonly">2018/09/27</td><td><span class="tag green">正常</span></td><td><span class="tag green">正常过货</span></td>
+                    <td class="num formula-error">#REF!</td><td class="num formula-error">#REF!</td><td class="num">122</td><td class="num">178</td><td class="num">128</td><td class="num">175</td><td class="num">36</td><td class="num">35</td>
+                    <td class="num">4.0</td><td class="num">3.4</td><td class="num">4.2</td><td class="num">4.0</td><td class="num">3.9</td><td class="num">3.8</td>
+                    <td class="num readonly">3.8</td><td class="num readonly">+0.4</td><td class="num readonly">4.2</td><td class="num readonly">118</td><td class="input-cell"><button data-drawer="child">调整</button></td><td class="num"><b>138</b></td><td><span class="tag blue">AI</span></td><td class="muted">-</td>
+                  </tr>
+                  <tr>
+                    <td class="sticky-1 readonly">US</td><td class="sticky-2 readonly">AMZ-BRABIC-US</td><td class="sticky-3 readonly"><span class="identifier link" data-drawer="child">B07HQ8RPPV<span class="copy">⧉</span></span></td>
+                    <td class="readonly">B07HQGX677</td><td class="readonly">AD6032</td><td class="readonly">AD6032-B91</td><td class="readonly">AD603298100M-B91</td><td class="readonly">AD6032B00M-B91</td><td class="readonly">BRABIC-AD603298100M-B91-FZYT08</td><td class="readonly">2018/09/27</td><td><span class="tag green">正常</span></td><td><span class="tag orange">需复核</span></td>
+                    <td class="num">6</td><td class="num">50</td><td class="num">0</td><td class="num">0</td><td class="num">32</td><td class="num">20</td><td class="num">0</td><td class="num">35</td>
+                    <td class="num">5.2</td><td class="num">5.8</td><td class="num">6.1</td><td class="num">5.9</td><td class="num">5.9</td><td class="num">5.7</td>
+                    <td class="num readonly">5.7</td><td class="num readonly">+0.4</td><td class="num readonly">6.1</td><td class="num readonly">171</td><td class="input-cell num">190</td><td class="num"><b>190</b></td><td><span class="tag purple">人工</span></td><td>大促预期</td>
+                  </tr>
+                  <tr>
+                    <td class="sticky-1 readonly">US</td><td class="sticky-2 readonly">AMZ-BRABIC-US</td><td class="sticky-3 readonly"><span class="identifier link" data-drawer="child">B07HQCZZB8<span class="copy">⧉</span></span></td>
+                    <td class="readonly">B07HQGX677</td><td class="readonly">AD6032</td><td class="readonly">AD6032-B91</td><td class="readonly">AD603298100L-B91</td><td class="readonly">AD6032B00L-B91</td><td class="readonly">BRABIC-AD603298100L-B91-FZYT08</td><td class="readonly">2018/09/27</td><td><span class="tag green">正常</span></td><td><span class="tag green">正常过货</span></td>
+                    <td class="num">18</td><td class="num">80</td><td class="num">96</td><td class="num">120</td><td class="num">56</td><td class="num">40</td><td class="num">52</td><td class="num">35</td>
+                    <td class="num">4.7</td><td class="num">4.8</td><td class="num">5.1</td><td class="num">5.0</td><td class="num">4.9</td><td class="num">5.0</td>
+                    <td class="num readonly">5.0</td><td class="num readonly">+0.0</td><td class="num readonly">5.0</td><td class="num readonly">140</td><td class="input-cell"><button data-drawer="child">调整</button></td><td class="num"><b>140</b></td><td><span class="tag blue">AI</span></td><td class="muted">-</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="footer-bar"><span>只读字段标识数据来源；#REF! 保留为来源/映射异常，不隐藏为 0</span><span>固定左侧基础信息，横向查看库存、历史销量与预测填报区</span></div>
+          </div>
+        </div>
+
+        <div class="page" id="page-review">
+          <div class="hero">
+            <div>
+              <h1>PMC｜销售预测审核</h1>
+              <div class="hero-meta">
+                <div>预测批次：<b>20260909</b></div>
+                <div>销售提交：<b>9,842 Child ASIN</b></div>
+                <div>采用AI：<b>9,216</b></div>
+                <div>人工调整：<b>626</b></div>
+              </div>
+            </div>
+            <div class="hero-actions">
+              <button>查看销售调整</button>
+              <button>查看异常</button>
+              <button class="primary">通过</button>
+              <button class="danger">退回销售</button>
+            </div>
+          </div>
+          <div class="toolbar">
+            <div class="actions-left">
+              <button class="primary" data-page="supply">进入需求转供给</button>
+              <button>仅看人工调整</button>
+              <button>仅看异常</button>
+            </div>
+            <div class="actions-right">
+              <button class="icon" title="下载">↓</button>
+              <button class="icon" title="列配置">☷</button>
+              <button class="icon" title="刷新">↻</button>
+            </div>
+          </div>
+          <div class="table-shell">
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr class="fields">
+                    <th style="width:130px">Child ASIN</th><th style="width:130px">Parent ASIN</th><th style="width:130px">最终预测</th><th style="width:100px">AI预测</th><th style="width:110px">销售人工</th><th style="width:100px">近30天日均</th><th style="width:90px">当前库存</th><th style="width:90px">在途</th><th style="width:70px">DOI</th><th style="width:100px">异常</th><th style="width:120px">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td><span class="link" data-drawer="child">B07HQDXGS3</span></td><td>B07HQGX677</td><td class="num">138</td><td class="num">118</td><td class="num">-</td><td class="num">3.9</td><td class="num">306</td><td class="num">403</td><td class="num">36</td><td>-</td><td><button data-page="supply">查看供给</button></td></tr>
+                  <tr><td><span class="link" data-drawer="child">B07HQ8RPPV</span></td><td>B07HQGX677</td><td class="num">190</td><td class="num">171</td><td class="num">190</td><td class="num">5.9</td><td class="num">52</td><td class="num">20</td><td class="num">0</td><td><span class="tag orange">人工偏高</span></td><td><button data-page="supply">查看供给</button></td></tr>
+                  <tr><td><span class="link" data-drawer="child">B07HQHL8F2</span></td><td>B07HQGX677</td><td class="num">0</td><td class="num">0</td><td class="num">-</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td><span class="tag red">无历史销量</span></td><td><button data-page="supply">查看供给</button></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="footer-bar"><span>PMC审核销售预测，不维护 Parent/Child ASIN 长期关系</span><span>下一步按 SKU / 首版SKU 聚合供给</span></div>
+          </div>
+        </div>
+
+        <div class="page" id="page-supply">
+          <div class="page-grid">
+            <div>
+              <div class="hero">
+                <div>
+                  <h1>需求转供给</h1>
+                  <div class="hero-meta">
+                    <div>Child ASIN：<b>B07HQDXGS3</b></div>
+                    <div>销售预测日均：<b>138</b></div>
+                    <div>预测周期：<b>28天</b></div>
+                    <div>预测需求：<b>3,864件</b></div>
+                  </div>
+                </div>
+                <div class="hero-actions">
+                  <button>系统分配</button>
+                  <button>新增供给SKU</button>
+                  <button class="primary">保存</button>
+                </div>
+              </div>
+              <div class="section">
+                <h2>当前SKU供给</h2>
+                <div class="table-shell">
+                  <div class="table-scroll" style="max-height:360px">
+                    <table>
+                      <thead>
+                        <tr class="fields">
+                          <th style="width:110px">首版SKU</th><th style="width:130px">当前版本SKU</th><th style="width:90px">版本</th><th style="width:80px">库存</th><th style="width:80px">在途</th><th style="width:90px">供应商</th><th style="width:100px">供给能力</th><th style="width:110px">承接需求</th><th style="width:110px">采购需求</th><th style="width:140px">操作</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr><td>1001</td><td>SKU1001</td><td><span class="tag">老版</span></td><td class="num">500</td><td class="num">0</td><td>A</td><td><span class="tag green">充足</span></td><td class="num input-cell">2,500</td><td class="num">2,000</td><td><button>调整承接量</button></td></tr>
+                        <tr><td>1001</td><td>SKU1008</td><td><span class="tag blue">新版</span></td><td class="num">100</td><td class="num">0</td><td>B</td><td><span class="tag orange">受限</span></td><td class="num input-cell">1,364</td><td class="num">1,264</td><td><button>查看供应商能力</button></td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              <div class="section">
+                <h2>版本供给策略</h2>
+                <div class="comparison">
+                  <div class="field"><span>首版SKU</span><b>1001</b></div>
+                  <div class="field"><span>当前版本</span><b>SKU1008 新版</b></div>
+                  <div class="field"><span>历史版本</span><b>SKU1001 老版</b></div>
+                  <div class="field"><span>采购版本默认</span><b class="success-text">最新版本 SKU1008</b></div>
+                  <div class="field"><span>老版库存</span><b>可以参与库存消耗</b></div>
+                  <div class="field"><span>采购旧版本</span><b class="warning-text">必须填写原因并复核</b></div>
+                </div>
+                <div class="inline-row" style="margin-top:10px">
+                  <select>
+                    <option>采购版本：SKU1008 新版</option>
+                    <option>SKU1001 老版（需原因）</option>
+                  </select>
+                  <input style="width:280px" placeholder="选择旧版本时填写原因">
+                </div>
+              </div>
+            </div>
+            <aside>
+              <div class="section">
+                <h2>AI预测构成</h2>
+                <div class="calc-box">
+                  <div class="calc-row"><span>基准ADU</span><b>3.8</b></div>
+                  <div class="calc-row"><span>活动增量</span><b>+0.4</b></div>
+                  <div class="calc-row total"><span>AI最终日均</span><b>4.2</b></div>
+                </div>
+              </div>
+              <div class="section">
+                <h2>供应判断</h2>
+                <div class="check-list">
+                  <div class="check-item"><span>固定资料表关联首版SKU</span><b class="success-text">已匹配</b></div>
+                  <div class="check-item"><span>是否存在可改唛SKU</span><b class="warning-text">待核查</b></div>
+                  <div class="check-item"><span>默认最新版本采购</span><b class="success-text">SKU1008</b></div>
+                  <div class="check-item"><span>旧版本回退原因</span><b class="warning-text">未填写</b></div>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </div>
+
+        <div class="page" id="page-plan">
+          <div class="hero">
+            <div>
+              <h1>备货计划</h1>
+              <div class="hero-meta">
+                <div>来源：<b>销售预测审核 + 需求转供给</b></div>
+                <div>采购输出：<b>SKU / 数量 / 期望到货日期</b></div>
+                <div>正式PR：<b>PNC在SCM下推，经总办审批</b></div>
+                <div>MOQ：<b>SKC颜色维度，尺码待标准化</b></div>
+              </div>
+            </div>
+            <div class="hero-actions">
+              <button>重新计算</button>
+              <button class="warning" data-modal="moq">处理MOQ</button>
+              <button>查看交期风险</button>
+              <button class="primary">提交采购确认</button>
+            </div>
+          </div>
+          <div class="table-shell">
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr class="fields">
+                    <th style="width:110px">首版SKU</th><th style="width:130px">建议采购SKU</th><th style="width:90px">版本</th><th style="width:90px">供应商</th><th style="width:100px">需求</th><th style="width:80px">库存</th><th style="width:80px">在途</th><th style="width:100px">缺口</th><th style="width:80px">MOQ</th><th style="width:110px">建议采购量</th><th style="width:110px">预计到货</th><th style="width:120px">状态</th><th style="width:140px">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>1001</td><td>SKU1008</td><td><span class="tag blue">新版</span></td><td>B</td><td class="num">3,864</td><td class="num">600</td><td class="num">0</td><td class="num">3,264</td><td class="num">500</td><td class="num">3,500</td><td>2026/11/15</td><td><span class="tag orange">产能风险</span></td><td><button data-modal="moq">处理MOQ</button></td></tr>
+                  <tr><td>1020</td><td>SKU1022</td><td><span class="tag blue">新版</span></td><td>C</td><td class="num">1,200</td><td class="num">500</td><td class="num">300</td><td class="num">400</td><td class="num">500</td><td class="num">待确认</td><td>2026/10/20</td><td><span class="tag orange">不足MOQ</span></td><td><button data-modal="moq">凑单确认</button></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="footer-bar"><span>缺口不足 MOQ 不自动取整为采购量，需选择凑单策略并同步销售确认</span><span>PR模板仅展示必要字段，不扩展为 SCM 采购执行列表</span></div>
+          </div>
+        </div>
+
+        <div class="page" id="page-log">
+          <div class="hero">
+            <div>
+              <h1>计划操作日志</h1>
+              <div class="hero-meta">
+                <div>批次：<b>20260909</b></div>
+                <div>对象：<b>B07HQDXGS3 / SKU1008</b></div>
+                <div>追踪范围：<b>提报、调整、审核、确认、回写</b></div>
+                <div>目的：<b>替代 Excel 无痕修改</b></div>
+              </div>
+            </div>
+          </div>
+          <div class="section">
+            <div class="timeline">
+              <div><div class="dot"></div><div class="time-line"></div></div>
+              <div class="event"><b>系统生成预测批次</b><span>2026/09/09 09:00，基础资料、库存、历史销量、AI预测形成快照。</span></div>
+              <div><div class="dot"></div><div class="time-line"></div></div>
+              <div class="event"><b>销售确认采用 AI</b><span>赵丽华确认 B07HQDXGS3 采用 AI 预测，最终预测量 138。</span></div>
+              <div><div class="dot"></div><div class="time-line"></div></div>
+              <div class="event"><b>PMC审核并进入需求转供给</b><span>按首版SKU 1001 聚合 SKU1001 与 SKU1008 的供给承接关系。</span></div>
+              <div><div class="dot"></div></div>
+              <div class="event"><b>MOQ待销售确认</b><span>SKU1022 缺口 400，小于 SKC MOQ 500，等待凑单策略确认。</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="drawer-mask" id="childDrawer">
+    <div class="drawer">
+      <div class="drawer-header">
+        <h2>Child ASIN预测详情</h2>
+        <button class="icon" data-close="childDrawer">×</button>
+      </div>
+      <div class="drawer-body">
+        <div class="section">
+          <div class="info-grid">
+            <div class="field"><span>Child ASIN</span><b>B07HQDXGS3</b></div>
+            <div class="field"><span>Parent ASIN</span><b>B07HQGX677</b></div>
+            <div class="field"><span>当前SKU</span><b>AD6032B00S-B91</b></div>
+            <div class="field"><span>SKC</span><b>AD6032-B91</b></div>
+            <div class="field"><span>销售SKU</span><b>BRABIC-AD603298100S-B91-FZYT08</b></div>
+            <div class="field"><span>开卖日期</span><b>2018/09/27</b></div>
+          </div>
+        </div>
+        <div class="page-grid">
+          <div>
+            <div class="section">
+              <h2>历史销量趋势</h2>
+              <div class="comparison">
+                <div class="field"><span>近3天</span><b>4.0</b></div>
+                <div class="field"><span>近7天</span><b>3.4</b></div>
+                <div class="field"><span>近15天</span><b>4.2</b></div>
+                <div class="field"><span>近20天</span><b>4.0</b></div>
+                <div class="field"><span>近30天</span><b>3.9</b></div>
+                <div class="field"><span>加权日均</span><b>3.8</b></div>
+              </div>
+            </div>
+            <div class="section">
+              <h2>库存</h2>
+              <div class="comparison">
+                <div class="field"><span>南沙库存</span><b class="danger-text">#REF!</b></div>
+                <div class="field"><span>采购在途</span><b class="danger-text">#REF!</b></div>
+                <div class="field"><span>FBA库存</span><b>122</b></div>
+                <div class="field"><span>FBA在途</span><b>178</b></div>
+                <div class="field"><span>跟卖库存</span><b>128</b></div>
+                <div class="field"><span>跟卖在途</span><b>175</b></div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="section">
+              <h2>系统预测</h2>
+              <div class="calc-box">
+                <div class="calc-row"><span>基准ADU</span><b>3.8</b></div>
+                <div class="calc-row"><span>活动增量</span><b>+0.4</b></div>
+                <div class="calc-row"><span>预测周期</span><b>28天</b></div>
+                <div class="calc-row total"><span>AI预测量</span><b>118</b></div>
+              </div>
+            </div>
+            <div class="section">
+              <h2>销售操作</h2>
+              <div class="radio-list">
+                <label class="radio-row active"><input type="radio" name="forecastChoice" checked><span><b>采用AI预测</b><br><span class="muted">无异议时默认采用 AI。</span></span></label>
+                <label class="radio-row"><input type="radio" name="forecastChoice"><span><b>使用人工预测</b><br><span class="muted">需要填写人工预测量和调整原因。</span></span></label>
+              </div>
+              <div class="inline-row" style="margin-top:10px">
+                <input style="width:160px" placeholder="人工预测量">
+                <input style="flex:1" placeholder="调整原因">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="drawer-footer">
+        <button data-close="childDrawer">取消</button>
+        <button>采用AI</button>
+        <button class="primary">保存调整</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-mask" id="batchModal">
+    <div class="modal">
+      <div class="modal-header"><h2>批量操作</h2><button class="icon" data-close="batchModal">×</button></div>
+      <div class="modal-body">
+        <div class="check-list">
+          <div class="check-item"><span>已选择数据</span><b>36 个 Child ASIN</b></div>
+          <div class="check-item"><span>操作范围</span><b>仅当前筛选结果</b></div>
+        </div>
+        <div class="radio-list">
+          <label class="radio-row active"><input type="radio" name="batch" checked><span><b>批量采用AI预测</b><br><span class="muted">不需要逐条填写预测量。</span></span></label>
+          <label class="radio-row"><input type="radio" name="batch"><span><b>批量使用人工预测</b><br><span class="muted">适用于明确的 SPU / SKC 调整场景。</span></span></label>
+          <label class="radio-row"><input type="radio" name="batch"><span><b>批量修改预测周期</b><br><span class="muted">周期变化保留调整记录。</span></span></label>
+          <label class="radio-row"><input type="radio" name="batch"><span><b>批量添加备注</b><br><span class="muted">用于采购需求备注或异常说明。</span></span></label>
+        </div>
+      </div>
+      <div class="modal-footer"><button data-close="batchModal">取消</button><button class="primary">确认操作</button></div>
+    </div>
+  </div>
+
+  <div class="modal-mask" id="submitCheckModal">
+    <div class="modal">
+      <div class="modal-header"><h2>提交检查</h2><button class="icon" data-close="submitCheckModal">×</button></div>
+      <div class="modal-body">
+        <div class="check-list">
+          <div class="check-item"><span>预测数据完整</span><b class="success-text">已通过</b></div>
+          <div class="check-item"><span>Child ASIN均已生成系统预测</span><b class="success-text">已通过</b></div>
+          <div class="check-item"><span>36个SKU库存周转超过150天</span><b class="warning-text">需销售确认</b></div>
+          <div class="check-item"><span>8个Child ASIN人工预测明显高于AI</span><b class="warning-text">需说明</b></div>
+          <div class="check-item"><span>5个Child ASIN无有效历史销量</span><b class="warning-text">需复核</b></div>
+        </div>
+        <p class="muted">当前资料只支持“需要确认”，不支持“禁止提交”。</p>
+      </div>
+      <div class="modal-footer"><button data-close="submitCheckModal">返回修改</button><button class="primary">确认提交</button></div>
+    </div>
+  </div>
+
+  <div class="modal-mask" id="moqModal">
+    <div class="modal">
+      <div class="modal-header"><h2>MOQ凑单处理</h2><button class="icon" data-close="moqModal">×</button></div>
+      <div class="modal-body">
+        <div class="comparison">
+          <div class="field"><span>SKU</span><b>SKU1022</b></div>
+          <div class="field"><span>原始缺口</span><b>400</b></div>
+          <div class="field"><span>SKC MOQ</span><b>500</b></div>
+        </div>
+        <div class="section" style="margin-top:12px">
+          <h2>系统建议</h2>
+          <div class="radio-list">
+            <label class="radio-row active"><input type="radio" name="moq" checked><span><b>方案A：采购500</b><br><span class="muted">增加库存100，需销售确认。</span></span></label>
+            <label class="radio-row"><input type="radio" name="moq"><span><b>方案B：拉长备货周期</b><br><span class="muted">延长需求覆盖周期后重新计算缺口。</span></span></label>
+            <label class="radio-row"><input type="radio" name="moq"><span><b>方案C：跨渠道凑单</b><br><span class="muted">按渠道缺口占比分摊，具体口径待确认。</span></span></label>
+          </div>
+        </div>
+        <label class="inline-row"><input type="checkbox" checked style="width:16px;height:16px"> <span>需要销售确认</span></label>
+      </div>
+      <div class="modal-footer"><button data-close="moqModal">取消</button><button>发起销售确认</button><button class="primary">保存方案</button></div>
+    </div>
+  </div>
+
+  <script>
+    const app = document.getElementById('app');
+    const pageButtons = document.querySelectorAll('[data-page]');
+    const pages = document.querySelectorAll('.page');
+    const navItems = document.querySelectorAll('.nav-item');
+    const tabs = document.querySelectorAll('.tab');
+
+    function openPage(page) {
+      pages.forEach(item => item.classList.toggle('active', item.id === `page-${page}`));
+      navItems.forEach(item => item.classList.toggle('active', item.dataset.page === page));
+      tabs.forEach(item => item.classList.toggle('active', item.dataset.page === page));
+    }
+
+    pageButtons.forEach(button => {
+      button.addEventListener('click', event => {
+        const target = event.currentTarget.dataset.page;
+        if (target) openPage(target);
+      });
+    });
+
+    document.getElementById('collapseBtn').addEventListener('click', () => {
+      app.classList.toggle('collapsed');
+    });
+
+    document.querySelectorAll('[data-drawer="child"]').forEach(item => {
+      item.addEventListener('click', () => {
+        document.getElementById('childDrawer').classList.add('open');
+      });
+    });
+
+    document.querySelectorAll('[data-modal]').forEach(item => {
+      item.addEventListener('click', event => {
+        const modalId = `${event.currentTarget.dataset.modal}Modal`;
+        document.getElementById(modalId).classList.add('open');
+      });
+    });
+
+    document.querySelectorAll('[data-close]').forEach(item => {
+      item.addEventListener('click', event => {
+        document.getElementById(event.currentTarget.dataset.close).classList.remove('open');
+      });
+    });
+
+    document.querySelectorAll('.drawer-mask, .modal-mask').forEach(mask => {
+      mask.addEventListener('click', event => {
+        if (event.target === mask) mask.classList.remove('open');
+      });
+    });
+
+    document.querySelectorAll('.radio-row input').forEach(input => {
+      input.addEventListener('change', event => {
+        const name = event.currentTarget.name;
+        document.querySelectorAll(`input[name="${name}"]`).forEach(peer => {
+          peer.closest('.radio-row').classList.toggle('active', peer.checked);
+        });
+      });
+    });
+
+    const params = new URLSearchParams(window.location.search);
+    const initialPage = params.get('page');
+    if (initialPage && document.getElementById(`page-${initialPage}`)) {
+      openPage(initialPage);
+    }
+    if (params.get('drawer') === 'child') {
+      document.getElementById('childDrawer').classList.add('open');
+    }
+    const initialModal = params.get('modal');
+    if (initialModal && document.getElementById(`${initialModal}Modal`)) {
+      document.getElementById(`${initialModal}Modal`).classList.add('open');
+    }
+    if (params.get('scroll') === 'right') {
+      const activeScroll = document.querySelector('.page.active .table-scroll');
+      if (activeScroll) {
+        activeScroll.scrollLeft = activeScroll.scrollWidth;
+      }
+    }
+  </script>
+</body>
+</html>

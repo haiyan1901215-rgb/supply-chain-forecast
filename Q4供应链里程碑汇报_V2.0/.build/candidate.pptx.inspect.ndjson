@@ -1,0 +1,62 @@
+{"kind":"deck","id":"pr/43qbev","name":"Deck"}
+{"kind":"layout","layoutId":"4c42267e-8f29-438f-95c6-651925c61c66","name":"Master","type":"master"}
+{"kind":"layout","layoutId":"f00f3220-e62f-4f59-8a61-47e651d0c34d","name":"Title Slide","type":"title"}
+{"kind":"slide","id":"sl/unjvd7","slide":1,"title":"Q4供应链系统建设里程碑","textShapes":6}
+{"kind":"shape","id":"sh/wvipo7m9","slide":1,"bbox":[64,57,9,64]}
+{"kind":"textbox","id":"sh/bu98f25o","slide":1,"name":"Q4供应链系统建设里程碑","text":"Q4供应链系统建设里程碑","textPreview":"Q4供应链系统建设里程碑","textChars":12,"textLines":1,"bbox":[95,48,1960,82]}
+{"kind":"textbox","id":"sh/at07mh43","slide":1,"name":"2026 Q4 / 里程碑V2.0","text":"2026 Q4 / 里程碑V2.0","textPreview":"2026 Q4 / 里程碑V2.0","textChars":17,"textLines":1,"bbox":[2070,63,426,50]}
+{"kind":"shape","id":"sh/9srqdcni","slide":1,"bbox":[64,145,2432,2]}
+{"kind":"textbox","id":"sh/o7ipk7md","slide":1,"name":"9月底启动门户与权限，10月中完成前置底座，四个业务节点按交付成果推进","text":"9月底启动门户与权限，10月中完成前置底座，四个业务节点按交付成果推进","textPreview":"9月底启动门户与权限，10月中完成前置底座，四个业务节点按交付成果推进","textChars":35,"textLines":1,"bbox":[64,170,2432,65]}
+{"kind":"shape","id":"sh/n6p8b25s","slide":1,"bbox":[64,1384,2432,1.5]}
+{"kind":"textbox","id":"sh/m5g7ix47","slide":1,"name":"管理层建议里程碑 · 4名开发共享投入 · 首批场景交付，分阶段扩围","text":"管理层建议里程碑 · 4名开发共享投入 · 首批场景交付，分阶段扩围","textPreview":"管理层建议里程碑 · 4名开发共享投入 · 首批场景交付，分阶段扩围","textChars":34,"textLines":1,"bbox":[64,1395,2150,38]}
+{"kind":"textbox","id":"sh/147q9snm","slide":1,"name":"1 / 4","text":"1 / 4","textPreview":"1 / 4","textChars":5,"textLines":1,"bbox":[2330,1395,166,38]}
+{"kind":"textbox","id":"sh/6psvu1sj","slide":1,"name":"9/28启动前置建设；10/19起推进业务模块；12/25—12/31稳定观察与季度收口。","text":"9/28启动前置建设；10/19起推进业务模块；12/25—12/31稳定观察与季度收口。","textPreview":"9/28启动前置建设；10/19起推进业务模块；12/25—12/31稳定观察与季度收口。","textChars":45,"textLines":1,"bbox":[64,1275,2432,68]}
+{"kind":"table","id":"tb/pobmpwfi","slide":1,"name":"","rows":8,"cols":4,"preview":"建议完成日 | 大节点 | 对应交付物 | 业务成果","bbox":[64,278,2432,944]}
+{"kind":"notes","id":"nt/unjvd7","slide":1,"text":"Q4供应链系统建设里程碑\n业务范围依据用户附件《Q4供应链系统建设.pptx》（/Users/yan/Documents/codex/供应链/Q4供应链系统建设汇报_V3.0/可编辑文件/Q4供应链系统建设.pptx）的PMC预测/备货、MRP物料需求、SCM采购/供应商执行、已有MES协同边界。新增门户与统一权限来自2026-09-17用户要求。所有里程碑日期、首批范围与资源分配均为本次建议，不是附件既定承诺。建议排期，按4名开发全职共享投入，复用既有认证、组织人员、SCM和MES能力，首批接入范围待评审确认。 节假日来源：https://big5.www.gov.cn/gate/big5/www.gov.cn/zhengce/zhengceku/202511/content_7047091.htm（2026-09-17核对）。9/25-27中秋，10/1-7国庆，10/10补班；9/28-30为3工作日，10/8-16为8工作日，10/19-12/31为54工作日。业务建设216人日可建议分为功能132、联调验收44、预留40，技术评审后锁定。"}
+{"kind":"slide","id":"sl/1mll3t","slide":2,"title":"阶段安排与并行关系","textShapes":6}
+{"kind":"shape","id":"sh/9s36tsze","slide":2,"bbox":[64,57,9,64]}
+{"kind":"textbox","id":"sh/mpc7ydgn","slide":2,"name":"阶段安排与并行关系","text":"阶段安排与并行关系","textPreview":"阶段安排与并行关系","textChars":9,"textLines":1,"bbox":[95,48,1960,82]}
+{"kind":"textbox","id":"sh/nqlorih8","slide":2,"name":"2026 Q4 / 里程碑V2.0","text":"2026 Q4 / 里程碑V2.0","textPreview":"2026 Q4 / 里程碑V2.0","textChars":17,"textLines":1,"bbox":[2070,63,426,50]}
+{"kind":"shape","id":"sh/wfep47yp","slide":2,"bbox":[64,145,2432,2]}
+{"kind":"textbox","id":"sh/xgn6xsza","slide":2,"name":"门户和权限先行；PMC形成计划，SCM承接采购，MRP并行计算物料，MES接入已有生产能力","text":"门户和权限先行；PMC形成计划，SCM承接采购，MRP并行计算物料，MES接入已有生产能力","textPreview":"门户和权限先行；PMC形成计划，SCM承接采购，MRP并行计算物料，MES接入已有生产能力","textChars":45,"textLines":1,"bbox":[64,170,2432,65]}
+{"kind":"shape","id":"sh/atc72xgj","slide":2,"bbox":[64,1384,2432,1.5]}
+{"kind":"textbox","id":"sh/vulov2h4","slide":2,"name":"管理层建议里程碑 · 4名开发共享投入 · 首批场景交付，分阶段扩围","text":"管理层建议里程碑 · 4名开发共享投入 · 首批场景交付，分阶段扩围","textPreview":"管理层建议里程碑 · 4名开发共享投入 · 首批场景交付，分阶段扩围","textChars":34,"textLines":1,"bbox":[64,1395,2150,38]}
+{"kind":"textbox","id":"sh/cja5s3il","slide":2,"name":"2 / 4","text":"2 / 4","textPreview":"2 / 4","textChars":5,"textLines":1,"bbox":[2330,1395,166,38]}
+{"kind":"shape","id":"sh/l43u10vm","slide":2,"bbox":[64,1240,2432,87]}
+{"kind":"textbox","id":"sh/03ut8fe1","slide":2,"name":"4人按阶段集中投入和交叉协作；表内并行表示任务可重叠，不代表每个模块各配置一支团队。","text":"4人按阶段集中投入和交叉协作；表内并行表示任务可重叠，不代表每个模块各配置一支团队。","textPreview":"4人按阶段集中投入和交叉协作；表内并行表示任务可重叠，不代表每个模块各配置一支团队。","textChars":42,"textLines":1,"bbox":[90,1249,2380,67]}
+{"kind":"table","id":"tb/kjidorit","slide":2,"name":"","rows":7,"cols":6,"preview":"建设节点 | 9月底—10/16 | 10/19—11/13 | 11/16—11/30 | 12/01—12/18 | 12/21—12/31","bbox":[64,280,2432,934]}
+{"kind":"notes","id":"nt/1mll3t","slide":2,"text":"阶段安排与并行关系\n业务范围依据用户附件《Q4供应链系统建设.pptx》（/Users/yan/Documents/codex/供应链/Q4供应链系统建设汇报_V3.0/可编辑文件/Q4供应链系统建设.pptx）的PMC预测/备货、MRP物料需求、SCM采购/供应商执行、已有MES协同边界。新增门户与统一权限来自2026-09-17用户要求。所有里程碑日期、首批范围与资源分配均为本次建议，不是附件既定承诺。建议排期，按4名开发全职共享投入，复用既有认证、组织人员、SCM和MES能力，首批接入范围待评审确认。 节假日来源：https://big5.www.gov.cn/gate/big5/www.gov.cn/zhengce/zhengceku/202511/content_7047091.htm（2026-09-17核对）。9/25-27中秋，10/1-7国庆，10/10补班；9/28-30为3工作日，10/8-16为8工作日，10/19-12/31为54工作日。业务建设216人日可建议分为功能132、联调验收44、预留40，技术评审后锁定。"}
+{"kind":"slide","id":"sl/r9ij0c","slide":3,"title":"各大节点的交付判定","textShapes":6}
+{"kind":"shape","id":"sh/bql87y90","slide":3,"bbox":[64,57,9,64]}
+{"kind":"textbox","id":"sh/crup03al","slide":3,"name":"各大节点的交付判定","text":"各大节点的交付判定","textPreview":"各大节点的交付判定","textChars":9,"textLines":1,"bbox":[95,48,1960,82]}
+{"kind":"textbox","id":"sh/ds3q98rq","slide":3,"name":"2026 Q4 / 里程碑V2.0","text":"2026 Q4 / 里程碑V2.0","textPreview":"2026 Q4 / 里程碑V2.0","textChars":17,"textLines":1,"bbox":[2070,63,426,50]}
+{"kind":"shape","id":"sh/ytc72d8b","slide":3,"bbox":[64,145,2432,2]}
+{"kind":"textbox","id":"sh/zul8bi9w","slide":3,"name":"交付以可运行、可核对、可交接为准，每个节点保留对应验收证据","text":"交付以可运行、可核对、可交接为准，每个节点保留对应验收证据","textPreview":"交付以可运行、可核对、可交接为准，每个节点保留对应验收证据","textChars":29,"textLines":1,"bbox":[64,170,2432,65]}
+{"kind":"shape","id":"sh/0vu943qh","slide":3,"bbox":[64,1384,2432,1.5]}
+{"kind":"textbox","id":"sh/lg3qd8r2","slide":3,"name":"管理层建议里程碑 · 4名开发共享投入 · 首批场景交付，分阶段扩围","text":"管理层建议里程碑 · 4名开发共享投入 · 首批场景交付，分阶段扩围","textPreview":"管理层建议里程碑 · 4名开发共享投入 · 首批场景交付，分阶段扩围","textChars":34,"textLines":1,"bbox":[64,1395,2150,38]}
+{"kind":"textbox","id":"sh/mhwr6d8n","slide":3,"name":"3 / 4","text":"3 / 4","textPreview":"3 / 4","textChars":5,"textLines":1,"bbox":[2330,1395,166,38]}
+{"kind":"textbox","id":"sh/v61gjehk","slide":3,"name":"统一权限10/16交付底座与首批接入；PMC、MRP、SCM、MES各自上线前仍须通过业务权限验收。","text":"统一权限10/16交付底座与首批接入；PMC、MRP、SCM、MES各自上线前仍须通过业务权限验收。","textPreview":"统一权限10/16交付底座与首批接入；PMC、MRP、SCM、MES各自上线前仍须通过业务权限验收。","textChars":50,"textLines":1,"bbox":[64,1295,2432,68]}
+{"kind":"table","id":"tb/2xgfqtkb","slide":3,"name":"","rows":7,"cols":3,"preview":"大节点 | 交付验收证据 | 关键前提","bbox":[64,278,2432,970]}
+{"kind":"notes","id":"nt/r9ij0c","slide":3,"text":"各大节点的交付判定\n业务范围依据用户附件《Q4供应链系统建设.pptx》（/Users/yan/Documents/codex/供应链/Q4供应链系统建设汇报_V3.0/可编辑文件/Q4供应链系统建设.pptx）的PMC预测/备货、MRP物料需求、SCM采购/供应商执行、已有MES协同边界。新增门户与统一权限来自2026-09-17用户要求。所有里程碑日期、首批范围与资源分配均为本次建议，不是附件既定承诺。建议排期，按4名开发全职共享投入，复用既有认证、组织人员、SCM和MES能力，首批接入范围待评审确认。 节假日来源：https://big5.www.gov.cn/gate/big5/www.gov.cn/zhengce/zhengceku/202511/content_7047091.htm（2026-09-17核对）。9/25-27中秋，10/1-7国庆，10/10补班；9/28-30为3工作日，10/8-16为8工作日，10/19-12/31为54工作日。业务建设216人日可建议分为功能132、联调验收44、预留40，技术评审后锁定。"}
+{"kind":"slide","id":"sl/e1l4wd","slide":4,"title":"节假日、资源与交付边界","textShapes":15}
+{"kind":"shape","id":"sh/lgne5grm","slide":4,"bbox":[64,57,9,64]}
+{"kind":"textbox","id":"sh/ytwfu1sb","slide":4,"name":"节假日、资源与交付边界","text":"节假日、资源与交付边界","textPreview":"节假日、资源与交付边界","textChars":11,"textLines":1,"bbox":[95,48,1960,82]}
+{"kind":"textbox","id":"sh/zu5w369w","slide":4,"name":"2026 Q4 / 里程碑V2.0","text":"2026 Q4 / 里程碑V2.0","textPreview":"2026 Q4 / 里程碑V2.0","textChars":17,"textLines":1,"bbox":[2070,63,426,50]}
+{"kind":"shape","id":"sh/cruxsra5","slide":4,"bbox":[64,145,2432,2]}
+{"kind":"textbox","id":"sh/xsne1wrq","slide":4,"name":"门户和权限占用同一组4名开发，新增前置工作已经从Q4业务建设窗口中扣除","text":"门户和权限占用同一组4名开发，新增前置工作已经从Q4业务建设窗口中扣除","textPreview":"门户和权限占用同一组4名开发，新增前置工作已经从Q4业务建设窗口中扣除","textChars":35,"textLines":1,"bbox":[64,170,2432,65]}
+{"kind":"shape","id":"sh/apcvq1sz","slide":4,"bbox":[64,1384,2432,1.5]}
+{"kind":"textbox","id":"sh/bqlwz69k","slide":4,"name":"管理层建议里程碑 · 4名开发共享投入 · 首批场景交付，分阶段扩围","text":"管理层建议里程碑 · 4名开发共享投入 · 首批场景交付，分阶段扩围","textPreview":"管理层建议里程碑 · 4名开发共享投入 · 首批场景交付，分阶段扩围","textChars":34,"textLines":1,"bbox":[64,1395,2150,38]}
+{"kind":"textbox","id":"sh/onudora9","slide":4,"name":"4 / 4","text":"4 / 4","textPreview":"4 / 4","textChars":5,"textLines":1,"bbox":[2330,1395,166,38]}
+{"kind":"shape","id":"sh/dkf6ps7y","slide":4,"bbox":[64,830,2432,87]}
+{"kind":"textbox","id":"sh/cj6pgnqd","slide":4,"name":"Q4仍为248人日：前置底座32 + 业务窗口216。9月底12人日单列，不计入Q4。","text":"Q4仍为248人日：前置底座32 + 业务窗口216。9月底12人日单列，不计入Q4。","textPreview":"Q4仍为248人日：前置底座32 + 业务窗口216。9月底12人日单列，不计入Q4。","textChars":43,"textLines":1,"bbox":[90,839,2380,67]}
+{"kind":"textbox","id":"sh/rixoni9s","slide":4,"name":"日历约束","text":"日历约束","textPreview":"日历约束","textChars":4,"textLines":1,"bbox":[64,964,1170,58]}
+{"kind":"textbox","id":"sh/qhoned87","slide":4,"name":"中秋9/25—9/27、国庆10/01—10/07放假。","text":"中秋9/25—9/27、国庆10/01—10/07放假。","textPreview":"中秋9/25—9/27、国庆10/01—10/07放假。","textChars":28,"textLines":1,"bbox":[64,1030,1190,60]}
+{"kind":"textbox","id":"sh/pwf6l8rm","slide":4,"name":"10/10补班已计入；9/20在本次启动前，未计入。","text":"10/10补班已计入；9/20在本次启动前，未计入。","textPreview":"10/10补班已计入；9/20在本次启动前，未计入。","textChars":26,"textLines":1,"bbox":[64,1094,1190,60]}
+{"kind":"textbox","id":"sh/4v65c3q1","slide":4,"name":"12/24验收，12/25—12/31保留5天稳定窗口。","text":"12/24验收，12/25—12/31保留5天稳定窗口。","textPreview":"12/24验收，12/25—12/31保留5天稳定窗口。","textChars":28,"textLines":1,"bbox":[64,1158,1190,60]}
+{"kind":"textbox","id":"sh/3uxojy9w","slide":4,"name":"计划成立的条件","text":"计划成立的条件","textPreview":"计划成立的条件","textChars":7,"textLines":1,"bbox":[1320,964,1170,58]}
+{"kind":"textbox","id":"sh/2t4nad8b","slide":4,"name":"门户/权限复用现有认证与组织人员基础。","text":"门户/权限复用现有认证与组织人员基础。","textPreview":"门户/权限复用现有认证与组织人员基础。","textChars":19,"textLines":1,"bbox":[1320,1030,1170,60]}
+{"kind":"textbox","id":"sh/hsv6h8rq","slide":4,"name":"SCM、MES复用已有能力，首批场景/系统先行。","text":"SCM、MES复用已有能力，首批场景/系统先行。","textPreview":"SCM、MES复用已有能力，首批场景/系统先行。","textChars":24,"textLines":1,"bbox":[1320,1094,1170,60]}
+{"kind":"textbox","id":"sh/grm583q5","slide":4,"name":"业务、数仓、PLM及接口责任人按时支持联验。","text":"业务、数仓、PLM及接口责任人按时支持联验。","textPreview":"业务、数仓、PLM及接口责任人按时支持联验。","textChars":22,"textLines":1,"bbox":[1320,1158,1170,60]}
+{"kind":"textbox","id":"sh/snaxk72d","slide":4,"name":"需确认：4人实际投入、门户/权限首批接入清单及试点范围。前置未通过时重排业务日期。","text":"需确认：4人实际投入、门户/权限首批接入清单及试点范围。前置未通过时重排业务日期。","textPreview":"需确认：4人实际投入、门户/权限首批接入清单及试点范围。前置未通过时重排业务日期。","textChars":41,"textLines":1,"bbox":[64,1285,2432,68]}
+{"kind":"table","id":"tb/wfqtw7mt","slide":4,"name":"","rows":4,"cols":4,"preview":"时间范围 | 工作日 / 人 | 4人人日上限 | 安排内容","bbox":[64,285,2432,460]}
+{"kind":"notes","id":"nt/e1l4wd","slide":4,"text":"节假日、资源与交付边界\n业务范围依据用户附件《Q4供应链系统建设.pptx》（/Users/yan/Documents/codex/供应链/Q4供应链系统建设汇报_V3.0/可编辑文件/Q4供应链系统建设.pptx）的PMC预测/备货、MRP物料需求、SCM采购/供应商执行、已有MES协同边界。新增门户与统一权限来自2026-09-17用户要求。所有里程碑日期、首批范围与资源分配均为本次建议，不是附件既定承诺。建议排期，按4名开发全职共享投入，复用既有认证、组织人员、SCM和MES能力，首批接入范围待评审确认。 节假日来源：https://big5.www.gov.cn/gate/big5/www.gov.cn/zhengce/zhengceku/202511/content_7047091.htm（2026-09-17核对）。9/25-27中秋，10/1-7国庆，10/10补班；9/28-30为3工作日，10/8-16为8工作日，10/19-12/31为54工作日。业务建设216人日可建议分为功能132、联调验收44、预留40，技术评审后锁定。"}

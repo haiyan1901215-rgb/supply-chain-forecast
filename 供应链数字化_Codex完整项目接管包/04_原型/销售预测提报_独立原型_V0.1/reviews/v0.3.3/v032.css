@@ -1,0 +1,79 @@
+/* V0.3.2: one body type scale, restrained grid surfaces and a single fixed divider. */
+.range-left { gap:8px; }
+.range-section-separator { color:var(--line-strong); font-size:12px; }
+.range-bar .range-title,
+.range-bar .range-current,
+.range-bar .range-title strong,
+.range-bar .range-meta { font-size:12px; font-weight:400; }
+
+.forecast-table tbody .identity-cell,
+.forecast-table .child-asin-line,
+.forecast-table .child-store,
+.forecast-table .product-identifiers,
+.forecast-table .product-identifiers .sku-detail-link,
+.forecast-table .product-identifiers .biz-code,
+.forecast-table .product-sub,
+.forecast-table .product-meta,
+.forecast-table .code-value,
+.forecast-table .code-text,
+.forecast-table .product-action,
+.forecast-table .product-note,
+.forecast-table .note-display,
+.forecast-table .note-saved-text,
+.forecast-table .size-value,
+.forecast-table .parent-strip,
+.forecast-table .parent-strip .code-value,
+.forecast-table .parent-strip .parent-sales,
+.forecast-table .parent-child-count,
+.forecast-table .parent-site,
+.forecast-table .context-section-title,
+.forecast-table .context-section .metric label,
+.forecast-table .context-section .metric strong,
+.forecast-table .context-cell .coverage-note {
+  font-size:12px;
+  font-weight:400;
+}
+.forecast-table .identity-cell,
+.forecast-table .product-sub,
+.forecast-table .product-meta,
+.forecast-table .child-store,
+.forecast-table .size-value { color:var(--ink); }
+.forecast-table .product-action { line-height:18px; }
+.forecast-table .product-sub,
+.forecast-table .product-meta { line-height:17px; }
+.forecast-table .context-section .metric label,
+.forecast-table .context-section .metric strong { line-height:14px; }
+.forecast-table .context-section-title { line-height:14px; }
+.forecast-table .product-note > span,
+.forecast-table .note-display button { font-size:12px; }
+.forecast-table tbody td.line-cell { font-size:12px; color:var(--ink); font-weight:400; }
+.forecast-table .summary-forecast strong { color:var(--ink); font-size:12px; font-weight:500; }
+.forecast-table .summary-forecast small { font-size:12px; }
+.forecast-table .parent-band .parent-strip { gap:4px; }
+.forecast-table .parent-strip .copy-code { flex-basis:14px; width:14px; }
+
+.forecast-table thead th,
+.forecast-table thead th.week-head,
+.forecast-table thead th.date-head > div,
+.forecast-table thead th.date-head > small { font-size:12px; font-weight:400; }
+.forecast-table thead th.date-head > div,
+.forecast-table thead th.date-head > small { line-height:14px; }
+.forecast-table thead th.date-head.weekend { color:var(--muted); background-color:var(--forecast-weekend-bg, #fafafa); }
+
+/* Parent totals retain their group surface; every other numeric row remains white. */
+.forecast-table tbody tr:not(.parent-row):not(.summary-row) > td.date-col { background-color:var(--surface); }
+.forecast-table tr.focus-cross-row > td { --cross-row:var(--forecast-cross-color); }
+.forecast-table .focus-cross-column { --cross-column:var(--forecast-cross-color); }
+.forecast-table .focus-cross-cell { box-shadow:inset 0 0 0 1px var(--forecast-focus-border); }
+
+/* One overlay draws the entire fixed/date boundary. Preserve border geometry only. */
+.forecast-table .line-head,
+.forecast-table .line-cell,
+.forecast-table .parent-band { border-right-color:transparent; }
+.forecast-table .line-head::before,
+.forecast-table .line-cell::before { content:none; }
+.forecast-table td[data-focus-index="0"],
+.forecast-table th[data-focus-index="0"],
+.forecast-table th.first-time-header { border-left-width:0; }
+#forecastFixedDivider { width:1px; }
+.forecast-table th.current-forecast-week { box-shadow:none; }

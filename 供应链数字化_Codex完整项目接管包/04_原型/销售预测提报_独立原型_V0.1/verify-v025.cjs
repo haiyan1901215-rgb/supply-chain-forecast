@@ -1,0 +1,41 @@
+const assert=require('node:assert/strict'),path=require('node:path'),{chromium}=require('playwright');
+(async()=>{
+ const browser=await chromium.launch({channel:'chrome',headless:true}),context=await browser.newContext({viewport:{width:1440,height:900},permissions:['clipboard-read','clipboard-write']}),page=await context.newPage(),errors=[];
+ page.on('pageerror',e=>errors.push(e.stack));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});page.setDefaultTimeout(10000);
+ const id='US-B0GRG5DRWW',drawer=()=>page.getByRole('dialog',{name:'商品详情',exact:true});
+ const shot=n=>page.screenshot({path:path.join(__dirname,'evidence','v025-'+n+'.png'),animations:'disabled'});
+ const chart=()=>page.locator('.sales-echart').evaluate(e=>{const c=echarts.getInstanceByDom(e),o=c?.getOption();return o?{names:o.series.map(s=>s.name),data:o.series.map(s=>s.data),colors:o.series.map(s=>s.lineStyle.color),dates:o.xAxis[0].data,legend:o.legend[0],width:c.getWidth()}:null;});
+ const ready=()=>page.waitForFunction(()=>{const el=document.querySelector('.sales-echart');return el&&echarts.getInstanceByDom(el)?.getOption().series?.length;});
+ const open=async(view,child=id)=>{await page.locator('[data-insight="'+view+'"][data-asin="'+child+'"]').click();await drawer().waitFor();};
+ const close=async()=>{await drawer().getByRole('button',{name:'Close',exact:true}).click();await drawer().waitFor({state:'hidden'});};
+ try{
+  await page.goto('http://127.0.0.1:8800/?v=0.2.5');await page.locator('#productInsights').waitFor({state:'attached'});
+  assert.equal(await page.locator('.biz-code').first().evaluate(e=>getComputedStyle(e,'::before').content),'"丨"');
+  const initialForecast=await page.evaluate(()=>JSON.stringify({days:visibleDays().map(dateKey),manual:findChild('US-B0GRG5DRWW').manual,activity:findChild('US-B0GRG5DRWW').activity}));
+  await open('sales');await ready();await shot('sales-initial');
+  assert.equal(await drawer().getByRole('tab').count(),4);
+  await drawer().locator('.insight-identity').getByRole('button').click();await page.getByText('已复制',{exact:true}).waitFor();assert.equal(await page.evaluate(()=>navigator.clipboard.readText()),'B0GRG5DRWW');
+  assert.ok((await page.getByText('已复制',{exact:true}).boundingBox()).y<(await page.locator('#workbench').boundingBox()).y+10);
+  for(const name of ['SKU映射','商品档案','预测分析','销售趋势']){await drawer().getByRole('tab',{name,exact:true}).click();assert.equal(await drawer().getByRole('tab').count(),4);assert.equal(await drawer().getByRole('tab',{name,exact:true}).getAttribute('aria-selected'),'true');assert.equal(await drawer().getByRole('tabpanel',{name,exact:true}).count(),1);if(name==='SKU映射')await shot('mapping');if(name==='商品档案')await shot('profile');}
+  await ready();assert.deepEqual((await chart()).names,['销量','上期销量','去年同期销量']);
+  const expected={'过去7天':['2026-10-14','2026-10-20',7],'过去14天':['2026-10-07','2026-10-20',14],'过去30天':['2026-09-21','2026-10-20',30],'本月':['2026-10-01','2026-10-20',20],'上月':['2026-09-01','2026-09-30',30],'今年':['2026-01-01','2026-10-20',293],'去年':['2025-01-01','2025-12-31',365]};
+  for(const [name,[start,end,n]]of Object.entries(expected)){await drawer().getByText(name,{exact:true}).click();await page.waitForFunction(n=>echarts.getInstanceByDom(document.querySelector('.sales-echart')).getOption().xAxis[0].data.length===n,n);const o=await chart();assert.equal(o.dates[0],start);assert.equal(o.dates.at(-1),end);assert.ok(o.data[0].every(v=>Number.isFinite(v)));}
+  await drawer().getByText('过去7天',{exact:true}).click();
+  const checks=await page.evaluate(()=>{const api=forecastInsights,c=findChild('US-B0GRG5DRWW'),g=groups.find(g=>g.children.includes(c)),s=api.buildSales(c,g,[dayjs('2026-10-14'),dayjs('2026-10-20')]);return {ranges:s.map(x=>[x.keys[0],x.keys.at(-1)]),leap:api.priorYear('2024-02-29'),normal:api.priorYear('2024-03-01'),zero:api.comparison({values:[0,null,4]},{values:[0,3,null]}),missing:api.comparison({values:[null]},{values:[1]})};});
+  assert.deepEqual(checks.ranges,[['2026-10-14','2026-10-20'],['2026-10-07','2026-10-13'],['2025-10-14','2025-10-20']]);assert.equal(checks.leap,null);assert.equal(checks.normal,'2023-03-01');assert.deepEqual(checks.zero,{count:1,delta:0,rate:null});assert.deepEqual(checks.missing,{count:0,delta:null,rate:null});
+  await drawer().getByRole('checkbox',{name:'对比上期',exact:true}).uncheck();assert.deepEqual((await chart()).names,['销量','去年同期销量']);assert.equal((await chart()).colors[1],'#70ad62');
+  await drawer().getByRole('tab',{name:'SKU映射',exact:true}).click();await drawer().getByRole('tab',{name:'销售趋势',exact:true}).click();await ready();assert.deepEqual((await chart()).names,['销量','去年同期销量']);
+  await drawer().getByRole('checkbox',{name:'对比上期',exact:true}).check();await ready();
+  const point=await page.locator('.sales-echart').evaluate(e=>echarts.getInstanceByDom(e).convertToPixel({seriesIndex:0},[3,32]));const box=await page.locator('.sales-echart').boundingBox();await page.mouse.move(box.x+point[0],box.y+point[1]);await page.locator('.sales-chart-tooltip').waitFor({state:'visible'});assert.match(await page.locator('.sales-chart-tooltip').innerText(),/2026\/10\/17/);assert.match(await page.locator('.sales-chart-tooltip').innerText(),/2026\/10\/10/);assert.match(await page.locator('.sales-chart-tooltip').innerText(),/2025\/10\/17/);await shot('trend-tooltip');
+  await page.locator('#sales-range-start').click();await page.locator('td[title="2026-10-14"]').waitFor({state:'visible'});await shot('date-picker');assert.match(await page.locator('td[title="2026-10-21"]').first().getAttribute('class'),/disabled/);assert.match(await page.locator('td[title="2026-10-22"]').first().getAttribute('class'),/disabled/);
+  await page.keyboard.press('Escape');await page.locator('td[title="2026-10-14"]').waitFor({state:'hidden'});assert.equal(await drawer().isVisible(),true);
+  await page.locator('#sales-range-start').click();await page.locator('td[title="2026-10-05"]').last().click();await page.locator('td[title="2026-10-12"]').last().click();await page.waitForFunction(()=>echarts.getInstanceByDom(document.querySelector('.sales-echart')).getOption().xAxis[0].data.length===8);assert.equal((await chart()).dates[0],'2026-10-05');assert.equal((await chart()).dates.at(-1),'2026-10-12');
+  for(const [width,height]of [[1366,768],[1440,900],[1920,900]]){await page.setViewportSize({width,height});await page.waitForFunction(()=>{const el=document.querySelector('.sales-echart');return Math.abs(el.clientWidth-echarts.getInstanceByDom(el).getWidth())<2;});assert.ok(await drawer().evaluate(e=>e.scrollWidth<=e.clientWidth));await page.mouse.move(10,10);await shot('sales-'+width);}
+  await close();for(const view of ['analysis','mapping','product','sales']){await open(view);assert.equal(await drawer().getByRole('tab').count(),4);assert.equal(await page.locator('[data-insight-panel]').getAttribute('data-insight-panel'),view);await close();}
+  await open('sales','US-B0CVRKCC5M');await ready();assert.ok((await chart()).data[2].every(v=>v===null));await shot('missing-history');await drawer().getByText('去年',{exact:true}).click();await drawer().getByText('所选区间暂无销量数据',{exact:true}).waitFor();assert.equal(await page.locator('.sales-echart').count(),0);await close();
+  await open('sales','UK-B0GRG5DRWW');await ready();assert.match(await drawer().locator('.insight-identity').innerText(),/UK \/ BRABIC-UK/);assert.equal((await chart()).dates.length,30);await close();
+  assert.equal(await page.evaluate(()=>JSON.stringify({days:visibleDays().map(dateKey),manual:findChild('US-B0GRG5DRWW').manual,activity:findChild('US-B0GRG5DRWW').activity})),initialForecast);
+  await page.goto('http://127.0.0.1:8800/index.v0.2.4.html');await page.locator('#antdColumnButton').waitFor();assert.equal(await page.locator('script[src*="v025"]').count(),0);
+  assert.deepEqual(errors,[]);console.log('V025 PASS: shared persistent tabs, seven T+1 presets, previous-period/year alignment, leap/null/zero semantics, comparisons and preference persistence, tooltip real dates, resize, previous version.');
+ }catch(e){console.error(e);console.error(errors);await shot('failure');process.exitCode=1;}finally{await browser.close();}
+})();

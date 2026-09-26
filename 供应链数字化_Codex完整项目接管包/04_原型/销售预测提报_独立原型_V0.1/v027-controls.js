@@ -1,0 +1,178 @@
+/* Actual Ant Design islands around the existing forecast business grid. */
+(() => {
+  const h=React.createElement,{useState,useEffect,useReducer}=React;
+  const {ConfigProvider,App,Select,Input,Button,Tooltip,Drawer,Checkbox,List,Space,Tag,Alert,DatePicker,Typography}=antd;
+  const {SettingOutlined,HolderOutlined,VerticalAlignTopOutlined,CloseCircleOutlined,LockOutlined,PushpinOutlined,QuestionCircleOutlined,SearchOutlined}=icons;
+  const filterSpec=[
+    ['platform','平台',[['Amazon','Amazon'],['Temu','Temu'],['SHEIN','SHEIN']]],
+    ['market','国家 / 站点',[['','全部国家 / 站点'],['US','美国 / US'],['UK','英国 / UK']]],
+    ['account','账号 / 店铺',[['','全部账号 / 店铺'],['BRABIC-US','BRABIC-US'],['BRABIC-UK','BRABIC-UK']]],
+    ['owner','销售负责人',[['','全部销售负责人'],['李敏','李敏'],['周宁','周宁'],['陈洁','陈洁']]],
+    ['tag','商品标签',[['','全部商品标签'],['成熟款','成熟款'],['活动款','活动款'],['库存偏紧','库存偏紧']]]
+  ];
+  const groupNames=[...new Set(fieldCatalog.map(f=>f.group))];
+  const canOrder=f=>!f.required&&!positionFixedFields.has(f.key);
+  const clone=value=>JSON.parse(JSON.stringify(value));
+  const compactFont=enterpriseThemeV020.components.Button.fontSizeSM;
+  const compactTheme={...enterpriseThemeV020,token:{...enterpriseThemeV020.token,fontSize:compactFont},components:{...enterpriseThemeV020.components,
+    Button:{...enterpriseThemeV020.components.Button,fontSize:compactFont,contentFontSize:compactFont,contentFontSizeSM:compactFont},
+    Input:{...enterpriseThemeV020.components.Input,fontSize:compactFont,inputFontSize:compactFont,inputFontSizeSM:compactFont},
+    Select:{...enterpriseThemeV020.components.Select,fontSize:compactFont,optionFontSize:compactFont},
+    InputNumber:{fontSize:compactFont,inputFontSize:compactFont,inputFontSizeSM:compactFont},
+    DatePicker:{fontSize:compactFont,inputFontSize:compactFont,inputFontSizeSM:compactFont}}};
+  const withApp=child=>h(ConfigProvider,{theme:compactTheme,componentSize:'small',button:{autoInsertSpace:false}},h(App,null,child));
+
+  function Filters(){
+    const [draft,setDraft]=useState({...state.filters,query:state.query});
+    const apply=values=>{state.filters={market:values.market,platform:values.platform,account:values.account,owner:values.owner,tag:values.tag};state.query=values.query;state.page=1;renderTable();$('#workbench').scrollTop=0;};
+    const control=spec=>{const [key,label,options]=spec;return h(Select,{key,'aria-label':label,'data-testid':'filter-'+key,value:draft[key],showSearch:true,optionFilterProp:'label',options:options.map(([value,label])=>({value,label})),style:{width:'100%'},onChange:value=>setDraft(old=>({...old,[key]:value})),popupMatchSelectWidth:Math.max(key==='account'?180:160,0)});};
+    return h('div',{className:'antd-filter-grid'},...filterSpec.slice(0,4).map(control),h(Input,{'aria-label':'编码或商品名称',placeholder:'ASIN / SKU / 业务识别码',allowClear:true,value:draft.query,onChange:e=>setDraft(old=>({...old,query:e.target.value})),onPressEnter:()=>apply(draft)}),control(filterSpec[4]),h(Button,{type:'primary',onClick:()=>apply(draft)},'查询'),h(Button,{onClick:()=>{const initial={market:'',platform:'Amazon',account:'',owner:'',tag:'',query:''};setDraft(initial);apply(initial);}},'重置'));
+  }
+
+  function ForecastEditor({edit,onClose}){
+    const [form]=antd.Form.useForm(),[error,setError]=useState('');
+    const {modal}=App.useApp(),c=findChild(edit.id),isNote=edit.kind==='note',isManual=edit.kind==='manual',event=c.activity[edit.key];
+    const initial=isNote?{note:notes[c.id]||''}:isManual?{qty:c.manual[edit.key],reason:c.manualReasons[edit.key]||''}:{qty:event?.qty,name:event?.name||'',date:dayjs(edit.key),note:event?.note||''};
+    const close=()=>{if(form.isFieldsTouched())modal.confirm({title:'放弃未保存的填写？',okText:'放弃修改',cancelText:'继续填写',onOk:onClose});else onClose();};
+    const commit=(values,clear=false)=>{
+      setError('');
+      if(isNote){
+        const next={...notes,[c.id]:(values.note||'').trim()};if(!next[c.id])delete next[c.id];
+        try{localStorage.setItem(notesStorageKey,JSON.stringify(next));}catch{setError('保存失败，请检查浏览器存储权限');return;}notes=next;
+      }else{
+        const key=isManual?edit.key:values.date?.format('YYYY-MM-DD')||edit.key;
+        if(!canEdit(key)){form.setFields([{name:'date',errors:['日期需在当前预测范围内']}]);return;}
+        if(!isManual&&!clear&&key!==edit.key&&c.activity[key]){form.setFields([{name:'date',errors:['该日期已有活动预测，请选择其他日期']}]);return;}
+        const previous={manual:{...c.manual},manualReasons:{...c.manualReasons},activity:{...c.activity},changes:[...c.changes]};
+        if(isManual){
+          if(clear){delete c.manual[edit.key];delete c.manualReasons[edit.key];}
+          else{c.manual[edit.key]=values.qty;c.manualReasons[edit.key]=values.reason.trim();}
+          c.changes.push({date:edit.key,line:'人工预测',before:previous.manual[edit.key]??null,after:clear?null:values.qty,reason:clear?'清除人工预测':values.reason.trim()});
+        }else{
+          if(clear||key!==edit.key)delete c.activity[edit.key];
+          if(!clear)c.activity[key]={qty:values.qty,name:values.name.trim(),date:key,note:(values.note||'').trim()};
+          c.changes.push({date:key,line:'活动预测',before:event?.qty??null,after:clear?null:values.qty,reason:clear?'清除活动预测':values.name.trim()});
+        }
+        if(!persistCurrent()){Object.assign(c,previous);setError('保存失败，填写内容仍保留，请重试');return;}
+      }
+      onClose();renderTable();toast(clear?'已清除预测':'已保存');
+    };
+    const item=(name,label,child,rules=[])=>h(antd.Form.Item,{name,label,rules,className:name==='reason'||name==='note'?'forecast-note-field':undefined},child);
+    const count={showCount:true,maxLength:200,autoSize:{minRows:3,maxRows:5},styles:{textarea:{paddingBottom:24},count:{position:'absolute',bottom:5,right:10,margin:0,lineHeight:'16px',fontSize:11,pointerEvents:'none'}}};
+    const qty=item('qty','预测销量',h(antd.InputNumber,{'aria-label':'预测销量',min:0,max:999999999,precision:0,style:{width:'100%'},autoFocus:true}),[{required:true,message:'请填写预测销量'},{type:'integer',min:0,message:'请输入大于等于0的整数'}]);
+    const fields=isNote?[item('note','商品备注',h(Input.TextArea,{...count,'aria-label':'商品备注',autoFocus:true}),[{max:200,message:'最多200字'}])]:isManual?[qty,item('reason','人工预测原因',h(Input.TextArea,{...count,'aria-label':'人工预测原因',placeholder:'说明为什么调整AI预测，例如新增推广资源'}),[{required:true,whitespace:true,message:'请填写不采用AI预测的原因'},{max:200,message:'最多200字'}])]:[qty,item('name','活动名称',h(Input,{'aria-label':'活动名称',maxLength:50,showCount:true}),[{required:true,whitespace:true,message:'请填写活动名称'},{max:50,message:'最多50字'}]),item('date','活动日期',h(DatePicker,{'aria-label':'活动日期',format:'YYYY/MM/DD',allowClear:false,inputReadOnly:true,style:{width:'100%'},disabledDate:d=>!canEdit(d.format('YYYY-MM-DD'))}),[{required:true,message:'请选择活动日期'}]),item('note','备注说明',h(Input.TextArea,{...count,'aria-label':'备注说明'}),[{max:200,message:'最多200字'}])];
+    if(isNote)return h('div',{className:'inline-note-editor'},h(antd.Form,{form,initialValues:initial,onFinish:values=>commit(values),validateTrigger:['onChange','onBlur']},
+      h(antd.Form.Item,{name:'note',className:'forecast-note-field',rules:[{max:200,message:'最多200字'}]},h(Input.TextArea,{...count,'aria-label':'商品备注',autoFocus:true}))),
+      error?h(Alert,{type:'error',message:error}):null,h('div',{className:'forecast-editor-footer'},h('span'),h(Space,null,h(Button,{onClick:close},'取消'),h(Button,{type:'primary',onClick:()=>form.submit()},'保存'))));
+    return h(antd.Modal,{open:true,title:isNote?'商品备注':isManual?'人工预测':'活动预测',width:440,onCancel:close,maskClosable:false,destroyOnHidden:true,footer:h('div',{className:'forecast-editor-footer'},!isNote&&(isManual?c.manual[edit.key]!=null:Boolean(event))?h(Button,{danger:true,onClick:()=>commit({},true)},'清除预测'):h('span'),h(Space,null,h(Button,{onClick:close},'取消'),h(Button,{type:'primary',onClick:()=>form.submit()},'保存')))},
+      h('div',{className:'forecast-editor-context'},c.asin+(edit.key?' · '+formatKey(edit.key):'')),
+      h(antd.Form,{form,layout:'vertical',initialValues:initial,onFinish:values=>commit(values),scrollToFirstError:true,validateTrigger:['onChange','onBlur']},...fields),error?h(Alert,{type:'error',message:error,showIcon:true}):null);
+  }
+  function Controls(){
+    const [,force]=useReducer(n=>n+1,0),[open,setOpen]=useState(false),[draft,setDraft]=useState(null),[search,setSearch]=useState(''),[template,setTemplate]=useState(undefined),[naming,setNaming]=useState(false),[name,setName]=useState(''),[error,setError]=useState('');
+    const {modal}=App.useApp();
+    const [message,messageHolder]=antd.message.useMessage({getContainer:()=>$('#forecastMessages'),top:0,maxCount:1});
+    const [editor,setEditor]=useState(null),dragged=React.useRef(null),[dropKey,setDropKey]=useState(null);
+    useEffect(()=>{window.openForecastEditor=e=>{message.destroy();setEditor({...e,token:Date.now()});};window.forecastMessage=(content,type)=>message.open({key:'forecast-feedback',content,type,duration:2.2});return()=>{delete window.openForecastEditor;delete window.forecastMessage;};},[message]);
+    useEffect(()=>{window.refreshForecastControls=force;return()=>{delete window.refreshForecastControls;};},[]);
+    const begin=()=>{hideCodeTooltip();closeCalendar();setDraft(clone(columnConfig));setOpen(true);setSearch('');setError('');setTemplate(undefined);setNaming(false);};
+    const close=()=>{if(draft&&JSON.stringify(draft)!==JSON.stringify(columnConfig)){modal.confirm({title:'放弃未应用的列配置？',content:'当前列表仍保留原配置。',okText:'放弃修改',cancelText:'继续编辑',onOk:()=>setOpen(false)});}else setOpen(false);};
+    const apply=()=>{try{localStorage.setItem(configStorageKey,JSON.stringify(draft));}catch{setError('保存失败，请检查浏览器存储权限后重试');return;}columnConfig=clone(draft);setOpen(false);renderTable();};
+    const toggle=(key,checked)=>setDraft(old=>({...old,keys:checked?[...old.keys,key]:old.keys.filter(k=>k!==key),pinned:(old.pinned||[]).filter(k=>checked||k!==key)}));
+    const reorder=(key,target,after=false)=>{
+      const field=fieldCatalog.find(f=>f.key===key),to=fieldCatalog.find(f=>f.key===target);
+      if(!field||!to||!canOrder(field)||!canOrder(to)||field.group!==to.group||key===target)return;
+      setDraft(old=>{
+        const movable=old.keys.filter(k=>{const f=fieldCatalog.find(f=>f.key===k);return f.group===field.group&&canOrder(f)&&!(old.pinned||[]).includes(k);});
+        if(!movable.includes(key)||!movable.includes(target))return old;
+        const ordered=movable.filter(k=>k!==key);ordered.splice(ordered.indexOf(target)+(after?1:0),0,key);
+        let i=0;return {...old,keys:old.keys.map(k=>movable.includes(k)?ordered[i++]:k)};
+      });
+    };
+    const toTop=field=>{const first=draft.keys.map(k=>fieldCatalog.find(f=>f.key===k)).find(f=>f.group===field.group&&canOrder(f)&&!(draft.pinned||[]).includes(f.key));if(first)reorder(field.key,first.key);};
+    const templateOptions=[{value:'default',label:'默认配置'},{value:'compact',label:'精简填报'},...(draft?.templates||[]).map((t,i)=>({value:'saved-'+i,label:t.name}))];
+    const changeTemplate=value=>{setTemplate(value);setDraft(old=>({...old,pinned:value.startsWith('saved-')?[...(old.templates[Number(value.slice(6))].pinned||[])]:[],keys:value==='default'?[...defaultFields]:value==='compact'?validFields(['spu','skc','owner','image','title','stock','doi']):[...old.templates[Number(value.slice(6))].keys]}));};
+    const saveTemplate=()=>{const title=name.trim();if(!title){setError('请输入模板名称');return;}if(draft.templates.some(t=>t.name===title)){setError('模板名称已存在');return;}setDraft(old=>({...old,templates:[...old.templates,{name:title,keys:[...old.keys],pinned:[...(old.pinned||[])]}]}));setTemplate('saved-'+draft.templates.length);setNaming(false);setName('');setError('');message.success('模板随“保存并应用”一起保存');};
+    const isPinned=key=>(draft?.pinned||[]).includes(key);
+    const moveable=field=>canOrder(field)&&!isPinned(field.key);
+    const togglePin=field=>{
+      if(!isPinned(field.key)&&(draft.pinned||[]).length>=7){message.info('最多可固定7项');return;}
+      setDraft(old=>({...old,pinned:isPinned(field.key)?old.pinned.filter(k=>k!==field.key):[...(old.pinned||[]),field.key]}));
+    };
+    const selectedTitle=(field,index,first)=>{
+      const fixed=field.required||positionFixedFields.has(field.key);
+      const action=(label,Icon,fn,disabled=false)=>h(React.Fragment,null,h(Button,{type:'text',size:'small',className:'column-quick-action',icon:h(Icon,{style:{fontSize:14}}),'aria-label':label+field.label,disabled,onClick:fn}));
+      const tools=field.required
+        ?h(Tooltip,{title:'必选字段，不可移除'},h(LockOutlined,{className:'column-fixed-icon','aria-label':'必选字段'}))
+        :h(React.Fragment,null,action('移除',CloseCircleOutlined,()=>toggle(field.key,false)),
+          action('置顶',VerticalAlignTopOutlined,()=>toTop(field),!moveable(field)||field.key===first),
+          fixed?h(Tooltip,{title:'结构位置固定，可隐藏'},h(LockOutlined,{className:'column-fixed-icon','aria-label':'结构固定'}))
+            :h(Tooltip,{title:isPinned(field.key)?'取消组内位置固定':'固定组内位置'},h(Button,{type:'text',size:'small',className:'column-quick-action'+(isPinned(field.key)?' is-pinned':''),icon:h(PushpinOutlined,{style:{fontSize:14}}),'aria-label':(isPinned(field.key)?'取消固定':'固定')+field.label,'aria-pressed':isPinned(field.key),onClick:()=>togglePin(field)})));
+      return h('div',{
+        className:'antd-selected-field-row'+(dropKey===field.key?' is-drop-target':''),
+        'data-selected-field':field.key,tabIndex:0,draggable:moveable(field),
+        onDragStart:e=>{dragged.current=field.key;e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',field.key);},
+        onDragOver:e=>{const source=fieldCatalog.find(f=>f.key===dragged.current);if(source&&source.group===field.group&&moveable(field)&&source.key!==field.key){e.preventDefault();setDropKey(field.key);}},
+        onDrop:e=>{e.preventDefault();const source=fieldCatalog.find(f=>f.key===dragged.current);if(source&&moveable(source)&&moveable(field))reorder(source.key,field.key,e.clientY>e.currentTarget.getBoundingClientRect().top+18);dragged.current=null;setDropKey(null);},
+        onDragEnd:()=>{dragged.current=null;setDropKey(null);},
+        onKeyDown:e=>{if(!e.altKey||!['ArrowUp','ArrowDown'].includes(e.key)||!moveable(field))return;e.preventDefault();const siblings=draft.keys.map(k=>fieldCatalog.find(f=>f.key===k)).filter(f=>f.group===field.group&&moveable(f)),i=siblings.findIndex(f=>f.key===field.key),target=siblings[i+(e.key==='ArrowDown'?1:-1)];if(target)reorder(field.key,target.key,e.key==='ArrowDown');}
+      },h('span',{className:'antd-selected-field-drag'+(moveable(field)?'':' is-locked'),'aria-hidden':true},h(HolderOutlined)),
+        h('span',{className:'antd-selected-field-number'},index+1),
+        h('span',{className:'antd-selected-field-name',title:field.label},field.label),
+        h('span',{className:'antd-selected-field-tools'+(isPinned(field.key)?' has-pin':'')},tools));
+    };
+    let selectedIndex=0;
+    const availablePane=draft?h('section',{className:'antd-column-available'},
+      h(Input,{'aria-label':'搜索字段',placeholder:'搜索字段',suffix:h(SearchOutlined),allowClear:true,value:search,onChange:e=>setSearch(e.target.value)}),
+      ...groupNames.map(group=>{
+        const fields=fieldCatalog.filter(f=>f.group===group&&f.label.toLowerCase().includes(search.toLowerCase()));
+        if(!fields.length)return null;
+        const all=fields.every(f=>draft.keys.includes(f.key));
+        return h('div',{className:'antd-column-group',key:group},
+          h('div',{className:'antd-column-group-title'},group,group==='必选字段'?h('span',null,'不可取消'):h(Button,{type:'link',onClick:()=>setDraft(old=>({...old,keys:all?old.keys.filter(k=>!fields.some(f=>f.key===k)):[...new Set([...old.keys,...fields.map(f=>f.key)])],pinned:(old.pinned||[]).filter(k=>!all||!fields.some(f=>f.key===k))}))},all?'取消全选':'全选')),
+          h('div',{className:'antd-column-options'},...fields.map(f=>h(Checkbox,{key:f.key,'data-antd-config-field':f.key,checked:draft.keys.includes(f.key),disabled:f.required,onChange:e=>toggle(f.key,e.target.checked)},f.label))));
+      })):null;
+    const selectedPane=draft?h('section',{className:'antd-column-selected','aria-label':'已选字段'},
+      h('div',{className:'antd-column-selected-header'},h('strong',null,'已选（'+draft.keys.length+'）'),h('span',null,'最多可固定7项 · 组内位置')),
+      h('div',{className:'antd-selected-scroll'},...groupNames.map(group=>{
+        const fields=draft.keys.map(k=>fieldCatalog.find(f=>f.key===k)).filter(f=>f.group===group),first=fields.find(moveable)?.key;
+        if(!fields.length)return null;
+        const base=selectedIndex;selectedIndex+=fields.length;
+        return h('div',{className:'antd-selected-group',key:group},h('div',{className:'antd-selected-group-title'},group),
+          h(List,{split:false,dataSource:fields,renderItem:(f,i)=>h(List.Item,{key:f.key,style:{display:'block',padding:0}},selectedTitle(f,base+i,first))}));
+      })),
+      h('div',{className:'antd-column-selected-hint'},'拖拽调整组内顺序')):null;
+    const drawerBody=draft?h(React.Fragment,null,
+      h('div',{className:'antd-column-template'},
+        h(Select,{'aria-label':'选择列配置模板',placeholder:'选择模板',value:template,options:templateOptions,onChange:changeTemplate,style:{width:190}}),
+        naming?h(Space,null,h(Input,{'aria-label':'模板名称',placeholder:'模板名称',maxLength:20,value:name,onChange:e=>setName(e.target.value),onPressEnter:saveTemplate}),h(Button,{onClick:saveTemplate},'保存模板'))
+          :h(Button,{type:'link',onClick:()=>{setNaming(true);setName('');}},'保存为新模板')),
+      h('div',{className:'antd-column-layout'},availablePane,selectedPane),
+      error?h(Alert,{type:'error',showIcon:true,message:error}):null):null;
+    const portals=[ReactDOM.createPortal(h(Filters),$('#filterControls'),'filters'),ReactDOM.createPortal(h(Tooltip,{title:'列配置'},h(Button,{id:'antdColumnButton',type:'text',icon:h(SettingOutlined),'aria-label':'列配置',onClick:begin})),$('#columnIcon'),'columns')];
+    $$('[data-forecast-toggle]').forEach(host=>{
+      const id=host.dataset.forecastToggle,children=id==='all'?displayGroups().flatMap(g=>g.children):[findChild(id)],expanded=children.every(c=>state.expandedChildren.has(c.id)),label=expanded?'收起填报':'展开填报';
+      portals.push(ReactDOM.createPortal(h(Tooltip,{title:(expanded?'收起':'展开')+'当前页填报明细'},h(Button,{type:'text',size:'small',disabled:!children.length,className:'forecast-toggle-action',style:{width:20,minWidth:20,height:22,padding:0,color:enterpriseThemeV020.token.colorTextSecondary},icon:h(expanded?icons.UpOutlined:icons.DownOutlined),'aria-label':label,'aria-expanded':expanded,'data-forecast-toggle-button':id,onClick:()=>{children.forEach(c=>expanded?state.expandedChildren.delete(c.id):state.expandedChildren.add(c.id));renderTable();requestAnimationFrame(()=>document.querySelector('[data-forecast-toggle-button="'+id+'"]')?.focus({preventScroll:true}));}})),host,'forecast-'+id));
+    });
+    $$('[data-reason-host]').forEach(host=>{
+      const c=findChild(host.dataset.reasonHost),key=host.dataset.reasonDate,content=host.dataset.reasonKind==='manual'?c.manualReasons[key]:[c.activity[key]?.name,c.activity[key]?.note].filter(Boolean).join('\n');
+      portals.push(ReactDOM.createPortal(h(Tooltip,{title:h('div',{className:'reason-full'},content),trigger:['hover','focus'],mouseEnterDelay:0.3},h('span',{className:'cell-reason',tabIndex:0,'aria-label':content},content)),host,'reason-'+c.id+'-'+host.dataset.reasonKind+'-'+key));
+    });
+    $$('[data-note-control]').forEach(host=>{
+      const c=findChild(host.dataset.noteControl),active=editor?.kind==='note'&&editor.id===c.id;
+      const content=active?h(ForecastEditor,{key:editor.token,edit:editor,onClose:()=>setEditor(null)}):h('span',{className:'note-display'},notes[c.id]?h('span',{className:'note-saved-text'},notes[c.id]):null,h(Tooltip,{title:'编辑备注'},h(Button,{type:'link',size:'small','data-note-edit':c.id,'aria-label':'编辑 '+c.asin+' 商品备注',icon:h(icons.EditOutlined),style:{width:16,minWidth:16,height:22,padding:0,flexShrink:0}})));
+      portals.push(ReactDOM.createPortal(content,host,'note-'+c.id));
+    });
+    $$('[data-history-management]').forEach(host=>{
+      const id=host.dataset.historyManagement,total=olderBatches().length,count=Math.min(state.historyCount[id]||2,total),expanded=state.historyOpen.has(id),more=count<total;
+      const focus=()=>requestAnimationFrame(()=>document.querySelector('[data-history-entry="'+id+'"]')?.focus({preventScroll:true}));
+      const change=n=>{state.historyCount[id]=n;state.historyOpen.add(id);renderTable();focus();};
+      const items=expanded?[...(more?[{key:'more',label:'再加载2批（剩余'+(total-count)+'批）'},{key:'all',label:'展开全部'+total+'批'}]:[]),...(count>2?[{key:'less',label:'仅保留最近2批'}]:[])]:[{key:'recent',label:'展开最近2批'},{key:'all',label:'展开全部'+total+'批'}];
+      portals.push(ReactDOM.createPortal(h('span',{className:'history-management'},
+        h(Button,{type:'link',size:'small',style:{padding:0,height:24,fontSize:12},icon:h(expanded?icons.DownOutlined:icons.RightOutlined),'data-history-entry':id,'aria-label':'历史提报记录 '+id,'aria-expanded':expanded,onClick:()=>{expanded?state.historyOpen.delete(id):state.historyOpen.add(id);renderTable();focus();}},'历史提报记录'),
+        h(antd.Dropdown,{trigger:['click'],menu:{items,onClick:({key})=>change(key==='all'?total:key==='more'?Math.min(total,count+2):2)}},h(Button,{type:'text',size:'small',style:{padding:'0 4px',height:24,fontSize:11,color:enterpriseThemeV020.token.colorTextSecondary},'data-history-count':id,'aria-label':'管理历史提报批次 '+id},(expanded?count+'/'+total:total+'批')+' ',h(icons.DownOutlined,{style:{fontSize:9}})))),host,'history-'+id));
+    });
+    return h(React.Fragment,null,messageHolder,editor&&editor.kind!=='note'?h(ForecastEditor,{key:editor.token,edit:editor,onClose:()=>setEditor(null)}):null,...portals,h(Drawer,{title:'列配置','aria-label':'列配置',open,onClose:close,width:'min(860px,96vw)',destroyOnHidden:true,styles:{body:{display:'flex',flexDirection:'column',padding:'16px 20px',overflow:'hidden'}},footer:h('div',{className:'column-footer'},h(Button,{onClick:()=>{setDraft(old=>({...old,keys:[...defaultFields],pinned:[]}));setTemplate('default');}},'恢复默认'),h(Space,null,h(Button,{onClick:close},'取消'),h(Button,{type:'primary',onClick:apply},'保存并应用')))},drawerBody));
+  }
+  ReactDOM.createRoot($('#antdControls')).render(withApp(h(Controls)));
+})();

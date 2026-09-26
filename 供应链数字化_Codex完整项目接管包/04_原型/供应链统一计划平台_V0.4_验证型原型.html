@@ -1,0 +1,546 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>供应链统一计划平台 V0.4 验证型原型</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --line: #d9e0ea;
+      --text: #17212b;
+      --muted: #667085;
+      --blue: #1677ff;
+      --blue-soft: #eaf3ff;
+      --green: #0f8f5f;
+      --green-soft: #eaf8f1;
+      --orange: #d46b08;
+      --orange-soft: #fff4e5;
+      --red: #cf1322;
+      --red-soft: #fff1f0;
+      --purple: #722ed1;
+      --purple-soft: #f3eefe;
+      --shadow: 0 12px 30px rgba(18, 38, 63, .12);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 13px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", Arial, sans-serif; }
+    button, input, select, textarea { font: inherit; }
+    .app { min-height: 100vh; display: grid; grid-template-columns: 232px 1fr; }
+    .sidebar { background: #111827; color: #e5e7eb; padding: 14px 12px; display: flex; flex-direction: column; gap: 12px; }
+    .brand { height: 40px; display: flex; align-items: center; gap: 10px; font-weight: 700; }
+    .brand-mark { width: 28px; height: 28px; border-radius: 6px; background: var(--blue); display: grid; place-items: center; color: #fff; }
+    .nav { display: grid; gap: 4px; }
+    .nav button { width: 100%; border: 0; background: transparent; color: #cbd5e1; text-align: left; padding: 8px 10px; border-radius: 6px; cursor: pointer; display: flex; justify-content: space-between; gap: 8px; }
+    .nav button span { color: #94a3b8; font-size: 12px; }
+    .nav button.active, .nav button:hover { background: #1f2937; color: #fff; }
+    .note { color: #9ca3af; font-size: 12px; padding: 8px 10px; border: 1px solid #374151; border-radius: 6px; }
+    .main { min-width: 0; display: flex; flex-direction: column; }
+    .topbar { position: sticky; top: 0; z-index: 20; height: 58px; background: rgba(255,255,255,.96); border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; padding: 8px 18px; gap: 12px; }
+    .breadcrumb { font-size: 12px; color: var(--muted); }
+    .scope { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .top-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .field { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; }
+    .select, .input, .textarea { border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--text); padding: 6px 8px; outline: 0; }
+    .input { min-width: 120px; }
+    .textarea { min-height: 84px; width: 100%; resize: vertical; }
+    .segmented { display: inline-flex; padding: 2px; border: 1px solid var(--line); border-radius: 7px; background: #fff; }
+    .segmented button { border: 0; background: transparent; padding: 6px 12px; border-radius: 5px; cursor: pointer; color: var(--muted); }
+    .segmented button.active { background: var(--blue); color: #fff; }
+    .content { padding: 16px 18px 28px; min-width: 0; }
+    .page { display: none; }
+    .page.active { display: block; }
+    .page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+    h1 { font-size: 22px; margin: 0 0 4px; }
+    .subtitle { color: var(--muted); }
+    .actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .btn { border: 1px solid var(--line); background: #fff; color: var(--text); border-radius: 6px; padding: 6px 10px; cursor: pointer; }
+    .btn.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+    .btn.text { border-color: transparent; background: transparent; color: var(--blue); padding-left: 4px; padding-right: 4px; }
+    .btn.danger { color: var(--red); border-color: #ffd1d1; background: #fff7f7; }
+    .btn:disabled { opacity: .45; cursor: not-allowed; }
+    .grid { display: grid; gap: 12px; }
+    .cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .card, .band { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; }
+    .card { padding: 14px; }
+    .band { margin-bottom: 14px; overflow: hidden; }
+    .band-header { min-height: 42px; padding: 10px 12px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .band-title { font-weight: 700; }
+    .band-body { padding: 12px; }
+    .metric-label { color: var(--muted); display: flex; justify-content: space-between; gap: 8px; }
+    .metric-value { font-size: 24px; font-weight: 750; margin-top: 8px; }
+    .metric-note { color: var(--muted); font-size: 12px; margin-top: 4px; }
+    .tag { display: inline-flex; align-items: center; border-radius: 4px; padding: 1px 6px; font-size: 12px; border: 1px solid transparent; white-space: nowrap; }
+    .tag.blue { color: #0958d9; background: var(--blue-soft); border-color: #b7d5ff; }
+    .tag.green { color: var(--green); background: var(--green-soft); border-color: #b7ebc6; }
+    .tag.orange { color: var(--orange); background: var(--orange-soft); border-color: #ffd591; }
+    .tag.red { color: var(--red); background: var(--red-soft); border-color: #ffa39e; }
+    .tag.purple { color: var(--purple); background: var(--purple-soft); border-color: #d3adf7; }
+    .assumption { display: inline-flex; color: var(--orange); background: var(--orange-soft); border: 1px solid #ffd591; border-radius: 4px; padding: 1px 6px; font-size: 12px; }
+    .summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+    .summary-item { padding: 8px; border: 1px solid #edf1f7; border-radius: 6px; background: #fbfcfe; min-width: 0; }
+    .summary-label { color: var(--muted); font-size: 12px; }
+    .summary-value { margin-top: 3px; font-weight: 650; overflow-wrap: anywhere; }
+    .table-wrap { width: 100%; overflow: auto; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+    table { width: 100%; border-collapse: collapse; min-width: 980px; }
+    th, td { border-bottom: 1px solid #edf1f7; padding: 8px 10px; vertical-align: top; text-align: left; }
+    th { background: #f8fafc; color: #344054; font-weight: 700; white-space: nowrap; }
+    tr:hover td { background: #fbfdff; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .small { font-size: 12px; }
+    .muted { color: var(--muted); }
+    .toolbar { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+    .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+    .tab { border: 1px solid var(--line); background: #fff; border-radius: 6px; padding: 7px 10px; cursor: pointer; }
+    .tab.active { background: var(--blue-soft); border-color: #91caff; color: #0958d9; }
+    .chain { display: grid; gap: 10px; }
+    .chain-step { border: 1px solid var(--line); border-radius: 8px; background: #fff; overflow: hidden; }
+    .chain-title { display: flex; justify-content: space-between; gap: 8px; padding: 9px 10px; background: #f8fafc; border-bottom: 1px solid var(--line); font-weight: 700; }
+    .chain-body { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; padding: 10px; }
+    .kv { border: 1px solid #edf1f7; border-radius: 6px; padding: 7px; min-width: 0; }
+    .kv-k { color: var(--muted); font-size: 12px; }
+    .kv-v { margin-top: 3px; font-weight: 650; overflow-wrap: anywhere; }
+    .drawer-mask, .modal-mask { display: none; position: fixed; inset: 0; background: rgba(15,23,42,.35); z-index: 50; }
+    .drawer-mask.open, .modal-mask.open { display: block; }
+    .drawer { position: fixed; right: 0; top: 0; bottom: 0; width: min(760px, 92vw); background: #fff; z-index: 60; transform: translateX(100%); transition: transform .2s ease; box-shadow: var(--shadow); display: flex; flex-direction: column; }
+    .drawer.open { transform: translateX(0); }
+    .drawer-header, .drawer-footer { padding: 12px 14px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .drawer-footer { border-top: 1px solid var(--line); border-bottom: 0; justify-content: flex-end; }
+    .drawer-title { font-weight: 750; font-size: 16px; }
+    .drawer-body { padding: 14px; overflow: auto; }
+    .modal { display: none; position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(640px, 92vw); background: #fff; border-radius: 8px; z-index: 70; box-shadow: var(--shadow); }
+    .modal.open { display: block; }
+    .modal-header, .modal-footer { padding: 12px 14px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
+    .modal-footer { border-top: 1px solid var(--line); border-bottom: 0; justify-content: flex-end; gap: 8px; }
+    .modal-body { padding: 14px; }
+    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .form-item { display: grid; gap: 4px; }
+    .form-item.full { grid-column: 1 / -1; }
+    .alert { padding: 9px 10px; border-radius: 6px; border: 1px solid #ffd591; background: var(--orange-soft); color: #7a4b00; }
+    .impact-list { display: grid; gap: 8px; }
+    .toast { position: fixed; right: 18px; bottom: 18px; background: #111827; color: #fff; padding: 9px 12px; border-radius: 6px; opacity: 0; transform: translateY(10px); transition: .2s ease; z-index: 100; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    @media (max-width: 980px) {
+      .app { grid-template-columns: 1fr; }
+      .sidebar { position: static; }
+      .nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .topbar { position: static; height: auto; align-items: flex-start; flex-direction: column; }
+      .cols-4, .cols-3, .cols-2, .summary, .chain-body, .form-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand"><div class="brand-mark">P</div><div>供应链统一计划平台</div></div>
+      <nav class="nav" id="nav"></nav>
+      <div class="note">V0.4：把参数解释为“来源、Owner、业务目的、计算影响、变更影响”，用于业务走查纠偏；备货周期不默认等于需求覆盖周期；安全水位不默认解释为传统安全库存件数；不创建预测算法、库存主数据或正式PR模块。</div>
+    </aside>
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <div class="breadcrumb" id="breadcrumb">工作台</div>
+          <div class="scope" id="scopeText"></div>
+        </div>
+        <div class="top-actions">
+          <label class="field">角色
+            <select class="select" id="roleSelect">
+              <option value="pmc">PMC</option>
+              <option value="ops">运营</option>
+              <option value="brand">品牌项目负责人</option>
+              <option value="buyer">采购</option>
+              <option value="manager">管理者</option>
+            </select>
+          </label>
+          <div class="segmented" id="sceneSwitch">
+            <button data-scene="mature" class="active" type="button">成熟老品</button>
+            <button data-scene="multi" type="button">多平台</button>
+            <button data-scene="new" type="button">新品</button>
+          </div>
+        </div>
+      </header>
+      <div class="content">
+        <section class="page active" id="page-dashboard"></section>
+        <section class="page" id="page-demand"></section>
+        <section class="page" id="page-plan"></section>
+        <section class="page" id="page-result"></section>
+        <section class="page" id="page-channelParams"></section>
+        <section class="page" id="page-channelStrategy"></section>
+        <section class="page" id="page-supplyConstraint"></section>
+        <section class="page" id="page-stockCalendar"></section>
+        <section class="page" id="page-specialRules"></section>
+        <section class="page" id="page-scheme"></section>
+      </div>
+    </main>
+  </div>
+
+  <div class="drawer-mask" id="drawerMask"></div>
+  <aside class="drawer" id="drawer">
+    <div class="drawer-header"><div class="drawer-title" id="drawerTitle"></div><button class="btn" id="drawerClose" type="button">关闭</button></div>
+    <div class="drawer-body" id="drawerBody"></div>
+    <div class="drawer-footer">
+      <button class="btn" id="impactFromDrawer" type="button">查看变更影响</button>
+      <button class="btn primary" id="correctFromDrawer" type="button">提出纠偏</button>
+    </div>
+  </aside>
+
+  <div class="modal-mask" id="modalMask"></div>
+  <section class="modal" id="correctionModal">
+    <div class="modal-header"><strong>业务纠偏记录</strong><button class="btn" id="modalClose" type="button">关闭</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-item full"><label>原方案/原参数</label><textarea class="textarea" id="correctionOrigin" readonly></textarea></div>
+        <div class="form-item full"><label>业务反馈</label><textarea class="textarea" id="correctionFeedback">请直接写：当前设计哪里不对，应修改为...</textarea></div>
+        <div class="form-item"><label>反馈人</label><input class="input" id="correctionUser" value="业务负责人" /></div>
+        <div class="form-item"><label>处理状态</label><select class="select"><option>待产品确认</option><option>已采纳</option><option>需再次访谈</option></select></div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn" id="modalCancel" type="button">取消</button><button class="btn primary" id="modalSubmit" type="button">记录纠偏</button></div>
+  </section>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const navs = [
+      ["dashboard", "工作台", "任务"],
+      ["demand", "需求计划", "预测+修正"],
+      ["plan", "计划管理", "创建"],
+      ["result", "计划结果", "为什么采购"],
+      ["channelParams", "渠道计划参数", "时效/水位"],
+      ["channelStrategy", "渠道采购策略", "准入"],
+      ["supplyConstraint", "商品供应约束", "MOQ"],
+      ["stockCalendar", "备货日历", "节点"],
+      ["specialRules", "特殊计划规则", "例外"],
+      ["scheme", "规则方案", "组合层"]
+    ];
+    const roles = { pmc: "PMC", ops: "运营", brand: "品牌项目负责人", buyer: "采购", manager: "管理者" };
+    const scenes = {
+      mature: { label: "成熟老品", owner: "PMC", scheme: "成熟老品-非首单补货方案 V1", scope: { pmc: "成熟老品/负责SKU", ops: "授权查看渠道需求", brand: "负责品牌摘要", buyer: "负责供应商SKU", manager: "全部成熟老品" }, canCreate: ["pmc", "manager"] },
+      multi: { label: "多平台", owner: "运营", scheme: "多平台-常规备货方案 V1", scope: { pmc: "授权查看摘要", ops: "负责平台/国家", brand: "负责品牌多平台摘要", buyer: "负责供应商SKU", manager: "全部多平台" }, canCreate: ["ops", "manager"] },
+      new: { label: "新品", owner: "品牌项目负责人", scheme: "新品首单-上市备货方案 V1", scope: { pmc: "新品协同查看，不可创建", ops: "无新品完整数据权限", brand: "品牌A新品", buyer: "负责供应商新品", manager: "全部新品" }, canCreate: ["brand", "manager"] }
+    };
+    const state = { page: "dashboard", scene: "mature", role: "pmc", selectedParam: null, corrections: 0 };
+
+    const paramDict = [
+      { name: "采购前置时效", type: "计划参数", value: "35", unit: "天", source: "当前PMC采购备货表/供应商资料待确认", raw: "用户补充：采购前置时效；V1.0含下单时点规则", owner: "采购/PMC待确认", dim: "渠道或供应商/SKU待确认", editable: "按权限可维护", meaning: "从采购需求到可进入供应准备/采购执行所需时效，具体业务含义需采购确认。", purpose: "判断采购是否来得及，并计算最晚下单日和交期风险。", calc: "目标到货日 - 采购前置 - 仓库作业 - 头程/缓冲 = 最晚下单日候选", impact: "35改为40会使最晚下单日提前5天，未确认计划需要重新计算。", basis: "【原型假设】沿用现有业务表参数。", status: "待确认" },
+      { name: "仓库作业时效", type: "计划参数", value: "5", unit: "天", source: "仓库作业规则/PMC表待确认", raw: "用户补充：仓库作业时效", owner: "仓库/PMC待确认", dim: "渠道/仓库", editable: "按权限可维护", meaning: "入仓、上架、贴标或仓内处理所需时效。", purpose: "判断到货后多久可售，参与最晚下单日和预计可售日。", calc: "目标可售日 - 仓库作业时效 = 目标到货日", impact: "增加时效会提前采购节点并提高交期风险。", basis: "【原型假设】按现有参数展示。", status: "待确认" },
+      { name: "头程时效", type: "计划参数", value: "10-40", unit: "天", source: "物流规则/PMC表待确认", raw: "用户补充：头程时效", owner: "物流/PMC待确认", dim: "渠道/国家/运输方式", editable: "按权限可维护", meaning: "从发运到海外/目标仓入库前的运输时效。", purpose: "影响建议下单时间、预计到货时间和供应风险。", calc: "预计到货日 = 发运日 + 头程时效 + 仓库作业时效", impact: "时效变长会使交期风险提前暴露。", basis: "【当前业务操作实践】亚马逊示例为区间。", status: "待确认" },
+      { name: "备货周期", type: "计划参数", value: "14", unit: "天", source: "PMC备货规则/业务表待确认", raw: "用户补充：备货周期（间隔时间）", owner: "PMC", dim: "计划批次/渠道", editable: "按权限可维护", meaning: "当前材料更像两次常规采购计划之间的运行间隔。", purpose: "控制计划运行节奏；是否等于需求覆盖周期不能默认。", calc: "与需求覆盖周期分离展示；是否进入合计备货天数待确认。", impact: "改动可能影响计划生成频率，也可能影响需求覆盖范围。", basis: "【待确认】不默认等于需求覆盖周期。", status: "待确认" },
+      { name: "需求覆盖周期", type: "计划参数", value: "待确认", unit: "天", source: "待业务确认", raw: "V0.4新增区分项", owner: "PMC/业务待确认", dim: "计划批次/渠道/SKU", editable: "待确认", meaning: "本次计划需要覆盖的未来需求天数。", purpose: "决定本次要计算多少未来需求。", calc: "需求量 = 日均需求 × 需求覆盖周期", impact: "直接改变最终需求和原始缺口。", basis: "【当前产品判断】必须与备货周期拆开。", status: "待确认" },
+      { name: "在库安全水位", type: "计划参数", value: "5-35", unit: "天或件待确认", source: "PMC备货表待确认", raw: "用户补充：在库安全水位 5-35天", owner: "PMC/业务待确认", dim: "渠道/SKU/商品等级待确认", editable: "按权限可维护", meaning: "可能是库存覆盖天数阈值，也可能是件数安全库存。", purpose: "用于判断库存覆盖是否达到目标水位。", calc: "若为天数：库存覆盖天数 = 可用库存 / 日均需求", impact: "改变补货触发、风险颜色和建议量。", basis: "【待确认】不擅自解释为传统安全库存件数。", status: "待确认" },
+      { name: "管道安全垫", type: "计划参数", value: "0", unit: "天或件待确认", source: "PMC备货表待确认", raw: "用户补充：管道安全垫", owner: "PMC/业务待确认", dim: "渠道/SKU/运输方式待确认", editable: "按权限可维护", meaning: "为供应或运输波动预留的缓冲。", purpose: "用于风险缓冲或覆盖周期修正。", calc: "可能进入合计备货天数或覆盖需求，待确认。", impact: "可能提前下单或增加备货覆盖。", basis: "【待确认】当前仅展示参数位置。", status: "待确认" },
+      { name: "合计备货天数", type: "计算结果", value: "69-129", unit: "天", source: "计划平台计算", raw: "渠道参数矩阵", owner: "系统计算", dim: "渠道/计划批次", editable: "不可直接编辑", meaning: "由若干时效、水位和缓冲参数汇总形成。", purpose: "解释渠道整体备货提前量和风险窗口。", calc: "采购前置 + 仓库作业 + 头程 + 备货周期 + 在库安全水位 + 管道安全垫", impact: "随上游参数变化自动变化。", basis: "【原型假设】公式需业务确认。", status: "待确认" },
+      { name: "MOQ", type: "商品/供应商基础数据", value: "100", unit: "件", source: "供应商资料/采购维护/SCM待确认", raw: "V1.0：SKU MOQ、组 MOQ、取整规则", owner: "采购", dim: "SKU+供应商或款号+供应商待确认", editable: "采购权限可维护", meaning: "供应商最小接单量。", purpose: "把原始缺口转换为可执行采购量。", calc: "缺口>0时，建议量需满足MOQ；组MOQ另行校验。", impact: "MOQ 50改100可能影响12个未确认计划、86个SKU。", basis: "【当前业务操作实践】维度未确认。", status: "待确认" },
+      { name: "采购倍数", type: "商品/供应商基础数据", value: "100", unit: "件", source: "供应商资料/采购维护待确认", raw: "V1.0含取整规则，用户补充采购倍数", owner: "采购", dim: "SKU+供应商", editable: "采购权限可维护", meaning: "下单量需满足的批量、整箱或生产倍数。", purpose: "使建议量满足供应商或包装约束。", calc: "建议量 = max(MOQ, ceil(原始缺口 / 采购倍数) × 采购倍数)", impact: "改变MOQ后建议量和额外备货。", basis: "【原型假设】采购倍数独立于MOQ。", status: "待确认" },
+      { name: "生产天数", type: "商品/供应商基础数据", value: "35", unit: "天", source: "供应商资料/采购维护/SCM待确认", raw: "V1.0：供应商生产天数按自然日", owner: "采购", dim: "SKU+供应商", editable: "采购权限可维护", meaning: "供应商完成生产所需自然日。", purpose: "判断交期风险，不改变缺口数量。", calc: "最晚下单日 = 目标到货日 - 生产天数 - 运输/入仓缓冲", impact: "生产天数变长会提前下单日并增加交期风险。", basis: "【已确认业务事实】自然日，来源系统待确认。", status: "部分确认" },
+      { name: "是否参与备货", type: "计划策略", value: "参与/不参与", unit: "-", source: "PMC配置/渠道策略", raw: "V1.0需求来源表；用户补充是否参与备货", owner: "PMC/运营", dim: "渠道/渠道+SKU", editable: "按权限可维护", meaning: "决定该渠道或SKU是否进入采购计划。", purpose: "避免清货、停采或无预测渠道误入正常采购。", calc: "参与备货=是才进入缺口/MOQ计算。", impact: "关闭后不生成建议采购量或转人工。", basis: "【当前业务操作实践】", status: "待确认" },
+      { name: "有预测/无预测", type: "计划策略", value: "有预测/无预测", unit: "-", source: "数仓/渠道配置/业务维护", raw: "V1.0需求来源表", owner: "PMC/运营/数仓待确认", dim: "渠道", editable: "按权限可维护", meaning: "决定需求来自数仓预测还是人工/策略提报。", purpose: "保证无预测渠道不被误标为AI预测。", calc: "有预测读取模型结果；无预测读取人工/策略需求。", impact: "改变需求来源和数据血缘。", basis: "【已确认业务事实】渠道清单需复核。", status: "待确认" },
+      { name: "正常/清货/停采", type: "计划策略", value: "正常/清货/停采", unit: "-", source: "商品/渠道资料待确认", raw: "用户补充采购决策标签", owner: "PMC/运营/商品待确认", dim: "SKU/渠道/SKU+渠道", editable: "按权限可维护", meaning: "渠道或商品的采购决策状态。", purpose: "判断是否继续正常补货。", calc: "清货/停采通常阻断正常采购，是否仍参与库存覆盖待确认。", impact: "影响准入、异常和采购建议。", basis: "【当前业务操作实践】", status: "待确认" },
+      { name: "国庆备货", type: "日历事件", value: "W40-W41示例", unit: "周", source: "PMC备货日历", raw: "用户补充：国庆备货", owner: "PMC", dim: "日期/周+渠道", editable: "PMC/管理者维护", meaning: "节假日前提前或加量备货节点。", purpose: "解释为什么计划突然提前或加量。", calc: "可能增加前置、增加需求、调整水位或禁止下单，待确认。", impact: "影响建议下单日、过货策略和风险。", basis: "【当前业务操作实践】", status: "待确认" },
+      { name: "春节备货", type: "日历事件", value: "W43/W44/W45示例", unit: "周", source: "PMC备货日历", raw: "用户补充：春节备货、多备1周、多备2周", owner: "PMC", dim: "日期/周+渠道", editable: "PMC/管理者维护", meaning: "春节前提前备货、截单、不过货和复工节点组合。", purpose: "解释春节对备货时点、覆盖周数和过货策略的影响。", calc: "具体是前置调整还是需求覆盖调整，待确认。", impact: "影响最晚下单日和交期风险。", basis: "【当前业务操作实践】", status: "待确认" },
+      { name: "物流截单", type: "日历事件", value: "示例：W48", unit: "周/日期", source: "物流/PMC待确认", raw: "用户补充：物流截单", owner: "物流/PMC", dim: "日期/周+渠道/线路", editable: "按权限可维护", meaning: "物流停止接单或末班发运节点。", purpose: "判断是否还能过货。", calc: "目标发运日晚于截单日时阻断或标红。", impact: "影响过货策略、预计到货和风险。", basis: "【当前业务操作实践】", status: "待确认" },
+      { name: "组合装库存复用", type: "特殊计划规则", value: "启用示例", unit: "-", source: "商品关系/库存数据待确认", raw: "V1.0/用户补充：组合装复用", owner: "PMC/仓库/商品待确认", dim: "组合SKU+基础SKU", editable: "规则Owner维护", meaning: "组合装或单色SKU有需求时检查基础SKU库存是否满足。", purpose: "避免基础库存可复用时重复下单。", calc: "检查可复用SKU库存，满足则建议下单量可调整为0或生成拆组提示。", impact: "影响库存匹配、原始缺口和仓库作业提示。", basis: "【待确认】触发节点未确认。", status: "待确认" },
+      { name: "改唛SKU复用", type: "特殊计划规则", value: "启用示例", unit: "-", source: "SKU映射/商品关系待确认", raw: "用户补充：改唛SKU", owner: "运营/PMC/商品待确认", dim: "SKU映射/渠道+SKU", editable: "规则Owner维护", meaning: "多平台改唛SKU判断是否可复用其他渠道库存。", purpose: "减少不必要采购，并保留跨渠道复用依据。", calc: "判断跨渠道可复用库存后进入抵扣。", impact: "影响可参与库存和缺口。", basis: "【待确认】映射来源未确认。", status: "待确认" },
+      { name: "多品牌库存拆分", type: "特殊计划规则", value: "启用示例", unit: "-", source: "商品/库存归属资料待确认", raw: "用户补充：N品牌库存", owner: "品牌/PMC/仓库待确认", dim: "品牌+SKU/共享库存", editable: "规则Owner维护", meaning: "共享库存或老品衍生N品牌时按实际归属拆分。", purpose: "避免品牌之间库存误抵扣。", calc: "共享库存按归属或分配规则拆分。", impact: "影响数据权限、可用库存和缺口。", basis: "【待确认】分摊规则未确认。", status: "待确认" },
+      { name: "采购退回", type: "异常事件/特殊规则", value: "拒单/交期变化", unit: "-", source: "SCM/采购反馈", raw: "V1.0：采购答复异常返回", owner: "采购", dim: "SKU+供应商+计划行", editable: "采购反馈触发", meaning: "采购反馈供应商拒单、MOQ变化、交期变化、拆单或替代供应商。", purpose: "异常不丢失，回退后保留重算前后值。", calc: "异常原因 -> 回退至缺口/MOQ节点 -> 重新计算受影响SKU。", impact: "影响最终采购计划和下游承接。", basis: "【已确认业务事实】存在采购退回。", status: "部分确认" },
+      { name: "PR明细", type: "下游输出", value: "采购需求/PR候选", unit: "-", source: "SCM/采购执行待确认", raw: "V1.0：仅已确认/可下单SKU生成PR", owner: "SCM/采购待确认", dim: "供应商+SKU+计划行", editable: "否", meaning: "下游采购执行需要的候选字段，不在V0.4默认定义为正式PR。", purpose: "保持计划平台与SCM边界中性。", calc: "已确认计划结果 -> 采购需求/计划结果 -> SCM承接待确认。", impact: "影响接口和审批边界。", basis: "【待确认】计划平台是否生成正式PR。", status: "待确认" }
+    ];
+
+    const channelRows = [
+      ["亚马逊", 35, 5, "10-40", 14, "5-35", 0, "参与", "69-129", "2026-08-21", "正常"],
+      ["美客多", 35, 5, 40, 14, 0, 0, "参与", 94, "2026-08-21", "正常"],
+      ["TK小店和半托仓", 35, 5, 30, 14, 10, 0, "参与", 94, "2026-08-21", "正常"],
+      ["日本乐天", 35, 5, 10, 14, 10, 0, "参与", 74, "2026-08-21", "正常"],
+      ["国内通货", 35, 5, 0, 14, 0, 0, "参与", 54, "2026-08-21", "正常"],
+      ["独立站", 35, 5, 0, 0, 0, 0, "参与", 40, "2026-08-21", "正常"],
+      ["TK直邮店", 35, 5, 0, 0, 0, 0, "不参与", 40, "2026-08-21", "待确认"],
+      ["OBM-Shein", "-", "-", "-", "-", "-", "-", "不参与", 0, "待确认", "清货"]
+    ];
+    const strategyRows = [
+      ["亚马逊", "数仓预测", "有预测", "参与", "否", "否", "正常采购", 100],
+      ["美客多", "数仓预测", "有预测", "参与", "否", "否", "正常采购", 90],
+      ["1688", "人工/策略", "无预测", "不参与", "否", "否", "不参与", 10],
+      ["TEMU", "人工/策略", "无预测", "不参与", "否", "否", "不参与", 30],
+      ["OBM-Shein", "-", "无预测", "不参与", "是", "否", "清货", 10]
+    ];
+    const supplyRows = [
+      ["AD6025-BK-M", "AD6025", "XX制衣", 100, 100, 35, 5, "供应商资料/SCM待确认", "采购", "2026-08-21", "有效"],
+      ["AD615910100M-B91", "AD615910", "佛山波罗密", 300, 100, 13, 5, "采购维护/待确认", "采购", "2026-08-28", "有效"],
+      ["ND6025-BK-M", "ND6025", "XX制衣", 100, 100, 40, 5, "N品牌共享库存待确认", "采购/品牌", "待确认", "待确认"]
+    ];
+    const calendarRows = [
+      ["国庆备货", "W40-W41", "全部/待确认", "提前备货", "前置调整", "+7天", "建议下单日", "PMC日历", "PMC", "待确认"],
+      ["春节备货", "W43", "亚马逊/美客多", "多备2周", "覆盖周期/待确认", "+14天", "备货时点", "PMC日历", "PMC", "待确认"],
+      ["物流截单", "W48", "海运线路", "截单", "过货策略", "禁止常规过货", "执行风险", "物流/PMC待确认", "物流", "待确认"],
+      ["不过货", "W49-W50", "部分渠道", "不过货", "过货策略", "阻断或标红", "输出状态", "PMC日历", "PMC", "待确认"],
+      ["工厂复工", "W07", "供应商", "复工", "生产可行性", "限制生产启动", "交期风险", "供应商资料", "采购", "待确认"]
+    ];
+    const specialRows = [
+      ["组合装库存复用", "组合装SKU", "组合装/单色SKU存在需求", "检查基础SKU库存；满足则下单量可为0", "库存匹配/缺口前后待确认", "是", "待确认"],
+      ["改唛SKU复用", "改唛SKU", "存在跨渠道SKU映射", "检查可复用库存", "库存匹配", "否", "待确认"],
+      ["多品牌库存拆分", "N品牌/共享库存", "共享库存归属不清", "分品牌计算覆盖", "库存匹配/数据权限", "是", "待确认"],
+      ["采购退回重算", "计划结果行", "供应商拒单/MOQ或交期变化", "回退至缺口/MOQ节点重算", "异常闭环", "是", "部分确认"]
+    ];
+    const resultRows = {
+      mature: [
+        { sku: "AD6025-BK-M", product: "连体塑身衣", scene: "Amazon US / 子体ASIN B0AD6025M", forecast: 1500, adjust: 100, demand: 1600, stockParts: [["南沙仓",300,"可用量+锁定差异+良品"],["FBA仓",200,"FBA可售+待调仓"],["TEMU仓",100,"仓内可用"]], inboundParts: [["采购在途",300,"待到货+次品+待采购"],["FBA在途",200,"标发在途+计划入库+入库中"],["在途库存",100,"暂不可用+已发货"]], stock: 600, inbound: 600, gap: 400, moq: 100, batch: 100, suggested: 400, calendar: "春节备货 +1周【待确认】", latestOrder: "2026-09-10", risk: "交期风险", manual: -200, finalQty: 200, manualReason: "供应商当前产能不足", owner: "PMC计划员" },
+        { sku: "AD615910100M-B91", product: "连体塑身衣", scene: "Amazon US / 子体ASIN B0US6159M", forecast: 520, adjust: 80, demand: 600, stockParts: [["FBA仓",100,"FBA可售"],["南沙/广州仓",80,"可用库存"],["锁定库存",20,"不参与"]], inboundParts: [["采购在途",120,"预计10-10到货"]], stock: 180, inbound: 120, gap: 300, moq: 300, batch: 100, suggested: 300, calendar: "常规备货", latestOrder: "2026-09-12", risk: "正常", manual: 0, finalQty: 300, manualReason: "无", owner: "PMC计划员" }
+      ],
+      multi: [
+        { sku: "9994115", product: "LED蜂窝灯地下车库白色147造型", scene: "eBay 英国 / 自定义SKU H-LS00128 ASSHOD", forecast: 180, adjust: 20, demand: 200, stockParts: [["海外仓",0,"总可售天数0.00"],["共享库存",0,"无可复用"]], inboundParts: [["待下PO",0,"仅展示承接关系"]], stock: 0, inbound: 0, gap: 200, moq: 100, batch: 50, suggested: 200, calendar: "物流LT 113天", latestOrder: "2026-09-03", risk: "供应周期风险", manual: 0, finalQty: 200, manualReason: "无", owner: "运营" }
+      ],
+      new: [
+        { sku: "NEW-SKU-202610-001", product: "新款塑身裤", scene: "品牌A / 上市时间2026-10-20", forecast: 300, adjust: 200, demand: 500, stockParts: [["已有库存",0,"首单是否参与待确认"]], inboundParts: [["已下采购",0,"项目采购待确认"]], stock: 0, inbound: 0, gap: 500, moq: 500, batch: 100, suggested: 500, calendar: "上市日期反推", latestOrder: "2026-09-25", risk: "正常", manual: 0, finalQty: 500, manualReason: "新品首发铺货", owner: "品牌项目负责人" },
+        { sku: "NEW-SKU-202611-003", product: "新款运动服", scene: "品牌B / 数据权限示例", forecast: 180, adjust: 0, demand: 180, stockParts: [["已有库存",0,"品牌A不可查看完整数据"]], inboundParts: [["已下采购",0,"无权限查看"]], stock: 0, inbound: 0, gap: 180, moq: 300, batch: 100, suggested: 300, calendar: "上市日期反推", latestOrder: "2026-10-04", risk: "无权限查看完整数据", manual: 0, finalQty: 300, manualReason: "无", owner: "品牌B项目负责人" }
+      ]
+    };
+
+    function scene() { return scenes[state.scene]; }
+    function tag(text, type) {
+      const s = String(text);
+      const cls = type || (s.includes("不参与") || s.includes("风险") || s.includes("无权限") ? "red" : s.includes("待") || s.includes("假设") || s.includes("清货") ? "orange" : s.includes("确认") ? "purple" : "green");
+      return `<span class="tag ${cls}">${text}</span>`;
+    }
+    function assumption(text) { return `<span class="assumption">原型假设：${text}</span>`; }
+    function summary(items) { return `<div class="summary">${items.map(([k,v]) => `<div class="summary-item"><div class="summary-label">${k}</div><div class="summary-value">${v}</div></div>`).join("")}</div>`; }
+    function showToast(text) { const el = document.getElementById("toast"); el.textContent = text; el.classList.add("show"); setTimeout(() => el.classList.remove("show"), 1600); }
+    function canCreate() { return scene().canCreate.includes(state.role); }
+    function resultData() {
+      let rows = resultRows[state.scene].slice();
+      if (state.role === "brand" && state.scene === "new") rows = rows.filter(r => !r.scene.includes("品牌B"));
+      if (state.role === "pmc" && state.scene === "new") rows = rows.map(r => ({...r, manual: "只读"}));
+      return rows;
+    }
+    function param(name) { return paramDict.find(p => p.name === name) || paramDict[0]; }
+
+    function renderShell() {
+      document.getElementById("nav").innerHTML = navs.map(([key,label,sub]) => `<button class="${state.page===key?'active':''}" data-nav="${key}" type="button">${label}<span>${sub}</span></button>`).join("");
+      document.querySelectorAll(".page").forEach(p => p.classList.toggle("active", p.id === `page-${state.page}`));
+      document.querySelectorAll("[data-scene]").forEach(b => b.classList.toggle("active", b.dataset.scene === state.scene));
+      document.getElementById("roleSelect").value = state.role;
+      document.getElementById("breadcrumb").textContent = navs.find(n => n[0] === state.page)?.[1] || "工作台";
+      document.getElementById("scopeText").textContent = `当前角色：${roles[state.role]}。计划场景：${scene().label}。数据范围：${scene().scope[state.role]}`;
+    }
+    function pageHeader(title, sub, actions="") {
+      return `<div class="page-header"><div><h1>${title}</h1><div class="subtitle">${sub}</div></div><div class="actions">${actions}</div></div>`;
+    }
+    function renderDashboard() {
+      document.getElementById("page-dashboard").innerHTML = pageHeader("工作台", "统一入口，验证角色、场景和数据权限是否能解释“我负责什么计划”。", `<button class="btn primary" id="newPlanBtn" ${canCreate()?"":"disabled"}>新建计划</button><button class="btn" data-nav="result">查看计划结果</button>`)
+        + `<div class="grid cols-4">
+          <div class="card"><div class="metric-label">当前方案 ${tag(scene().label,"blue")}</div><div class="metric-value">${scene().scheme}</div><div class="metric-note">规则方案只引用参数，不承载所有规则字段。</div></div>
+          <div class="card"><div class="metric-label">创建权限</div><div class="metric-value">${canCreate() ? "可创建" : "不可创建"}</div><div class="metric-note">${state.role==="pmc" && state.scene==="new" ? "PMC 不默认拥有新品创建权" : scene().owner}</div></div>
+          <div class="card"><div class="metric-label">纠偏记录</div><div class="metric-value">${state.corrections}</div><div class="metric-note">原型内模拟，不写后端。</div></div>
+          <div class="card"><div class="metric-label">下游边界</div><div class="metric-value">采购需求</div><div class="metric-note">不默认正式PR/PO。</div></div>
+        </div>
+        <div style="height:14px"></div>
+        <div class="band"><div class="band-header"><div class="band-title">参数解释链路</div>${assumption("业务走查重点")}</div><div class="band-body">
+          <div class="chain">
+            ${["数据来源","基础数据","计划参数","业务策略","日历约束","计算过程","人工判断","最终采购计划","SCM承接"].map((x,i)=>`<div class="chain-step"><div class="chain-title"><span>${i+1}. ${x}</span>${tag("可追溯","blue")}</div><div class="chain-body"><div class="kv"><div class="kv-k">验证问题</div><div class="kv-v">${x}从哪里来、谁维护、影响什么？</div></div></div></div>`).join("")}
+          </div>
+        </div></div>`;
+    }
+    function renderDemand() {
+      const rows = resultData();
+      document.getElementById("page-demand").innerHTML = pageHeader("需求计划", "展示数仓预测、人工修正和最终需求，并区分读取型数据与人工输入。", `<button class="btn" ${state.role==="buyer"?"disabled":""}>保存调整</button><button class="btn primary" ${state.role==="buyer"?"disabled":""}>提交计算</button>`)
+        + `<div class="band"><div class="band-header"><div class="band-title">需求来源</div>${tag("数仓预测只读取不重建","blue")}</div><div class="band-body">${summary([
+          ["计划场景", scene().label],
+          ["预测来源", "数仓销售预测/无预测渠道人工提报"],
+          ["调整责任", scene().owner],
+          ["规则方案", scene().scheme],
+          ["备货周期说明", "与需求覆盖周期分离，当前待确认"],
+          ["数据权限", scene().scope[state.role]]
+        ])}</div></div>
+        <div class="band"><div class="band-header"><div class="band-title">需求明细</div><button class="btn text" data-param="有预测/无预测">查看需求来源参数</button></div><div class="band-body"><div class="table-wrap"><table>
+          <thead><tr><th>SKU</th><th>商品/场景字段</th><th>预测需求</th><th>人工修正</th><th>最终需求</th><th>来源</th><th>调整留痕</th><th>操作</th></tr></thead>
+          <tbody>${rows.map(r=>`<tr><td class="mono">${r.sku}</td><td>${r.product}<br><span class="muted">${r.scene}</span></td><td>${r.forecast}<br><button class="btn text" data-lineage="forecast:${r.sku}">血缘</button></td><td>${r.adjust}</td><td><strong>${r.demand}</strong></td><td>${state.scene==="multi" ? "平台/国家预测或人工策略" : "数仓预测"}</td><td>${r.owner} / ${r.manualReason}</td><td><button class="btn text" data-correct="需求调整：${r.sku}">纠偏</button></td></tr>`).join("")}</tbody>
+        </table></div></div></div>`;
+    }
+    function renderPlan() {
+      document.getElementById("page-plan").innerHTML = pageHeader("计划管理", "创建计划只选择场景和必要输入，系统自动加载参数方案，不让普通业务用户拼规则。", `<button class="btn primary" id="createPlanBtn" ${canCreate()?"":"disabled"}>创建计划</button>`)
+        + `<div class="band"><div class="band-header"><div class="band-title">创建计划输入</div>${tag(canCreate()?"当前角色可创建":"当前角色不可创建", canCreate()?"green":"red")}</div><div class="band-body">${summary([
+          ["计划场景", scene().label],
+          ["责任主体", scene().owner],
+          ["默认规则方案", scene().scheme],
+          ["预测版本", "DW-FCST-20260903-V12"],
+          ["库存快照", "INV-SNAPSHOT-20260903-0800"],
+          ["供应快照", "SUPPLY-SNAPSHOT-20260903-0820"],
+          ["创建权限", state.role==="pmc" && state.scene==="new" ? "PMC不可创建新品计划" : (canCreate()?"可创建":"不可创建")],
+          ["下游输出", "采购需求/计划结果，不默认正式PR"]
+        ])}</div></div>
+        <div class="band"><div class="band-header"><div class="band-title">计划准入检查</div><button class="btn text" data-param="商品状态">查看商品状态依据</button></div><div class="band-body">
+          <div class="alert">V1.0 边界：非新款首单才进入该流程；新款、首单或状态缺失 SKU 应转人工复核，不得直接生成 PR。</div>
+        </div></div>`;
+    }
+    function renderResult() {
+      document.getElementById("page-result").innerHTML = pageHeader("计划结果", "核心验收：随机点击一个采购建议，能解释为什么系统建议采购这个量。", `<button class="btn">重新计算预演</button><button class="btn primary">确认计划结果</button>`)
+        + `<div class="band"><div class="band-header"><div class="band-title">SKU采购建议</div>${tag("供应周期影响时间和风险，不作为数量加项","orange")}</div><div class="band-body"><div class="table-wrap"><table>
+          <thead><tr><th>SKU</th><th>商品/场景</th><th>最终需求</th><th>可用库存</th><th>可抵扣在途</th><th>原始缺口</th><th>MOQ</th><th>采购倍数</th><th>建议采购量</th><th>日历修正</th><th>最晚下单日</th><th>风险</th><th>人工调整</th><th>最终采购计划</th><th>操作</th></tr></thead>
+          <tbody>${resultData().map((r,i)=>`<tr><td class="mono">${r.sku}</td><td>${r.product}<br><span class="muted">${r.scene}</span></td><td>${r.demand}</td><td>${r.stock}<br><button class="btn text" data-lineage="stock:${r.sku}">血缘</button></td><td>${r.inbound}<br><button class="btn text" data-lineage="inbound:${r.sku}">血缘</button></td><td><strong>${r.gap}</strong></td><td>${r.moq}<br><button class="btn text" data-param="MOQ">依据</button></td><td>${r.batch}</td><td><strong>${r.suggested}</strong></td><td>${r.calendar}</td><td>${r.latestOrder}</td><td>${tag(r.risk)}</td><td>${r.manual}</td><td><strong>${r.finalQty}</strong></td><td><button class="btn text" data-explain="${i}">为什么采购${r.finalQty}件</button></td></tr>`).join("")}</tbody>
+        </table></div></div></div>`;
+    }
+    function renderChannelParams() {
+      document.getElementById("page-channelParams").innerHTML = pageHeader("渠道计划参数", "每个时效和水位都能查看依据、Owner、用途、参与计算和变更影响。", `<button class="btn" data-param="备货周期">备货周期解释</button><button class="btn" data-param="在库安全水位">安全水位解释</button>`)
+        + `<div class="band"><div class="band-header"><div class="band-title">渠道 × 参数项矩阵</div>${assumption("合计备货天数为系统计算结果，不可直接编辑")}</div><div class="band-body"><div class="table-wrap"><table>
+          <thead><tr><th>渠道</th><th>采购前置</th><th>仓库作业</th><th>头程</th><th>备货周期</th><th>在库安全水位</th><th>管道安全垫</th><th>是否参与备货</th><th>合计备货天数</th><th>生效时间</th><th>状态</th><th>操作</th></tr></thead>
+          <tbody>${channelRows.map(r=>`<tr>${r.slice(0,11).map((c,i)=>`<td>${i>0 && i<7 ? `<button class="btn text" data-param="${["","采购前置时效","仓库作业时效","头程时效","备货周期","在库安全水位","管道安全垫"][i]}">${c}</button>` : i===7 ? tag(c, c==="参与"?"green":"red") : i===8 ? `<strong>${c}</strong><br><button class="btn text" data-total="${r[0]}">查看计算构成</button>` : c}</td>`).join("")}<td><button class="btn text" data-correct="渠道参数：${r[0]}">纠偏</button></td></tr>`).join("")}</tbody>
+        </table></div></div></div>`;
+    }
+    function renderChannelStrategy() {
+      document.getElementById("page-channelStrategy").innerHTML = pageHeader("渠道采购策略", "策略决定是否进入采购计划，不等于预测算法。", "")
+        + `<div class="band"><div class="band-header"><div class="band-title">渠道准入与采购决策</div><button class="btn text" data-param="正常/清货/停采">查看状态含义</button></div><div class="band-body"><div class="table-wrap"><table>
+          <thead><tr><th>渠道</th><th>需求来源</th><th>预测类型</th><th>参与备货</th><th>清货</th><th>停采</th><th>采购决策</th><th>优先级</th><th>操作</th></tr></thead>
+          <tbody>${strategyRows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${tag(r[2], r[2]==="有预测"?"green":"orange")}</td><td>${tag(r[3], r[3]==="参与"?"green":"red")}</td><td>${r[4]}</td><td>${r[5]}</td><td>${tag(r[6])}</td><td>${r[7]}</td><td><button class="btn text" data-param="是否参与备货">查看依据</button><button class="btn text" data-correct="渠道采购策略：${r[0]}">纠偏</button></td></tr>`).join("")}</tbody>
+        </table></div></div></div>`;
+    }
+    function renderSupplyConstraint() {
+      document.getElementById("page-supplyConstraint").innerHTML = pageHeader("商品供应约束", "MOQ、采购倍数、生产天数是供应/采购约束，计划平台引用并解释，不默认成为计划平台主数据。", `<button class="btn" data-param="MOQ">MOQ解释</button><button class="btn" data-param="生产天数">生产天数解释</button>`)
+        + `<div class="band"><div class="band-header"><div class="band-title">SKU供应约束</div>${tag("引用数据，不是库存/供应商主数据模块","orange")}</div><div class="band-body"><div class="table-wrap"><table>
+          <thead><tr><th>SKU</th><th>SPU</th><th>供应商</th><th>MOQ</th><th>采购倍数</th><th>生产天数</th><th>运输/入仓缓冲</th><th>数据来源</th><th>维护责任</th><th>生效时间</th><th>状态</th><th>操作</th></tr></thead>
+          <tbody>${supplyRows.map(r=>`<tr>${r.map((c,i)=>`<td>${[3,4].includes(i)?`<button class="btn text" data-param="${i===3?"MOQ":"采购倍数"}">${c}</button>`:i===5?`<button class="btn text" data-param="生产天数">${c}</button>`:c}</td>`).join("")}<td><button class="btn text" data-impact="MOQ">变更影响</button><button class="btn text" data-correct="供应约束：${r[0]}">纠偏</button></td></tr>`).join("")}</tbody>
+        </table></div></div></div>`;
+    }
+    function renderCalendar() {
+      document.getElementById("page-stockCalendar").innerHTML = pageHeader("备货日历", "日历事件解释“为什么计划提前、加量、不过货或标风险”。", "")
+        + `<div class="band"><div class="band-header"><div class="band-title">供应链计划日历</div>${assumption("事件影响方式需业务确认")}</div><div class="band-body"><div class="table-wrap"><table>
+          <thead><tr><th>事件名称</th><th>生效日期/周</th><th>适用渠道</th><th>影响类型</th><th>影响参数</th><th>影响值</th><th>影响计划环节</th><th>数据来源</th><th>维护责任</th><th>规则依据</th><th>操作</th></tr></thead>
+          <tbody>${calendarRows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join("")}<td><button class="btn text" data-param="${r[0]}">为什么影响计划</button><button class="btn text" data-correct="备货日历：${r[0]}">纠偏</button></td></tr>`).join("")}</tbody>
+        </table></div></div></div>`;
+    }
+    function renderSpecialRules() {
+      document.getElementById("page-specialRules").innerHTML = pageHeader("特殊计划规则", "组合装、改唛、多品牌库存和采购退回不能塞进MOQ规则，必须解释触发节点。", "")
+        + `<div class="band"><div class="band-header"><div class="band-title">特殊规则列表</div>${tag("不是万能公式编辑器","orange")}</div><div class="band-body"><div class="table-wrap"><table>
+          <thead><tr><th>规则</th><th>适用对象</th><th>触发条件</th><th>系统动作</th><th>影响节点</th><th>是否阻断</th><th>确认状态</th><th>操作</th></tr></thead>
+          <tbody>${specialRows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join("")}<td><button class="btn text" data-param="${r[0]}">查看规则解释</button><button class="btn text" data-correct="特殊规则：${r[0]}">纠偏</button></td></tr>`).join("")}</tbody>
+        </table></div></div></div>`;
+    }
+    function renderScheme() {
+      document.getElementById("page-scheme").innerHTML = pageHeader("规则方案", "规则方案只做组合层：引用参数、策略、供应约束、日历和特殊规则。普通用户不拼规则。", `<button class="btn" ${state.role==="manager"?"":"disabled"}>复制方案</button><button class="btn primary" ${state.role==="manager"?"":"disabled"}>发布方案</button>`)
+        + `<div class="band"><div class="band-header"><div class="band-title">当前场景方案</div>${tag(scene().scheme,"blue")}</div><div class="band-body">${summary([
+          ["适用场景", scene().label],
+          ["预测口径", "引用数仓预测版本，不配置预测算法"],
+          ["渠道计划参数", "渠道参数2026.08.21"],
+          ["渠道采购策略", "采购策略V1.0"],
+          ["商品供应约束", "供应约束2026.08.31"],
+          ["备货日历", "2026-Q4日历"],
+          ["特殊计划规则", "组合装/改唛/N品牌/采购退回"],
+          ["输出口径", "采购需求/计划结果，PR边界待确认"]
+        ])}</div></div>`;
+    }
+    function renderConfigPages() { renderChannelParams(); renderChannelStrategy(); renderSupplyConstraint(); renderCalendar(); renderSpecialRules(); renderScheme(); }
+
+    function openParamDrawer(name) {
+      const p = param(name);
+      state.selectedParam = p.name;
+      document.getElementById("drawerTitle").textContent = `参数依据：${p.name}`;
+      document.getElementById("drawerBody").innerHTML = `<div class="alert">当前值不是最终规则。该抽屉用于让业务确认：参数含义、来源、Owner、维度、计算影响是否正确。</div><div style="height:12px"></div>
+        ${summary([["参数类型", p.type],["当前值", `${p.value} ${p.unit}`],["适用维度", p.dim],["确认状态", tag(p.status)],["数据来源", p.source],["原始字段/材料", p.raw],["维护责任", p.owner],["是否可改", p.editable]])}
+        <div style="height:14px"></div>
+        <div class="chain">
+          <div class="chain-step"><div class="chain-title"><span>1. 这是什么</span>${tag(p.type,"blue")}</div><div class="chain-body"><div class="kv"><div class="kv-k">业务含义</div><div class="kv-v">${p.meaning}</div></div><div class="kv"><div class="kv-k">为什么需要</div><div class="kv-v">${p.purpose}</div></div></div></div>
+          <div class="chain-step"><div class="chain-title"><span>2. 参与什么计算</span>${tag("计算影响","purple")}</div><div class="chain-body"><div class="kv"><div class="kv-k">计算关系</div><div class="kv-v">${p.calc}</div></div><div class="kv"><div class="kv-k">修改后影响</div><div class="kv-v">${p.impact}</div></div></div></div>
+          <div class="chain-step"><div class="chain-title"><span>3. 当前值依据</span>${assumption("需业务纠偏")}</div><div class="chain-body"><div class="kv"><div class="kv-k">依据</div><div class="kv-v">${p.basis}</div></div><div class="kv"><div class="kv-k">历史版本示例</div><div class="kv-v">2026-08-21 参数版本；变更必须记录原因、操作者、时间。</div></div></div></div>
+        </div>`;
+      openDrawer();
+    }
+    function openTotalDrawer(channel) {
+      document.getElementById("drawerTitle").textContent = `合计备货天数计算构成：${channel}`;
+      document.getElementById("drawerBody").innerHTML = `<div class="alert">合计备货天数是系统计算结果，不是配置输入。当前公式为原型假设，需业务确认。</div><div style="height:12px"></div>
+        <div class="chain">${[
+          ["输入参数","采购前置35 + 仓库作业5 + 头程10-40 + 备货周期14 + 在库安全水位5-35 + 管道安全垫0"],
+          ["系统计算","合计备货天数 = 69-129天"],
+          ["待确认","备货周期是否等于需求覆盖周期；安全水位是否为覆盖天数；特殊日历是否进入合计。"],
+          ["修改影响","任一输入参数变化，会标记未确认计划为“参数变化，需重算”。"]
+        ].map((s,i)=>`<div class="chain-step"><div class="chain-title"><span>${i+1}. ${s[0]}</span>${i===1?tag("计算结果","purple"):tag("输入/确认","blue")}</div><div class="chain-body"><div class="kv"><div class="kv-k">说明</div><div class="kv-v">${s[1]}</div></div></div></div>`).join("")}</div>`;
+      state.selectedParam = "合计备货天数";
+      openDrawer();
+    }
+    function openExplainDrawer(index) {
+      const r = resultData()[index];
+      state.selectedParam = `采购建议：${r.sku}`;
+      const stockText = r.stockParts.map(x=>`${x[0]}：${x[1]}（${x[2]}）`).join("<br>");
+      const inboundText = r.inboundParts.map(x=>`${x[0]}：${x[1]}（${x[2]}）`).join("<br>");
+      document.getElementById("drawerTitle").textContent = `为什么采购 ${r.finalQty} 件：${r.sku}`;
+      document.getElementById("drawerBody").innerHTML = `<div class="alert">这条链用于反向解释采购结果。每一步都展示输入值、来源、使用参数、计算方式和输出值。</div><div style="height:12px"></div>
+        <div class="chain">
+          ${step("需求", [["系统预测", r.forecast],["来源", "数仓销售预测 / DW-FCST-20260903-V12"],["人工修正", r.adjust],["最终需求", `${r.forecast} + ${r.adjust} = ${r.demand}`]])}
+          ${step("库存", [["组成", stockText],["来源", "库存快照；三仓字段来自V1.0口径"],["输出", `可用库存 ${r.stock}`],["纠偏点", "哪些仓能参与抵扣？锁定库存如何处理？"]])}
+          ${step("在途", [["组成", inboundText],["来源", "供应/在途快照；需批次号去重"],["输出", `可抵扣在途 ${r.inbound}`],["纠偏点", "FBA在途能否全部抵扣？次品量是否抵扣？"]])}
+          ${step("原始缺口", [["计算", `${r.demand} - ${r.stock} - ${r.inbound} = ${r.gap}`],["输出", r.gap],["性质", "系统计算结果，不可直接配置"]])}
+          ${step("MOQ与采购倍数", [["MOQ", r.moq],["采购倍数", r.batch],["计算", `max(MOQ, ceil(${r.gap}/${r.batch})×${r.batch}) = ${r.suggested}`],["输出", `建议采购量 ${r.suggested}`]])}
+          ${step("备货日历修正", [["事件", r.calendar],["影响", "影响建议下单日/交期风险，不直接作为数量加项"],["待确认", "春节多备1周是增加覆盖周期还是提前下单？"]])}
+          ${step("交期判断", [["最晚下单日", r.latestOrder],["风险", r.risk],["计算依据", "目标到货日 - 生产天数 - 运输/入仓缓冲"]])}
+          ${step("人工调整与最终计划", [["人工调整", r.manual],["原因", r.manualReason],["最终采购计划", r.finalQty],["下游", "采购需求/计划结果；PR边界待确认"]])}
+        </div>`;
+      openDrawer();
+    }
+    function step(title, rows) {
+      return `<div class="chain-step"><div class="chain-title"><span>${title}</span>${tag("可追溯","blue")}</div><div class="chain-body">${rows.map(([k,v])=>`<div class="kv"><div class="kv-k">${k}</div><div class="kv-v">${v}</div></div>`).join("")}</div></div>`;
+    }
+    function openLineage(key) {
+      const [type, sku] = key.split(":");
+      const title = type === "forecast" ? "最终需求血缘" : type === "stock" ? "库存血缘" : "在途血缘";
+      document.getElementById("drawerTitle").textContent = `${title}：${sku}`;
+      const r = Object.values(resultRows).flat().find(x => x.sku === sku);
+      let rows = [];
+      if (type === "forecast") rows = [["系统预测", `${r.forecast}，来源：数仓销售预测`],["预测版本", "DW-FCST-20260903-V12"],["预测时间", "2026-09-03 08:00"],["人工修正", `${r.adjust}，操作者：${r.owner}，原因：${r.manualReason}`],["最终需求", r.demand]];
+      if (type === "stock") rows = r.stockParts.map(x => [x[0], `${x[1]}；${x[2]}；更新时间待接口确认`]);
+      if (type === "inbound") rows = r.inboundParts.map(x => [x[0], `${x[1]}；${x[2]}；批次号/单号用于去重`]);
+      document.getElementById("drawerBody").innerHTML = `<div class="alert">读取型数据不在计划平台手工维护，必须保留来源、版本、更新时间和原始字段。</div><div style="height:12px"></div>${summary(rows)}`;
+      state.selectedParam = title;
+      openDrawer();
+    }
+    function openImpact(name = state.selectedParam || "MOQ") {
+      document.getElementById("drawerTitle").textContent = `参数变更影响：${name}`;
+      document.getElementById("drawerBody").innerHTML = `<div class="alert">仅做原型演示，不真正执行重算。真实系统应在发布参数前生成影响分析。</div><div style="height:12px"></div>
+        ${summary([["参数变更", `${name} 50 -> 100`],["受影响计划", "12个未确认计划"],["受影响SKU", "86个SKU"],["处理建议", "标记参数变化，需重新计算"]])}
+        <div style="height:12px"></div><div class="table-wrap"><table><thead><tr><th>计划</th><th>SKU</th><th>原建议采购量</th><th>新建议采购量</th><th>变化量</th><th>状态</th></tr></thead><tbody>
+          <tr><td>PLAN-202610-MATURE-001</td><td>AD6025-BK-M</td><td>400</td><td>400</td><td>0</td><td>${tag("需复核")}</td></tr>
+          <tr><td>PLAN-202610-MATURE-001</td><td>AD615910100L-B70</td><td>300</td><td>400</td><td>+100</td><td>${tag("变化")}</td></tr>
+          <tr><td>PLAN-202610-MULTI-001</td><td>9994115</td><td>200</td><td>200</td><td>0</td><td>${tag("需确认")}</td></tr>
+        </tbody></table></div>`;
+      openDrawer();
+    }
+    function openCorrection(origin) {
+      document.getElementById("correctionOrigin").value = origin || state.selectedParam || "原型假设待纠偏";
+      document.getElementById("modalMask").classList.add("open");
+      document.getElementById("correctionModal").classList.add("open");
+    }
+    function openDrawer() { document.getElementById("drawerMask").classList.add("open"); document.getElementById("drawer").classList.add("open"); }
+    function closeDrawer() { document.getElementById("drawerMask").classList.remove("open"); document.getElementById("drawer").classList.remove("open"); }
+    function closeModal() { document.getElementById("modalMask").classList.remove("open"); document.getElementById("correctionModal").classList.remove("open"); }
+
+    function renderAll() {
+      renderShell();
+      renderDashboard();
+      renderDemand();
+      renderPlan();
+      renderResult();
+      renderConfigPages();
+      bind();
+    }
+    function bind() {
+      document.querySelectorAll("[data-nav]").forEach(b => b.onclick = () => { state.page = b.dataset.nav; renderAll(); });
+      document.querySelectorAll("[data-scene]").forEach(b => b.onclick = () => { state.scene = b.dataset.scene; renderAll(); showToast(`已切换场景：${scene().label}`); });
+      document.querySelectorAll("[data-param]").forEach(b => b.onclick = () => openParamDrawer(b.dataset.param));
+      document.querySelectorAll("[data-total]").forEach(b => b.onclick = () => openTotalDrawer(b.dataset.total));
+      document.querySelectorAll("[data-explain]").forEach(b => b.onclick = () => openExplainDrawer(Number(b.dataset.explain)));
+      document.querySelectorAll("[data-lineage]").forEach(b => b.onclick = () => openLineage(b.dataset.lineage));
+      document.querySelectorAll("[data-impact]").forEach(b => b.onclick = () => openImpact(b.dataset.impact));
+      document.querySelectorAll("[data-correct]").forEach(b => b.onclick = () => openCorrection(`纠偏对象：${b.dataset.correct}\n当前场景：${scene().label}\n当前角色：${roles[state.role]}`));
+      const np = document.getElementById("newPlanBtn"); if (np) np.onclick = () => canCreate() ? (state.page="plan", renderAll()) : showToast("当前角色无创建权限");
+      const cp = document.getElementById("createPlanBtn"); if (cp) cp.onclick = () => canCreate() ? showToast("已模拟创建计划并冻结输入快照") : showToast("当前角色无创建权限");
+    }
+    document.getElementById("roleSelect").onchange = e => { state.role = e.target.value; renderAll(); showToast(`已切换角色：${roles[state.role]}`); };
+    document.getElementById("drawerClose").onclick = closeDrawer;
+    document.getElementById("drawerMask").onclick = closeDrawer;
+    document.getElementById("impactFromDrawer").onclick = () => openImpact();
+    document.getElementById("correctFromDrawer").onclick = () => openCorrection(`纠偏对象：${state.selectedParam || "当前抽屉内容"}\n请确认参数来源、Owner、计算关系和变更影响。`);
+    document.getElementById("modalClose").onclick = closeModal;
+    document.getElementById("modalCancel").onclick = closeModal;
+    document.getElementById("modalMask").onclick = closeModal;
+    document.getElementById("modalSubmit").onclick = () => { state.corrections += 1; closeModal(); renderAll(); showToast(`已模拟记录业务纠偏 ${state.corrections} 条`); };
+    renderAll();
+  </script>
+</body>
+</html>

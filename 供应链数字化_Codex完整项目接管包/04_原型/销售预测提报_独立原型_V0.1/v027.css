@@ -1,0 +1,37 @@
+/* Change base surfaces only: preserve both crosshair overlay layers. */
+.forecast-table td.line-system { background-color:var(--surface-2); color:var(--muted); }
+.forecast-table td.line-manual,.forecast-table td.line-event { background-color:var(--surface); }
+.forecast-table td.line-manual { color:var(--blue); }
+.forecast-table td.line-event { color:var(--amber); }
+.forecast-table td.line-final { background-color:var(--surface-2); color:var(--ink); }
+.forecast-table .date-col .source-tag.system { color:var(--muted); }
+.forecast-table .date-col .source-tag.manual { color:var(--blue); }
+.forecast-table .date-col .source-tag.activity { color:var(--amber); }
+.forecast-table .date-col .source-tag.mixed { color:var(--muted); }
+.forecast-table .history-row td.date-col,.forecast-table .history-component td.date-col { background-color:var(--surface); color:var(--muted); }
+.forecast-table .history-label { color:var(--muted); background-color:var(--surface-2); font-weight:400; }
+.forecast-table .actual-row td.date-col { color:var(--ink); background-color:var(--surface-2); }
+.forecast-table .deviation-row td.date-col { background-color:var(--surface); }
+.forecast-table thead th.date-head.weekend { color:var(--muted); background-color:var(--surface-2); }
+.forecast-table th.current-forecast-week { box-shadow:inset 0 2px var(--blue); }
+.current-week-label { font-size:10px; color:var(--blue); margin-left:4px; font-weight:400; white-space:nowrap; }
+.forecast-line-heading { flex-direction:row; align-items:center; gap:4px; }
+.forecast-line-heading .forecast-toggle-host { margin:0; }
+.history-management { display:inline-flex; align-items:center; gap:4px; flex-wrap:wrap; margin-top:2px; }
+.context-section + .context-section { margin-top:8px; }
+.context-section-title { font-size:11px; color:var(--muted); font-weight:600; margin-bottom:4px; }
+.context-section .metric-grid { gap:5px 8px; }
+.forecast-table .context-section .metric strong { color:var(--ink); font-weight:500; }
+.context-section .metric label { font-size:10px; color:var(--muted); }
+.context-cell .coverage-note.risk { background-color:var(--amber-2); border:0; border-left:2px solid var(--amber); padding:5px 6px; font-size:11px; line-height:17px; }
+.product-title { font-weight:600; }
+.product-identifiers,.product-meta { color:var(--muted); }
+.product-tags .pill { background-color:var(--surface); border-color:var(--line); }
+.product-tags .pill.amber { color:var(--amber); background-color:var(--amber-2); }
+.product-tags .pill.green,.product-tags .pill.blue,.product-tags .pill.purple { color:var(--muted); }
+.product-actions { gap:9px; }
+.product-actions .analysis,.product-actions .mapping { color:var(--blue); }
+.forecast-table .parent-row td { background-color:var(--surface-2); }
+.forecast-table .summary-row td { background-color:var(--surface-2); border-top-color:var(--line-strong); color:var(--ink); }
+.forecast-table td.date-col { border-color:var(--line); }
+.forecast-table td.week-boundary { border-left-color:var(--line-strong); }

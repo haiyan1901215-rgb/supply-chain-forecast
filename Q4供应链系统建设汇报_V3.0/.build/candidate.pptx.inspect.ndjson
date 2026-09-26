@@ -1,0 +1,852 @@
+{"kind":"deck","id":"pr/httgxx","name":"Deck"}
+{"kind":"layout","layoutId":"269aaba8-7475-4c9b-b5af-b1fafd1fe619","name":"Master","type":"master"}
+{"kind":"layout","layoutId":"240df0ff-a3c9-47eb-9eb4-0beb38437352","name":"Title Slide","type":"title"}
+{"kind":"slide","id":"sl/a5hhw5","slide":1,"title":"Q4供应链建设全景","textShapes":45}
+{"kind":"shape","id":"sh/cvi90v61","slide":1,"name":"白色画布","bbox":[0,0,2560,1440]}
+{"kind":"shape","id":"sh/bu98ra5g","slide":1,"name":"rect-1","bbox":[0,0,2560,1440]}
+{"kind":"shape","id":"sh/at0ry5ov","slide":1,"name":"rect-2","bbox":[64,57,9,64]}
+{"kind":"textbox","id":"sh/l0baxkni","slide":1,"name":"Q4供应链建设全景","text":"Q4供应链建设全景","textPreview":"Q4供应链建设全景","textChars":9,"textLines":1,"bbox":[95,56.04,436.79,71.05]}
+{"kind":"textbox","id":"sh/kz29of6x","slide":1,"name":"2026 Q4 / V3.0","text":"2026 Q4 / V3.0","textPreview":"2026 Q4 / V3.0","textChars":14,"textLines":1,"bbox":[2293.65,68,202.35,36.25]}
+{"kind":"shape","id":"sh/zy98va5s","slide":1,"name":"path-5","bbox":[64,144,2432,0.05]}
+{"kind":"textbox","id":"sh/yx0rm5o7","slide":1,"name":"以PMC计划为起点，打通需求、计划、采购、执行、交付与库存的滚动闭环","text":"以PMC计划为起点，打通需求、计划、采购、执行、交付与库存的滚动闭环","textPreview":"以PMC计划为起点，打通需求、计划、采购、执行、交付与库存的滚动闭环","textChars":34,"textLines":1,"bbox":[64,164.92,943.73,39.15]}
+{"kind":"textbox","id":"sh/147qlg7e","slide":1,"name":"01 / 先看全局","text":"01 / 先看全局","textPreview":"01 / 先看全局","textChars":9,"textLines":1,"bbox":[2338.48,169.08,157.52,33.35]}
+{"kind":"shape","id":"sh/03y9sb6t","slide":1,"name":"path-8","bbox":[80,314,330,126]}
+{"kind":"textbox","id":"sh/ed8fml8v","slide":1,"name":"需求预测","text":"需求预测","textPreview":"需求预测","textChars":4,"textLines":1,"bbox":[165.88,349.44,172.24,56.55]}
+{"kind":"textbox","id":"sh/zehgvq9g","slide":1,"name":"销售 / PMC","text":"销售 / PMC","textPreview":"销售 / PMC","textChars":8,"textLines":1,"bbox":[157.86,471.84,174.29,42.05]}
+{"kind":"shape","id":"sh/0faxovq1","slide":1,"name":"path-11","bbox":[424,314,330,126]}
+{"kind":"textbox","id":"sh/1gjyx0rm","slide":1,"name":"备货计划","text":"备货计划","textPreview":"备货计划","textChars":4,"textLines":1,"bbox":[509.88,349.44,172.24,56.55]}
+{"kind":"textbox","id":"sh/mhsfql87","slide":1,"name":"PMC","text":"PMC","textPreview":"PMC","textChars":3,"textLines":1,"bbox":[549.6,471.84,78.8,42.05]}
+{"kind":"shape","id":"sh/ni1gzq9s","slide":1,"name":"path-14","bbox":[768,314,330,126]}
+{"kind":"textbox","id":"sh/ojaxsvqd","slide":1,"name":"采购执行","text":"采购执行","textPreview":"采购执行","textChars":4,"textLines":1,"bbox":[853.88,349.44,172.24,56.55]}
+{"kind":"textbox","id":"sh/94jy107i","slide":1,"name":"SCM","text":"SCM","textPreview":"SCM","textChars":3,"textLines":1,"bbox":[893.67,471.84,78.66,42.05]}
+{"kind":"shape","id":"sh/a5sfu583","slide":1,"name":"path-17","bbox":[1112,314,330,126]}
+{"kind":"textbox","id":"sh/b61g3apo","slide":1,"name":"供应商协同","text":"供应商协同","textPreview":"供应商协同","textChars":5,"textLines":1,"bbox":[1177.6,349.44,212.8,56.55]}
+{"kind":"textbox","id":"sh/7alwba5w","slide":1,"name":"SCM / 供应商","text":"SCM / 供应商","textPreview":"SCM / 供应商","textChars":9,"textLines":1,"bbox":[1174.85,471.84,204.3,42.05]}
+{"kind":"shape","id":"sh/69cfi5ob","slide":1,"name":"path-20","bbox":[1456,314,330,126]}
+{"kind":"textbox","id":"sh/tc3edkn2","slide":1,"name":"生产","text":"生产","textPreview":"生产","textChars":2,"textLines":1,"bbox":[1582.44,349.44,91.12,56.55]}
+{"kind":"textbox","id":"sh/8buxkf6h","slide":1,"name":"已有MES / 工厂","text":"已有MES / 工厂","textPreview":"已有MES / 工厂","textChars":10,"textLines":1,"bbox":[1505.13,471.84,231.75,42.05]}
+{"kind":"shape","id":"sh/j6lwnq5k","slide":1,"name":"path-23","bbox":[1800,314,330,126]}
+{"kind":"textbox","id":"sh/ylsve5of","slide":1,"name":"交付","text":"交付","textPreview":"交付","textChars":2,"textLines":1,"bbox":[1926.44,349.44,91.12,56.55]}
+{"kind":"textbox","id":"sh/l83ep0nq","slide":1,"name":"QC / 供应商","text":"QC / 供应商","textPreview":"QC / 供应商","textChars":8,"textLines":1,"bbox":[1874.49,471.84,181.02,42.05]}
+{"kind":"shape","id":"sh/k7uxgv65","slide":1,"name":"path-26","bbox":[2144,314,330,126]}
+{"kind":"textbox","id":"sh/bi1wjq5o","slide":1,"name":"库存","text":"库存","textPreview":"库存","textChars":2,"textLines":1,"bbox":[2270.44,349.44,91.12,56.55]}
+{"kind":"textbox","id":"sh/ahsvalo3","slide":1,"name":"仓储 / 领星","text":"仓储 / 领星","textPreview":"仓储 / 领星","textChars":7,"textLines":1,"bbox":[2226.09,471.84,165.82,42.05]}
+{"kind":"shape","id":"sh/gb6l4nip","slide":1,"name":"path-29","bbox":[80,271,1350,0.05]}
+{"kind":"textbox","id":"sh/1cf2xsza","slide":1,"name":"P0：计划 → 采购 → 供应商执行状态","text":"P0：计划 → 采购 → 供应商执行状态","textPreview":"P0：计划 → 采购 → 供应商执行状态","textChars":20,"textLines":1,"bbox":[80,223.88,493.02,40.6]}
+{"kind":"shape","id":"sh/e9432x0j","slide":1,"name":"path-31","bbox":[1470,271,1010,0.05]}
+{"kind":"textbox","id":"sh/faxkv2h4","slide":1,"name":"已有能力协同接入，按阶段落地","text":"已有能力协同接入，按阶段落地","textPreview":"已有能力协同接入，按阶段落地","textChars":14,"textLines":1,"bbox":[1470,223.88,417.68,40.6]}
+{"kind":"shape","id":"sh/of6l87i1","slide":1,"name":"rect-33","bbox":[112,649,450,142]}
+{"kind":"shape","id":"sh/pgf21cz6","slide":1,"name":"rect-34","bbox":[112,649,5,142]}
+{"kind":"textbox","id":"sh/2do36x0v","slide":1,"name":"下一轮滚动计划","text":"下一轮滚动计划","textPreview":"下一轮滚动计划","textChars":7,"textLines":1,"bbox":[208.24,659.64,257.52,49.3]}
+{"kind":"textbox","id":"sh/3exkz2hg","slide":1,"name":"用实际执行结果校准需求与供给","text":"用实际执行结果校准需求与供给","textPreview":"用实际执行结果校准需求与供给","textChars":14,"textLines":1,"bbox":[135.44,716.92,403.12,39.15]}
+{"kind":"shape","id":"sh/4jm1w3ih","slide":1,"name":"path-37","bbox":[562,440,1878,280]}
+{"kind":"shape","id":"sh/5kv2p8z2","slide":1,"name":"arrowhead-37","bbox":[562,700,40,40]}
+{"kind":"shape","id":"sh/xcr2lc3i","slide":1,"name":"rect-38","bbox":[1110.8,683,718.4,42]}
+{"kind":"textbox","id":"sh/wbilc7mx","slide":1,"name":"实际销量 / 库存 / 在途 / 交期 / 生产 / 质量","text":"实际销量 / 库存 / 在途 / 交期 / 生产 / 质量","textPreview":"实际销量 / 库存 / 在途 / 交期 / 生产 / 质量","textChars":29,"textLines":1,"bbox":[1145.34,680.76,649.32,44.95]}
+{"kind":"shape","id":"sh/bapkj2ls","slide":1,"name":"path-40","bbox":[64,377,48,343]}
+{"kind":"shape","id":"sh/a9g3ax47","slide":1,"name":"arrowhead-40","bbox":[48,361,32,32]}
+{"kind":"textbox","id":"sh/9o72hs3m","slide":1,"name":"四个建设域，共同承接一条业务链","text":"四个建设域，共同承接一条业务链","textPreview":"四个建设域，共同承接一条业务链","textChars":15,"textLines":1,"bbox":[64,850.64,540.4,49.3]}
+{"kind":"shape","id":"sh/onyl8nm1","slide":1,"name":"path-42","bbox":[64,917,579,0.05]}
+{"kind":"textbox","id":"sh/nmpkfilg","slide":1,"name":"PMC计划","text":"PMC计划","textPreview":"PMC计划","textChars":5,"textLines":1,"bbox":[64,942.68,157.24,47.85]}
+{"kind":"textbox","id":"sh/mlg36x4v","slide":1,"name":"P0 · 需求与备货决策","text":"P0 · 需求与备货决策","textPreview":"P0 · 需求与备货决策","textChars":12,"textLines":1,"bbox":[64,1000.88,283.98,40.6]}
+{"kind":"shape","id":"sh/1k72ds3a","slide":1,"name":"path-45","bbox":[680,917,579,0.05]}
+{"kind":"textbox","id":"sh/0jel4nm5","slide":1,"name":"MRP面辅料计划","text":"MRP面辅料计划","textPreview":"MRP面辅料计划","textChars":8,"textLines":1,"bbox":[680,942.68,259,47.85]}
+{"kind":"textbox","id":"sh/qpczetkn","slide":1,"name":"P1 · 与成衣采购并行","text":"P1 · 与成衣采购并行","textPreview":"P1 · 与成衣采购并行","textChars":12,"textLines":1,"bbox":[680,1000.88,278.17,40.6]}
+{"kind":"shape","id":"sh/rql0ny18","slide":1,"name":"path-48","bbox":[1296,917,579,0.05]}
+{"kind":"textbox","id":"sh/cru1gj2t","slide":1,"name":"SCM采购","text":"SCM采购","textPreview":"SCM采购","textChars":5,"textLines":1,"bbox":[1296,942.68,157.11,47.85]}
+{"kind":"textbox","id":"sh/dsnipoje","slide":1,"name":"P0 · PR / PO与供应商协同","text":"P0 · PR / PO与供应商协同","textPreview":"P0 · PR / PO与供应商协同","textChars":18,"textLines":1,"bbox":[1296,1000.88,368.22,40.6]}
+{"kind":"shape","id":"sh/2lcza9kr","slide":1,"name":"path-51","bbox":[1912,917,579,0.05]}
+{"kind":"textbox","id":"sh/3ml0je1c","slide":1,"name":"执行与生产协同","text":"执行与生产协同","textPreview":"执行与生产协同","textChars":7,"textLines":1,"bbox":[1912,942.68,250.24,47.85]}
+{"kind":"textbox","id":"sh/4nuhcj2x","slide":1,"name":"P0状态 · P1已有MES协同","text":"P0状态 · P1已有MES协同","textPreview":"P0状态 · P1已有MES协同","textChars":16,"textLines":1,"bbox":[1912,1000.88,347.85,40.6]}
+{"kind":"shape","id":"sh/po3iloj2","slide":1,"name":"rect-54","bbox":[64,1120,2432,174]}
+{"kind":"textbox","id":"sh/uxsz69kf","slide":1,"name":"数据基础层","text":"数据基础层","textPreview":"数据基础层","textChars":5,"textLines":1,"bbox":[90,1132.84,160.8,42.05]}
+{"kind":"textbox","id":"sh/fy10fe10","slide":1,"name":"商品主数据","text":"商品主数据","textPreview":"商品主数据","textChars":5,"textLines":1,"bbox":[356,1145.88,155.6,40.6]}
+{"kind":"textbox","id":"sh/jqxor6dw","slide":1,"name":"商品身份 / SKU版本","text":"商品身份 / SKU版本","textPreview":"商品身份 / SKU版本","textChars":12,"textLines":1,"bbox":[356,1194.96,258.84,37.7]}
+{"kind":"textbox","id":"sh/ypony1wb","slide":1,"name":"PLM / BOM","text":"PLM / BOM","textPreview":"PLM / BOM","textChars":9,"textLines":1,"bbox":[887,1145.88,175.52,40.6]}
+{"kind":"textbox","id":"sh/lsf6tgvm","slide":1,"name":"技术与物料资料","text":"技术与物料资料","textPreview":"技术与物料资料","textChars":7,"textLines":1,"bbox":[887,1194.96,199.28,37.7]}
+{"kind":"textbox","id":"sh/kr6p0be1","slide":1,"name":"领星 / 库存 / 数仓","text":"领星 / 库存 / 数仓","textPreview":"领星 / 库存 / 数仓","textChars":12,"textLines":1,"bbox":[1418,1145.88,252.63,40.6]}
+{"kind":"textbox","id":"sh/7exovqds","slide":1,"name":"销量 / 库存 / 在途","text":"销量 / 库存 / 在途","textPreview":"销量 / 库存 / 在途","textChars":12,"textLines":1,"bbox":[1418,1194.96,235.31,37.7]}
+{"kind":"textbox","id":"sh/6to72lw7","slide":1,"name":"供应商数据","text":"供应商数据","textPreview":"供应商数据","textChars":5,"textLines":1,"bbox":[1949,1145.88,155.6,40.6]}
+{"kind":"textbox","id":"sh/tgz6xgvy","slide":1,"name":"产能 / 交期 / 成本","text":"产能 / 交期 / 成本","textPreview":"产能 / 交期 / 成本","textChars":12,"textLines":1,"bbox":[1949,1194.96,235.31,37.7]}
+{"kind":"textbox","id":"sh/8f6p4bed","slide":1,"name":"为PMC / MRP / SCM提供依据；数据正确性与清洗由来源系统及数据责任方承担。","text":"为PMC / MRP / SCM提供依据；数据正确性与清洗由来源系统及数据责任方承担。","textPreview":"为PMC / MRP / SCM提供依据；数据正确性与清洗由来源系统及数据责任方承担。","textChars":43,"textLines":1,"bbox":[356,1240,972.68,36.25]}
+{"kind":"textbox","id":"sh/nidojmxo","slide":1,"name":"范围：不重建完整WMS、OMS、PMS；QC与入库能力按关键节点协同接入。","text":"范围：不重建完整WMS、OMS、PMS；QC与入库能力按关键节点协同接入。","textPreview":"范围：不重建完整WMS、OMS、PMS；QC与入库能力按关键节点协同接入。","textChars":37,"textLines":1,"bbox":[64,1314.96,939.53,37.7]}
+{"kind":"shape","id":"sh/2x4nqhw3","slide":1,"name":"path-66","bbox":[64,1384,2432,0.05]}
+{"kind":"textbox","id":"sh/s3il0nul","slide":1,"name":"Q4供应链产品建设方案 · 汇报分层版 · 目标业务蓝图，按P0 / P1推进","text":"Q4供应链产品建设方案 · 汇报分层版 · 目标业务蓝图，按P0 / P1推进","textPreview":"Q4供应链产品建设方案 · 汇报分层版 · 目标业务蓝图，按P0 / P1推进","textChars":39,"textLines":1,"bbox":[64,1397.12,722.73,31.9]}
+{"kind":"textbox","id":"sh/dormtsb6","slide":1,"name":"01 / 10","text":"01 / 10","textPreview":"01 / 10","textChars":7,"textLines":1,"bbox":[2413.18,1397.12,82.82,31.9]}
+{"kind":"notes","id":"nt/a5hhw5","slide":1,"text":"来源：01_Q4供应链建设全景_V3.0.svg。业务依据：《第四季度供应链系统建设方案》及本次《修改意见》。采用全景、职责边界、六角色泳道和七个模块详细流程分层组织。MRP为P1同步建设；PMC确认PR，SCM承载PR/PO管理。图中QC和入库为目标协同节点，一期接入范围需联评；原文1.8边界表未提供。所有文字与流程图元素为原生可编辑对象。"}
+{"kind":"slide","id":"sl/hv88l4","slide":2,"title":"系统与职责边界","textShapes":36}
+{"kind":"shape","id":"sh/kzatcjax","slide":2,"name":"白色画布","bbox":[0,0,2560,1440]}
+{"kind":"shape","id":"sh/jy1c3e9c","slide":2,"name":"rect-1","bbox":[0,0,2560,1440]}
+{"kind":"shape","id":"sh/ixsba9sr","slide":2,"name":"rect-2","bbox":[64,57,9,64]}
+{"kind":"textbox","id":"sh/xwju14r6","slide":2,"name":"系统与职责边界","text":"系统与职责边界","textPreview":"系统与职责边界","textChars":7,"textLines":1,"bbox":[95,56.04,366.72,71.05]}
+{"kind":"textbox","id":"sh/wvat8jal","slide":2,"name":"2026 Q4 / V3.0","text":"2026 Q4 / V3.0","textPreview":"2026 Q4 / V3.0","textChars":14,"textLines":1,"bbox":[2293.65,68,202.35,36.25]}
+{"kind":"shape","id":"sh/vu1cze90","slide":2,"name":"path-5","bbox":[64,144,2432,0.05]}
+{"kind":"textbox","id":"sh/at8b69sv","slide":2,"name":"PMC确定买什么、买多少、什么时候要；采购决定向谁买、如何分配及以什么PO执行","text":"PMC确定买什么、买多少、什么时候要；采购决定向谁买、如何分配及以什么PO执行","textPreview":"PMC确定买什么、买多少、什么时候要；采购决定向谁买、如何分配及以什么PO执行","textChars":39,"textLines":1,"bbox":[64,164.92,1067.53,39.15]}
+{"kind":"textbox","id":"sh/hs3ud8ra","slide":2,"name":"02 / 识别边界","text":"02 / 识别边界","textPreview":"02 / 识别边界","textChars":9,"textLines":1,"bbox":[2333.72,169.08,162.28,33.35]}
+{"kind":"shape","id":"sh/grudk3q5","slide":2,"name":"rect-8","bbox":[170,280,470,150]}
+{"kind":"shape","id":"sh/e947idc3","slide":2,"name":"rect-9","bbox":[170,280,5,150]}
+{"kind":"textbox","id":"sh/fux8bit8","slide":2,"name":"销售 / 运营","text":"销售 / 运营","textPreview":"销售 / 运营","textChars":7,"textLines":1,"bbox":[308.66,290.64,192.68,49.3]}
+{"kind":"textbox","id":"sh/0v6pknat","slide":2,"name":"提供日级需求、活动与人工判断","text":"提供日级需求、活动与人工判断","textPreview":"提供日级需求、活动与人工判断","textChars":14,"textLines":1,"bbox":[203.44,347.92,403.12,39.15]}
+{"kind":"shape","id":"sh/1wfqdsbe","slide":2,"name":"rect-12","bbox":[1000,264,540,162]}
+{"kind":"shape","id":"sh/6547etcr","slide":2,"name":"rect-13","bbox":[1000,264,5,162]}
+{"kind":"textbox","id":"sh/r6do7ytc","slide":2,"name":"PMC计划中枢","text":"PMC计划中枢","textPreview":"PMC计划中枢","textChars":7,"textLines":1,"bbox":[1153.78,274.64,232.43,49.3]}
+{"kind":"textbox","id":"sh/s7mpg3ux","slide":2,"name":"审核需求、形成最终备货计划","text":"审核需求、形成最终备货计划","textPreview":"审核需求、形成最终备货计划","textChars":13,"textLines":1,"bbox":[1082.48,331.92,375.04,39.15]}
+{"kind":"textbox","id":"sh/t8vq98bi","slide":2,"name":"输出成衣采购需求","text":"输出成衣采购需求","textPreview":"输出成衣采购需求","textChars":8,"textLines":1,"bbox":[1152.68,370.92,234.64,39.15]}
+{"kind":"shape","id":"sh/a187qxsv","slide":2,"name":"path-17","bbox":[640,355,360,0.05]}
+{"kind":"shape","id":"sh/b2h8j2tg","slide":2,"name":"arrowhead-17","bbox":[976,343,24,24]}
+{"kind":"shape","id":"sh/7694bu98","slide":2,"name":"rect-18","bbox":[746,320,136,39]}
+{"kind":"textbox","id":"sh/m50n2psn","slide":2,"name":"预测需求","text":"预测需求","textPreview":"预测需求","textChars":4,"textLines":1,"bbox":[750.76,317.88,126.48,40.6]}
+{"kind":"shape","id":"sh/98rmd4ry","slide":2,"name":"rect-20","bbox":[430,552,570,154]}
+{"kind":"shape","id":"sh/87i54zad","slide":2,"name":"rect-21","bbox":[430,552,5,154]}
+{"kind":"textbox","id":"sh/va94fu94","slide":2,"name":"MRP面辅料计划","text":"MRP面辅料计划","textPreview":"MRP面辅料计划","textChars":8,"textLines":1,"bbox":[581.73,562.64,266.54,49.3]}
+{"kind":"textbox","id":"sh/u90n6psj","slide":2,"name":"需要多少面辅料","text":"需要多少面辅料","textPreview":"需要多少面辅料","textChars":7,"textLines":1,"bbox":[611.72,619.92,206.56,39.15]}
+{"kind":"textbox","id":"sh/hcbmh4ra","slide":2,"name":"净需求、备料与发料计划","text":"净需求、备料与发料计划","textPreview":"净需求、备料与发料计划","textChars":11,"textLines":1,"bbox":[555.56,658.92,318.88,39.15]}
+{"kind":"shape","id":"sh/wb258zap","slide":2,"name":"rect-25","bbox":[1740,552,570,154]}
+{"kind":"shape","id":"sh/jet4je90","slide":2,"name":"rect-26","bbox":[1740,552,5,154]}
+{"kind":"textbox","id":"sh/idkna98v","slide":2,"name":"SCM / 采购","text":"SCM / 采购","textPreview":"SCM / 采购","textChars":8,"textLines":1,"bbox":[1923.61,562.64,202.79,49.3]}
+{"kind":"textbox","id":"sh/g3ml0j6t","slide":2,"name":"PR / PO、供应商分配","text":"PR / PO、供应商分配","textPreview":"PR / PO、供应商分配","textChars":13,"textLines":1,"bbox":[1881.1,619.92,287.81,39.15]}
+{"kind":"textbox","id":"sh/14vm9o7e","slide":2,"name":"采购执行与交期协同","text":"采购执行与交期协同","textPreview":"采购执行与交期协同","textChars":9,"textLines":1,"bbox":[1893.64,658.92,262.72,39.15]}
+{"kind":"shape","id":"sh/ehk3y9on","slide":2,"name":"path-30","bbox":[715,426,555,126]}
+{"kind":"shape","id":"sh/f2d47ep8","slide":2,"name":"arrowhead-30","bbox":[703,528,24,24]}
+{"kind":"shape","id":"sh/sf2lwz6x","slide":2,"name":"path-31","bbox":[1270,482,755,70]}
+{"kind":"shape","id":"sh/tgbm547i","slide":2,"name":"arrowhead-31","bbox":[2013,528,24,24]}
+{"kind":"shape","id":"sh/6dk3u9or","slide":2,"name":"rect-32","bbox":[681.32,453,267.36,37]}
+{"kind":"textbox","id":"sh/ret43epc","slide":2,"name":"成衣采购计划 + BOM","text":"成衣采购计划 + BOM","textPreview":"成衣采购计划 + BOM","textChars":12,"textLines":1,"bbox":[679.81,450.96,270.37,37.7]}
+{"kind":"shape","id":"sh/4b2lsz6l","slide":2,"name":"rect-34","bbox":[1790.6,453,252.8,37]}
+{"kind":"textbox","id":"sh/5cb21476","slide":2,"name":"成衣采购需求 / PR","text":"成衣采购需求 / PR","textPreview":"成衣采购需求 / PR","textChars":11,"textLines":1,"bbox":[1796.94,450.96,240.12,37.7]}
+{"kind":"textbox","id":"sh/9g7i90ny","slide":2,"name":"并行承接","text":"并行承接","textPreview":"并行承接","textChars":4,"textLines":1,"bbox":[1120,487.84,130.64,42.05]}
+{"kind":"shape","id":"sh/8fy10vmd","slide":2,"name":"path-37","bbox":[1000,631,740,0.05]}
+{"kind":"shape","id":"sh/7ep07q5s","slide":2,"name":"arrowhead-37","bbox":[1716,619,24,24]}
+{"kind":"shape","id":"sh/mdgjyl47","slide":2,"name":"rect-38","bbox":[1213.44,598,313.12,37]}
+{"kind":"textbox","id":"sh/hkrid0nu","slide":2,"name":"净缺口 → 物料采购需求","text":"净缺口 → 物料采购需求","textPreview":"净缺口 → 物料采购需求","textChars":12,"textLines":1,"bbox":[1220.79,595.96,298.42,37.7]}
+{"kind":"shape","id":"sh/wji14vmp","slide":2,"name":"rect-40","bbox":[430,810,570,154]}
+{"kind":"shape","id":"sh/vi90ba54","slide":2,"name":"rect-41","bbox":[430,810,5,154]}
+{"kind":"textbox","id":"sh/uhgj254j","slide":2,"name":"成衣工厂 / 已有MES","text":"成衣工厂 / 已有MES","textPreview":"成衣工厂 / 已有MES","textChars":12,"textLines":1,"bbox":[544.48,820.64,341.05,49.3]}
+{"kind":"textbox","id":"sh/xoni1gnq","slide":2,"name":"生产执行、进度与延期回传","text":"生产执行、进度与延期回传","textPreview":"生产执行、进度与延期回传","textChars":12,"textLines":1,"bbox":[541.52,877.92,346.96,39.15]}
+{"kind":"shape","id":"sh/cnehsbm5","slide":2,"name":"rect-44","bbox":[1740,810,570,154]}
+{"kind":"shape","id":"sh/2tcf2hk3","slide":2,"name":"rect-45","bbox":[1740,810,5,154]}
+{"kind":"textbox","id":"sh/nulgvmlo","slide":2,"name":"供应商执行","text":"供应商执行","textPreview":"供应商执行","textChars":5,"textLines":1,"bbox":[1931.6,820.64,186.8,49.3]}
+{"kind":"textbox","id":"sh/ovux4r29","slide":2,"name":"接单、交期、资料与交付协同","text":"接单、交期、资料与交付协同","textPreview":"接单、交期、资料与交付协同","textChars":13,"textLines":1,"bbox":[1837.48,877.92,375.04,39.15]}
+{"kind":"shape","id":"sh/pw3yxc3u","slide":2,"name":"path-48","bbox":[715,706,0.05,104]}
+{"kind":"shape","id":"sh/axcf6hkz","slide":2,"name":"arrowhead-48","bbox":[703,786,24,24]}
+{"kind":"shape","id":"sh/bilgzmlk","slide":2,"name":"rect-49","bbox":[740,744,216,36]}
+{"kind":"textbox","id":"sh/cjex8r25","slide":2,"name":"备料 / 发料支持","text":"备料 / 发料支持","textPreview":"备料 / 发料支持","textChars":9,"textLines":1,"bbox":[749.84,742,196.32,36.25]}
+{"kind":"shape","id":"sh/xkny1w3q","slide":2,"name":"path-51","bbox":[2025,706,0.05,104]}
+{"kind":"shape","id":"sh/61sfuxkv","slide":2,"name":"arrowhead-51","bbox":[2013,786,24,24]}
+{"kind":"shape","id":"sh/rm1gn2lg","slide":2,"name":"rect-52","bbox":[2063.5,744,127,36]}
+{"kind":"textbox","id":"sh/vud4fuxw","slide":2,"name":"PO与任务","text":"PO与任务","textPreview":"PO与任务","textChars":5,"textLines":1,"bbox":[2064.47,742,125.05,36.25]}
+{"kind":"shape","id":"sh/at436pwb","slide":2,"name":"path-54","bbox":[1000,887,740,0.05]}
+{"kind":"shape","id":"sh/xwfmh4f2","slide":2,"name":"arrowhead-54","bbox":[1000,875,24,24]}
+{"kind":"shape","id":"sh/wv6l8zeh","slide":2,"name":"rect-55","bbox":[1218,853,294,38]}
+{"kind":"textbox","id":"sh/nqd4bux0","slide":2,"name":"订单、交期与技术资料","text":"订单、交期与技术资料","textPreview":"订单、交期与技术资料","textChars":10,"textLines":1,"bbox":[1219.6,850.92,290.8,39.15]}
+{"kind":"shape","id":"sh/mp432pwf","slide":2,"name":"rect-57","bbox":[1040,1082,600,150]}
+{"kind":"shape","id":"sh/9svmdkfq","slide":2,"name":"rect-58","bbox":[1040,1082,5,150]}
+{"kind":"textbox","id":"sh/8rml4zel","slide":2,"name":"QC / 入库 / 经营事实","text":"QC / 入库 / 经营事实","textPreview":"QC / 入库 / 经营事实","textChars":14,"textLines":1,"bbox":[1161.04,1092.64,357.91,49.3]}
+{"kind":"textbox","id":"sh/7mx4nex4","slide":2,"name":"质量、交付、库存与销量结果","text":"质量、交付、库存与销量结果","textPreview":"质量、交付、库存与销量结果","textChars":13,"textLines":1,"bbox":[1152.48,1149.92,375.04,39.15]}
+{"kind":"textbox","id":"sh/6lone9wj","slide":2,"name":"协同接入，按阶段落地","text":"协同接入，按阶段落地","textPreview":"协同接入，按阶段落地","textChars":10,"textLines":1,"bbox":[1194.6,1188.92,290.8,39.15]}
+{"kind":"shape","id":"sh/o7i18bu1","slide":2,"name":"path-62","bbox":[715,964,625,118]}
+{"kind":"shape","id":"sh/psrihgvm","slide":2,"name":"arrowhead-62","bbox":[1328,1058,24,24]}
+{"kind":"shape","id":"sh/250j61cv","slide":2,"name":"rect-63","bbox":[860,997,232,37]}
+{"kind":"textbox","id":"sh/3690f6dg","slide":2,"name":"完工、检验与交付","text":"完工、检验与交付","textPreview":"完工、检验与交付","textChars":8,"textLines":1,"bbox":[862.84,994.96,226.32,37.7]}
+{"kind":"shape","id":"sh/cvi1cvud","slide":2,"name":"path-65","bbox":[1540,346,920,811]}
+{"kind":"shape","id":"sh/dwbil0vi","slide":2,"name":"arrowhead-65","bbox":[1540,326,40,40]}
+{"kind":"shape","id":"sh/qt0jalc7","slide":2,"name":"rect-66","bbox":[2046.64,1111,246.72,40]}
+{"kind":"textbox","id":"sh/bu90jqds","slide":2,"name":"执行结果回流PMC","text":"执行结果回流PMC","textPreview":"执行结果回流PMC","textChars":9,"textLines":1,"bbox":[2040.12,1108.84,259.76,42.05]}
+{"kind":"shape","id":"sh/0z21gvu9","slide":2,"name":"rect-68","bbox":[2020,311,220,39]}
+{"kind":"textbox","id":"sh/l0b2p0vu","slide":2,"name":"下一轮滚动计划","text":"下一轮滚动计划","textPreview":"下一轮滚动计划","textChars":7,"textLines":1,"bbox":[2023.08,308.88,213.84,40.6]}
+{"kind":"shape","id":"sh/9kzexkjm","slide":2,"name":"rect-70","bbox":[64,1290,2432,66]}
+{"kind":"textbox","id":"sh/ojqd4fi1","slide":2,"name":"数据基础：商品主数据 / PLM-BOM / 领星-库存-数仓 / 供应商数据；支撑各系统，不作为串行业务节点。","text":"数据基础：商品主数据 / PLM-BOM / 领星-库存-数仓 / 供应商数据；支撑各系统，不作为串行业务节点。","textPreview":"数据基础：商品主数据 / PLM-BOM / 领星-库存-数仓 / 供应商数据；支撑各系统，不作为串行业务节点。","textChars":56,"textLines":1,"bbox":[90,1305.96,1301.19,37.7]}
+{"kind":"shape","id":"sh/nihwvu1g","slide":2,"name":"path-72","bbox":[64,1384,2432,0.05]}
+{"kind":"textbox","id":"sh/mh8v2p0v","slide":2,"name":"Q4供应链产品建设方案 · 汇报分层版 · 目标业务蓝图，按P0 / P1推进","text":"Q4供应链产品建设方案 · 汇报分层版 · 目标业务蓝图，按P0 / P1推进","textPreview":"Q4供应链产品建设方案 · 汇报分层版 · 目标业务蓝图，按P0 / P1推进","textChars":39,"textLines":1,"bbox":[64,1397.12,722.73,31.9]}
+{"kind":"textbox","id":"sh/1wzetkja","slide":2,"name":"02 / 10","text":"02 / 10","textPreview":"02 / 10","textChars":7,"textLines":1,"bbox":[2408.8,1397.12,87.2,31.9]}
+{"kind":"notes","id":"nt/hv88l4","slide":2,"text":"来源：02_Q4系统职责边界_V3.0.svg。业务依据：《第四季度供应链系统建设方案》及本次《修改意见》。采用全景、职责边界、六角色泳道和七个模块详细流程分层组织。MRP为P1同步建设；PMC确认PR，SCM承载PR/PO管理。图中QC和入库为目标协同节点，一期接入范围需联评；原文1.8边界表未提供。所有文字与流程图元素为原生可编辑对象。"}
+{"kind":"slide","id":"sl/u4z1uf","slide":3,"title":"核心业务泳道｜六个角色","textShapes":75}
+{"kind":"shape","id":"sh/nepgjqds","slide":3,"name":"白色画布","bbox":[0,0,2560,1440]}
+{"kind":"shape","id":"sh/ofixsbed","slide":3,"name":"rect-1","bbox":[0,0,2560,1440]}
+{"kind":"shape","id":"sh/9grylgvy","slide":3,"name":"rect-2","bbox":[64,57,9,64]}
+{"kind":"textbox","id":"sh/e9gfm1wb","slide":3,"name":"核心业务泳道｜六个角色","text":"核心业务泳道｜六个角色","textPreview":"核心业务泳道｜六个角色","textChars":11,"textLines":1,"bbox":[95,56.04,570.56,71.05]}
+{"kind":"textbox","id":"sh/zapwf6dg","slide":3,"name":"2026 Q4 / V3.0","text":"2026 Q4 / V3.0","textPreview":"2026 Q4 / V3.0","textChars":14,"textLines":1,"bbox":[2293.65,68,202.35,36.25]}
+{"kind":"shape","id":"sh/0byxobe1","slide":3,"name":"path-5","bbox":[64,144,2432,0.05]}
+{"kind":"textbox","id":"sh/1c7yhgvm","slide":3,"name":"谁发起、谁计算、谁审核、谁执行、谁反馈；PR是PMC计划与SCM采购的交接点","text":"谁发起、谁计算、谁审核、谁执行、谁反馈；PR是PMC计划与SCM采购的交接点","textPreview":"谁发起、谁计算、谁审核、谁执行、谁反馈；PR是PMC计划与SCM采购的交接点","textChars":38,"textLines":1,"bbox":[64,164.92,1015.62,39.15]}
+{"kind":"textbox","id":"sh/y50fy5cf","slide":3,"name":"03 / 对齐责任","text":"03 / 对齐责任","textPreview":"03 / 对齐责任","textChars":9,"textLines":1,"bbox":[2333.72,169.08,162.28,33.35]}
+{"kind":"shape","id":"sh/j6tgrad0","slide":3,"name":"rect-8","bbox":[245,232,276,43]}
+{"kind":"textbox","id":"sh/bup0buhc","slide":3,"name":"需求填报","text":"需求填报","textPreview":"需求填报","textChars":4,"textLines":1,"bbox":[326,236,114,36.25]}
+{"kind":"shape","id":"sh/atgjipgr","slide":3,"name":"rect-10","bbox":[521,232,276,43]}
+{"kind":"textbox","id":"sh/xw7idkzi","slide":3,"name":"预测审核","text":"预测审核","textPreview":"预测审核","textChars":4,"textLines":1,"bbox":[602,236,114,36.25]}
+{"kind":"shape","id":"sh/wvy1kzyx","slide":3,"name":"rect-12","bbox":[797,232,276,43]}
+{"kind":"textbox","id":"sh/jip0fuh8","slide":3,"name":"最终计划","text":"最终计划","textPreview":"最终计划","textChars":4,"textLines":1,"bbox":[878,236,114,36.25]}
+{"kind":"shape","id":"sh/yhgjmpg3","slide":3,"name":"rect-14","bbox":[1073,232,276,43]}
+{"kind":"textbox","id":"sh/lkrih4ze","slide":3,"name":"需求 / PR","text":"需求 / PR","textPreview":"需求 / PR","textChars":7,"textLines":1,"bbox":[1147.26,236,127.47,36.25]}
+{"kind":"shape","id":"sh/kjy1ozyt","slide":3,"name":"rect-16","bbox":[1349,232,276,43]}
+{"kind":"textbox","id":"sh/7m90jehk","slide":3,"name":"供应商分配","text":"供应商分配","textPreview":"供应商分配","textChars":5,"textLines":1,"bbox":[1417,236,140,36.25]}
+{"kind":"shape","id":"sh/6l0jq9gz","slide":3,"name":"rect-18","bbox":[1625,232,276,43]}
+{"kind":"textbox","id":"sh/ihk3id07","slide":3,"name":"PO / 接单","text":"PO / 接单","textPreview":"PO / 接单","textChars":7,"textLines":1,"bbox":[1698.25,236,129.5,36.25]}
+{"kind":"shape","id":"sh/3it4bi1s","slide":3,"name":"rect-20","bbox":[1901,232,276,43]}
+{"kind":"textbox","id":"sh/4jmlk3id","slide":3,"name":"生产 / 交付","text":"生产 / 交付","textPreview":"生产 / 交付","textChars":7,"textLines":1,"bbox":[1966.84,236,144.32,36.25]}
+{"kind":"shape","id":"sh/5kvmd8jy","slide":3,"name":"rect-22","bbox":[2177,232,276,43]}
+{"kind":"textbox","id":"sh/udk3et0b","slide":3,"name":"库存 / 回流","text":"库存 / 回流","textPreview":"库存 / 回流","textChars":7,"textLines":1,"bbox":[2242.84,236,144.32,36.25]}
+{"kind":"shape","id":"sh/vet47y1g","slide":3,"name":"rect-24","bbox":[64,275,181,155]}
+{"kind":"shape","id":"sh/gf2lg3i1","slide":3,"name":"rect-25","bbox":[245,275,2208,155]}
+{"kind":"textbox","id":"sh/hgbm98jm","slide":3,"name":"销售 / 运营","text":"销售 / 运营","textPreview":"销售 / 运营","textChars":7,"textLines":1,"bbox":[82,311,144.32,36.25]}
+{"kind":"textbox","id":"sh/e943qx0f","slide":3,"name":"需求填报与确认","text":"需求填报与确认","textPreview":"需求填报与确认","textChars":7,"textLines":1,"bbox":[82,358.28,141.04,26.1]}
+{"kind":"shape","id":"sh/zad4j210","slide":3,"name":"path-28","bbox":[64,430,2389,0.05]}
+{"kind":"shape","id":"sh/94z69w32","slide":3,"name":"rect-29","bbox":[64,430,181,155]}
+{"kind":"shape","id":"sh/o3qpgr2h","slide":3,"name":"rect-30","bbox":[245,430,2208,155]}
+{"kind":"textbox","id":"sh/n2xo7mlw","slide":3,"name":"PMC","text":"PMC","textPreview":"PMC","textChars":3,"textLines":1,"bbox":[82,466,69.54,36.25]}
+{"kind":"textbox","id":"sh/m1o7ehkb","slide":3,"name":"计划决策 · P0","text":"计划决策 · P0","textPreview":"计划决策 · P0","textChars":9,"textLines":1,"bbox":[82,513.28,129.97,26.1]}
+{"kind":"shape","id":"sh/1gf65c36","slide":3,"name":"path-33","bbox":[64,585,2389,0.05]}
+{"kind":"shape","id":"sh/0f65c72l","slide":3,"name":"rect-34","bbox":[64,585,181,155]}
+{"kind":"shape","id":"sh/zexo32l0","slide":3,"name":"rect-35","bbox":[245,585,2208,155]}
+{"kind":"textbox","id":"sh/edonahkf","slide":3,"name":"MRP","text":"MRP","textPreview":"MRP","textChars":3,"textLines":1,"bbox":[82,621,68.63,36.25]}
+{"kind":"textbox","id":"sh/lwj6hg3a","slide":3,"name":"物料计划 · P1","text":"物料计划 · P1","textPreview":"物料计划 · P1","textChars":9,"textLines":1,"bbox":[82,668.28,126.24,26.1]}
+{"kind":"shape","id":"sh/kbapob2p","slide":3,"name":"path-38","bbox":[64,740,2389,0.05]}
+{"kind":"shape","id":"sh/sfyx8b2l","slide":3,"name":"rect-39","bbox":[64,740,181,155]}
+{"kind":"shape","id":"sh/dg7ehg3q","slide":3,"name":"rect-40","bbox":[245,740,2208,155]}
+{"kind":"textbox","id":"sh/qdwf61kf","slide":3,"name":"SCM / 采购","text":"SCM / 采购","textPreview":"SCM / 采购","textChars":8,"textLines":1,"bbox":[82,776,151.77,36.25]}
+{"kind":"textbox","id":"sh/repwf6l0","slide":3,"name":"采购执行 · P0","text":"采购执行 · P0","textPreview":"采购执行 · P0","textChars":9,"textLines":1,"bbox":[82,823.28,129.97,26.1]}
+{"kind":"shape","id":"sh/0jyxcb2h","slide":3,"name":"path-43","bbox":[64,895,2389,0.05]}
+{"kind":"shape","id":"sh/147ylg32","slide":3,"name":"rect-44","bbox":[64,895,181,155]}
+{"kind":"shape","id":"sh/ehgfalkb","slide":3,"name":"rect-45","bbox":[245,895,2208,155]}
+{"kind":"textbox","id":"sh/fipwjqlw","slide":3,"name":"供应商 / MES","text":"供应商 / MES","textPreview":"供应商 / MES","textChars":9,"textLines":1,"bbox":[82,931,175.42,36.25]}
+{"kind":"textbox","id":"sh/o7ixgv2t","slide":3,"name":"履约与已有MES协同","text":"履约与已有MES协同","textPreview":"履约与已有MES协同","textChars":10,"textLines":1,"bbox":[82,978.28,181.31,26.1]}
+{"kind":"shape","id":"sh/p8ryp03y","slide":3,"name":"path-48","bbox":[64,1050,2389,0.05]}
+{"kind":"shape","id":"sh/z2t0fu5g","slide":3,"name":"rect-49","bbox":[64,1050,181,155]}
+{"kind":"shape","id":"sh/y1kzmp4v","slide":3,"name":"rect-50","bbox":[245,1050,2208,155]}
+{"kind":"textbox","id":"sh/l4bih4n6","slide":3,"name":"仓储 / 库存","text":"仓储 / 库存","textPreview":"仓储 / 库存","textChars":7,"textLines":1,"bbox":[82,1086,144.32,36.25]}
+{"kind":"textbox","id":"sh/k32hozm1","slide":3,"name":"事实结果回传","text":"事实结果回传","textPreview":"事实结果回传","textChars":6,"textLines":1,"bbox":[82,1133.28,122.32,26.1]}
+{"kind":"shape","id":"sh/byt0bu54","slide":3,"name":"path-53","bbox":[64,1205,2389,0.05]}
+{"kind":"shape","id":"sh/adkzip4j","slide":3,"name":"path-54","bbox":[245,275,0.05,930]}
+{"kind":"shape","id":"sh/x0bidkna","slide":3,"name":"path-55","bbox":[521,275,0.05,930]}
+{"kind":"shape","id":"sh/cz2hkfmp","slide":3,"name":"path-56","bbox":[797,275,0.05,930]}
+{"kind":"shape","id":"sh/vud0ne5o","slide":3,"name":"path-57","bbox":[1073,275,0.05,930]}
+{"kind":"shape","id":"sh/u94ju943","slide":3,"name":"path-58","bbox":[1349,275,0.05,930]}
+{"kind":"shape","id":"sh/6p83mdob","slide":3,"name":"path-59","bbox":[1625,275,0.05,930]}
+{"kind":"shape","id":"sh/rqhkfipw","slide":3,"name":"path-60","bbox":[1901,275,0.05,930]}
+{"kind":"shape","id":"sh/srqlon61","slide":3,"name":"path-61","bbox":[2177,275,0.05,930]}
+{"kind":"shape","id":"sh/tsz2hs7m","slide":3,"name":"path-62","bbox":[2453,275,0.05,930]}
+{"kind":"shape","id":"sh/et83qxo7","slide":3,"name":"rect-63","bbox":[263,302,238,108]}
+{"kind":"shape","id":"sh/fuhkji5s","slide":3,"name":"rect-64","bbox":[263,302,5,108]}
+{"kind":"textbox","id":"sh/0vqlsn6d","slide":3,"name":"日级预测与确认","text":"日级预测与确认","textPreview":"日级预测与确认","textChars":7,"textLines":1,"bbox":[286,307,192,36.25]}
+{"kind":"textbox","id":"sh/1wjmlsny","slide":3,"name":"活动预测、人工调整","text":"活动预测、人工调整","textPreview":"活动预测、人工调整","textChars":9,"textLines":1,"bbox":[283.4,346.2,197.2,29]}
+{"kind":"textbox","id":"sh/uxo3eto3","slide":3,"name":"提交确认","text":"提交确认","textPreview":"提交确认","textChars":4,"textLines":1,"bbox":[335.4,374.2,93.2,29]}
+{"kind":"shape","id":"sh/vyxk7ypo","slide":3,"name":"rect-68","bbox":[263,457,238,108]}
+{"kind":"shape","id":"sh/x4ne90v2","slide":3,"name":"rect-69","bbox":[263,457,5,108]}
+{"kind":"textbox","id":"sh/w3ex0vux","slide":3,"name":"开启预测周期","text":"开启预测周期","textPreview":"开启预测周期","textChars":6,"textLines":1,"bbox":[299,462,166,36.25]}
+{"kind":"textbox","id":"sh/b25w7qdc","slide":3,"name":"月份、W周期、窗口","text":"月份、W周期、窗口","textPreview":"月份、W周期、窗口","textChars":9,"textLines":1,"bbox":[284.12,501.2,195.75,29]}
+{"kind":"shape","id":"sh/a1wfylcr","slide":3,"name":"rect-72","bbox":[539,457,238,108]}
+{"kind":"shape","id":"sh/ls7ed0be","slide":3,"name":"rect-73","bbox":[539,457,5,108]}
+{"kind":"textbox","id":"sh/krex4vut","slide":3,"name":"审核与校准","text":"审核与校准","textPreview":"审核与校准","textChars":5,"textLines":1,"bbox":[588,462,140,36.25]}
+{"kind":"textbox","id":"sh/jq5wbqt8","slide":3,"name":"预测、库存、在途、水位","text":"预测、库存、在途、水位","textPreview":"预测、库存、在途、水位","textChars":11,"textLines":1,"bbox":[538.6,501.2,238.8,29]}
+{"kind":"shape","id":"sh/ypwf25cn","slide":3,"name":"rect-76","bbox":[815,457,238,108]}
+{"kind":"shape","id":"sh/1w3e1gva","slide":3,"name":"rect-77","bbox":[815,457,5,108]}
+{"kind":"textbox","id":"sh/0vudsbup","slide":3,"name":"最终采购需求","text":"最终采购需求","textPreview":"最终采购需求","textChars":6,"textLines":1,"bbox":[851,462,166,36.25]}
+{"kind":"textbox","id":"sh/sjq9cvyt","slide":3,"name":"SKU版本、供货能力","text":"SKU版本、供货能力","textPreview":"SKU版本、供货能力","textChars":10,"textLines":1,"bbox":[835.02,501.2,197.96,29]}
+{"kind":"textbox","id":"sh/tkzal0ze","slide":3,"name":"买什么 / 多少 / 何时要","text":"买什么 / 多少 / 何时要","textPreview":"买什么 / 多少 / 何时要","textChars":14,"textLines":1,"bbox":[821.55,529.2,224.91,29]}
+{"kind":"shape","id":"sh/6h8ra5g3","slide":3,"name":"rect-81","bbox":[2195,457,238,108]}
+{"kind":"shape","id":"sh/7ihsjaho","slide":3,"name":"rect-82","bbox":[2195,457,5,108]}
+{"kind":"textbox","id":"sh/kf698vyx","slide":3,"name":"下一轮滚动计划","text":"下一轮滚动计划","textPreview":"下一轮滚动计划","textChars":7,"textLines":1,"bbox":[2218,462,192,36.25]}
+{"kind":"textbox","id":"sh/5gfah0zi","slide":3,"name":"执行偏差反馈","text":"执行偏差反馈","textPreview":"执行偏差反馈","textChars":6,"textLines":1,"bbox":[2246.6,501.2,134.8,29]}
+{"kind":"textbox","id":"sh/idor6l0r","slide":3,"name":"更新需求与备货判断","text":"更新需求与备货判断","textPreview":"更新需求与备货判断","textChars":9,"textLines":1,"bbox":[2215.4,529.2,197.2,29]}
+{"kind":"shape","id":"sh/jexsfqhc","slide":3,"name":"rect-86","bbox":[815,612,238,108]}
+{"kind":"shape","id":"sh/4batkfy1","slide":3,"name":"rect-87","bbox":[815,612,5,108]}
+{"kind":"textbox","id":"sh/pcjatkzm","slide":3,"name":"物料需求计算","text":"物料需求计算","textPreview":"物料需求计算","textChars":6,"textLines":1,"bbox":[851,617,166,36.25]}
+{"kind":"textbox","id":"sh/zi54zi50","slide":3,"name":"成衣计划 + BOM","text":"成衣计划 + BOM","textPreview":"成衣计划 + BOM","textChars":10,"textLines":1,"bbox":[849.98,656.2,168.03,29]}
+{"kind":"textbox","id":"sh/yhw36d4f","slide":3,"name":"库存 / 在途 → 净需求","text":"库存 / 在途 → 净需求","textPreview":"库存 / 在途 → 净需求","textChars":13,"textLines":1,"bbox":[826.75,684.2,214.51,29]}
+{"kind":"shape","id":"sh/lknm1sn6","slide":3,"name":"rect-91","bbox":[1091,612,238,108]}
+{"kind":"shape","id":"sh/kjel8nml","slide":3,"name":"rect-92","bbox":[1091,612,5,108]}
+{"kind":"textbox","id":"sh/7mp4325c","slide":3,"name":"面辅料需求计划","text":"面辅料需求计划","textPreview":"面辅料需求计划","textChars":7,"textLines":1,"bbox":[1114,617,192,36.25]}
+{"kind":"textbox","id":"sh/mlgnax4r","slide":3,"name":"外购 / 备料 / 发料分流","text":"外购 / 备料 / 发料分流","textPreview":"外购 / 备料 / 发料分流","textChars":14,"textLines":1,"bbox":[1097.55,656.2,224.91,29]}
+{"kind":"shape","id":"sh/9o7m5sn2","slide":3,"name":"rect-95","bbox":[1643,612,238,108]}
+{"kind":"shape","id":"sh/8ny5cnmx","slide":3,"name":"rect-96","bbox":[1643,612,5,108]}
+{"kind":"textbox","id":"sh/3ql4ry5s","slide":3,"name":"备料 / 发料","text":"备料 / 发料","textPreview":"备料 / 发料","textChars":7,"textLines":1,"bbox":[1689.84,617,144.32,36.25]}
+{"kind":"textbox","id":"sh/2pc3yto7","slide":3,"name":"现有料或到料后执行","text":"现有料或到料后执行","textPreview":"现有料或到料后执行","textChars":9,"textLines":1,"bbox":[1663.4,656.2,197.2,29]}
+{"kind":"textbox","id":"sh/nyxkjixk","slide":3,"name":"支撑齐料与开工","text":"支撑齐料与开工","textPreview":"支撑齐料与开工","textChars":7,"textLines":1,"bbox":[1684.2,684.2,155.6,29]}
+{"kind":"shape","id":"sh/mxo3qdgz","slide":3,"name":"rect-100","bbox":[1091,767,238,108]}
+{"kind":"shape","id":"sh/90zmlsfq","slide":3,"name":"rect-101","bbox":[1091,767,5,108]}
+{"kind":"textbox","id":"sh/8z6lsne5","slide":3,"name":"PR承接与管理","text":"PR承接与管理","textPreview":"PR承接与管理","textChars":7,"textLines":1,"bbox":[1122.42,772,175.17,36.25]}
+{"kind":"textbox","id":"sh/zuxkvix8","slide":3,"name":"PMC确认PR","text":"PMC确认PR","textPreview":"PMC确认PR","textChars":7,"textLines":1,"bbox":[1147.07,811.2,125.86,29]}
+{"kind":"textbox","id":"sh/yto3mdg3","slide":3,"name":"SCM管理需求单据","text":"SCM管理需求单据","textPreview":"SCM管理需求单据","textChars":9,"textLines":1,"bbox":[1119.28,839.2,181.44,29]}
+{"kind":"shape","id":"sh/lwf2x8fe","slide":3,"name":"rect-105","bbox":[1367,767,238,108]}
+{"kind":"shape","id":"sh/0v6lonyt","slide":3,"name":"rect-106","bbox":[1367,767,5,108]}
+{"kind":"textbox","id":"sh/jqh4r2xs","slide":3,"name":"供应商分配","text":"供应商分配","textPreview":"供应商分配","textChars":5,"textLines":1,"bbox":[1416,772,140,36.25]}
+{"kind":"textbox","id":"sh/ip83yxw7","slide":3,"name":"产能 / 成本 / 交期","text":"产能 / 成本 / 交期","textPreview":"产能 / 成本 / 交期","textChars":12,"textLines":1,"bbox":[1394.35,811.2,183.31,29]}
+{"kind":"textbox","id":"sh/gb2hszep","slide":3,"name":"决定向谁买、如何分配","text":"决定向谁买、如何分配","textPreview":"决定向谁买、如何分配","textChars":10,"textLines":1,"bbox":[1377,839.2,218,29]}
+{"kind":"shape","id":"sh/1cbil4va","slide":3,"name":"rect-110","bbox":[1643,767,238,108]}
+{"kind":"shape","id":"sh/e9kzqpwj","slide":3,"name":"rect-111","bbox":[1643,767,5,108]}
+{"kind":"textbox","id":"sh/fat0jud4","slide":3,"name":"PO与交期确认","text":"PO与交期确认","textPreview":"PO与交期确认","textChars":7,"textLines":1,"bbox":[1673.41,772,177.18,36.25]}
+{"kind":"textbox","id":"sh/oz21wjel","slide":3,"name":"以采购订单组织执行","text":"以采购订单组织执行","textPreview":"以采购订单组织执行","textChars":9,"textLines":1,"bbox":[1663.4,811.2,197.2,29]}
+{"kind":"shape","id":"sh/p0vipov6","slide":3,"name":"rect-114","bbox":[1643,922,238,108]}
+{"kind":"shape","id":"sh/2dkju9wv","slide":3,"name":"rect-115","bbox":[1643,922,5,108]}
+{"kind":"textbox","id":"sh/3et0ned0","slide":3,"name":"接单与货期确认","text":"接单与货期确认","textPreview":"接单与货期确认","textChars":7,"textLines":1,"bbox":[1666,927,192,36.25]}
+{"kind":"textbox","id":"sh/c3m10jux","slide":3,"name":"供应商承接任务与资料","text":"供应商承接任务与资料","textPreview":"供应商承接任务与资料","textChars":10,"textLines":1,"bbox":[1653,966.2,218,29]}
+{"kind":"shape","id":"sh/d4vitovi","slide":3,"name":"rect-118","bbox":[1919,922,238,108]}
+{"kind":"shape","id":"sh/lkridonm","slide":3,"name":"rect-119","bbox":[1919,922,5,108]}
+{"kind":"textbox","id":"sh/kzihkjm1","slide":3,"name":"生产 / QC / 发货","text":"生产 / QC / 发货","textPreview":"生产 / QC / 发货","textChars":12,"textLines":1,"bbox":[1931.09,927,213.82,36.25]}
+{"kind":"textbox","id":"sh/zy90be5g","slide":3,"name":"MES进度与延期反馈","text":"MES进度与延期反馈","textPreview":"MES进度与延期反馈","textChars":10,"textLines":1,"bbox":[1937.82,966.2,200.35,29]}
+{"kind":"textbox","id":"sh/yx0zi94v","slide":3,"name":"质量放行、交付执行","text":"质量放行、交付执行","textPreview":"质量放行、交付执行","textChars":9,"textLines":1,"bbox":[1939.4,994.2,197.2,29]}
+{"kind":"shape","id":"sh/9obihoni","slide":3,"name":"rect-123","bbox":[2195,1077,238,108]}
+{"kind":"shape","id":"sh/8n21o3mx","slide":3,"name":"rect-124","bbox":[2195,1077,5,108]}
+{"kind":"textbox","id":"sh/7m90fy5c","slide":3,"name":"收货 / 入库","text":"收货 / 入库","textPreview":"收货 / 入库","textChars":7,"textLines":1,"bbox":[2241.84,1082,144.32,36.25]}
+{"kind":"textbox","id":"sh/ml0zmt47","slide":3,"name":"质检、库存更新","text":"质检、库存更新","textPreview":"质检、库存更新","textChars":7,"textLines":1,"bbox":[2236.2,1121.2,155.6,29]}
+{"kind":"textbox","id":"sh/ps7i54ne","slide":3,"name":"库存与到货事实回传","text":"库存与到货事实回传","textPreview":"库存与到货事实回传","textChars":9,"textLines":1,"bbox":[2215.4,1149.2,197.2,29]}
+{"kind":"shape","id":"sh/oryhcz6t","slide":3,"name":"path-128","bbox":[382,410,0.05,47]}
+{"kind":"shape","id":"sh/elcnq1gf","slide":3,"name":"arrowhead-128","bbox":[370,410,24,24]}
+{"kind":"shape","id":"sh/fmloz6h0","slide":3,"name":"rect-129","bbox":[422,426,64,31]}
+{"kind":"textbox","id":"sh/gnupsbyl","slide":3,"name":"发起","text":"发起","textPreview":"发起","textChars":2,"textLines":1,"bbox":[428.2,424.2,51.6,29]}
+{"kind":"shape","id":"sh/1o361gz6","slide":3,"name":"path-131","bbox":[501,356,38,155]}
+{"kind":"shape","id":"sh/2pc7ulgb","slide":3,"name":"arrowhead-131","bbox":[515,499,24,24]}
+{"kind":"shape","id":"sh/3q5o3qhw","slide":3,"name":"path-132","bbox":[777,511,38,0.05]}
+{"kind":"shape","id":"sh/orepwvyh","slide":3,"name":"arrowhead-132","bbox":[791,499,24,24]}
+{"kind":"shape","id":"sh/psn65gz2","slide":3,"name":"path-133","bbox":[934,565,0.05,47]}
+{"kind":"shape","id":"sh/itsnih07","slide":3,"name":"arrowhead-133","bbox":[922,588,24,24]}
+{"kind":"shape","id":"sh/ju1ormhs","slide":3,"name":"rect-134","bbox":[959,577,104,31]}
+{"kind":"textbox","id":"sh/zqt4vi9g","slide":3,"name":"成衣计划","text":"成衣计划","textPreview":"成衣计划","textChars":4,"textLines":1,"bbox":[964.4,575.2,93.2,29]}
+{"kind":"shape","id":"sh/ypk3mdsv","slide":3,"name":"path-136","bbox":[1053,511,38,310]}
+{"kind":"shape","id":"sh/lcbmxsrm","slide":3,"name":"arrowhead-136","bbox":[1067,809,24,24]}
+{"kind":"shape","id":"sh/kr2lona1","slide":3,"name":"rect-137","bbox":[1047,727,144,31]}
+{"kind":"textbox","id":"sh/7et4zi9s","slide":3,"name":"成衣采购需求","text":"成衣采购需求","textPreview":"成衣采购需求","textChars":6,"textLines":1,"bbox":[1051.6,725.2,134.8,29]}
+{"kind":"shape","id":"sh/mdk3qxs7","slide":3,"name":"path-139","bbox":[1053,666,38,0.05]}
+{"kind":"shape","id":"sh/9gvm1sri","slide":3,"name":"arrowhead-139","bbox":[1067,654,24,24]}
+{"kind":"shape","id":"sh/8fmlsnad","slide":3,"name":"path-140","bbox":[1210,720,0.05,47]}
+{"kind":"shape","id":"sh/vid4329o","slide":3,"name":"arrowhead-140","bbox":[1198,743,24,24]}
+{"kind":"shape","id":"sh/uh4nuxs3","slide":3,"name":"rect-141","bbox":[1223,733,124,31]}
+{"kind":"textbox","id":"sh/sn6lk76h","slide":3,"name":"净缺口采购","text":"净缺口采购","textPreview":"净缺口采购","textChars":5,"textLines":1,"bbox":[1228,731.2,114,29]}
+{"kind":"shape","id":"sh/dof2dc72","slide":3,"name":"path-143","bbox":[1329,666,314,0.05]}
+{"kind":"shape","id":"sh/6l43ixob","slide":3,"name":"arrowhead-143","bbox":[1619,654,24,24]}
+{"kind":"shape","id":"sh/rmxkb2pw","slide":3,"name":"rect-144","bbox":[1404,637,164,31]}
+{"kind":"textbox","id":"sh/4jmlgn65","slide":3,"name":"可用料直接备料","text":"可用料直接备料","textPreview":"可用料直接备料","textChars":7,"textLines":1,"bbox":[1408.2,635.2,155.6,29]}
+{"kind":"shape","id":"sh/5kv29s7q","slide":3,"name":"path-146","bbox":[1329,821,38,0.05]}
+{"kind":"shape","id":"sh/ih43exof","slide":3,"name":"arrowhead-146","bbox":[1343,809,24,24]}
+{"kind":"shape","id":"sh/jidk72p0","slide":3,"name":"path-147","bbox":[1605,821,38,0.05]}
+{"kind":"shape","id":"sh/wfmlcn69","slide":3,"name":"arrowhead-147","bbox":[1619,809,24,24]}
+{"kind":"shape","id":"sh/hgv25s7u","slide":3,"name":"path-148","bbox":[1762,875,0.05,47]}
+{"kind":"shape","id":"sh/x03atkv6","slide":3,"name":"arrowhead-148","bbox":[1750,898,24,24]}
+{"kind":"shape","id":"sh/czu9kfel","slide":3,"name":"path-149","bbox":[1881,976,38,0.05]}
+{"kind":"shape","id":"sh/bylsradg","slide":3,"name":"arrowhead-149","bbox":[1895,964,24,24]}
+{"kind":"shape","id":"sh/axcri5wv","slide":3,"name":"path-150","bbox":[1762,720,157,224]}
+{"kind":"shape","id":"sh/pwjap0va","slide":3,"name":"arrowhead-150","bbox":[1895,932,24,24]}
+{"kind":"shape","id":"sh/ova9gfep","slide":3,"name":"rect-151","bbox":[1867,885,104,31]}
+{"kind":"textbox","id":"sh/na1snad4","slide":3,"name":"齐料支持","text":"齐料支持","textPreview":"齐料支持","textChars":4,"textLines":1,"bbox":[1872.4,883.2,93.2,29]}
+{"kind":"shape","id":"sh/29sre5wj","slide":3,"name":"path-153","bbox":[2157,976,38,155]}
+{"kind":"shape","id":"sh/9sna14ve","slide":3,"name":"arrowhead-153","bbox":[2171,1119,24,24]}
+{"kind":"shape","id":"sh/8retszut","slide":3,"name":"rect-154","bbox":[2194,1037,66,32]}
+{"kind":"textbox","id":"sh/qdo7m1cb","slide":3,"name":"交付","text":"交付","textPreview":"交付","textChars":2,"textLines":1,"bbox":[2200.16,1035.16,53.68,30.45]}
+{"kind":"shape","id":"sh/rehov6tw","slide":3,"name":"path-156","bbox":[2433,511,47,620]}
+{"kind":"shape","id":"sh/sfqpobuh","slide":3,"name":"arrowhead-156","bbox":[2433,491,40,40]}
+{"kind":"shape","id":"sh/dgz6xgb2","slide":3,"name":"rect-157","bbox":[2289,977,162,34]}
+{"kind":"textbox","id":"sh/i9o7ihcf","slide":3,"name":"执行结果回流","text":"执行结果回流","textPreview":"执行结果回流","textChars":6,"textLines":1,"bbox":[2293.24,975.08,153.52,33.35]}
+{"kind":"shape","id":"sh/3axormt0","slide":3,"name":"path-159","bbox":[658,511,1537,64]}
+{"kind":"shape","id":"sh/4b6pkrul","slide":3,"name":"arrowhead-159","bbox":[642,565,32,32]}
+{"kind":"shape","id":"sh/5cf6twbq","slide":3,"name":"rect-160","bbox":[1543.6,552,472.8,33]}
+{"kind":"textbox","id":"sh/2587ulcj","slide":3,"name":"销量 / 库存 / 在途 / 交期 / 生产 / 质量","text":"销量 / 库存 / 在途 / 交期 / 生产 / 质量","textPreview":"销量 / 库存 / 在途 / 交期 / 生产 / 质量","textChars":27,"textLines":1,"bbox":[1571.02,550.12,417.96,31.9]}
+{"kind":"textbox","id":"sh/n6183qt4","slide":3,"name":"边界：PMC确认采购需求，SCM负责供应商分配与PR / PO执行；MRP与成衣采购并行。","text":"边界：PMC确认采购需求，SCM负责供应商分配与PR / PO执行；MRP与成衣采购并行。","textPreview":"边界：PMC确认采购需求，SCM负责供应商分配与PR / PO执行；MRP与成衣采购并行。","textChars":45,"textLines":1,"bbox":[64,1226.96,1080.44,37.7]}
+{"kind":"textbox","id":"sh/bmxo7ql8","slide":3,"name":"QC为执行协同节点，汇报版合并展示；具体检验、生产及库存接口按阶段接入。","text":"QC为执行协同节点，汇报版合并展示；具体检验、生产及库存接口按阶段接入。","textPreview":"QC为执行协同节点，汇报版合并展示；具体检验、生产及库存接口按阶段接入。","textChars":36,"textLines":1,"bbox":[64,1276,932.87,36.25]}
+{"kind":"textbox","id":"sh/a1o7el4n","slide":3,"name":"数据基础由商品主数据、PLM / BOM、领星 / 库存 / 数仓及供应商数据提供，不另设业务泳道。","text":"数据基础由商品主数据、PLM / BOM、领星 / 库存 / 数仓及供应商数据提供，不另设业务泳道。","textPreview":"数据基础由商品主数据、PLM / BOM、领星 / 库存 / 数仓及供应商数据提供，不另设业务泳道。","textChars":50,"textLines":1,"bbox":[64,1321,1126.34,36.25]}
+{"kind":"shape","id":"sh/xof69g3e","slide":3,"name":"path-165","bbox":[64,1384,2432,0.05]}
+{"kind":"textbox","id":"sh/wn6pgv2t","slide":3,"name":"Q4供应链产品建设方案 · 汇报分层版 · 目标业务蓝图，按P0 / P1推进","text":"Q4供应链产品建设方案 · 汇报分层版 · 目标业务蓝图，按P0 / P1推进","textPreview":"Q4供应链产品建设方案 · 汇报分层版 · 目标业务蓝图，按P0 / P1推进","textChars":39,"textLines":1,"bbox":[64,1397.12,722.73,31.9]}
+{"kind":"textbox","id":"sh/nydo36lc","slide":3,"name":"03 / 10","text":"03 / 10","textPreview":"03 / 10","textChars":7,"textLines":1,"bbox":[2408.8,1397.12,87.2,31.9]}
+{"kind":"notes","id":"nt/u4z1uf","slide":3,"text":"来源：03_Q4核心业务六角色泳道_V3.0.svg。业务依据：《第四季度供应链系统建设方案》及本次《修改意见》。采用全景、职责边界、六角色泳道和七个模块详细流程分层组织。MRP为P1同步建设；PMC确认PR，SCM承载PR/PO管理。图中QC和入库为目标协同节点，一期接入范围需联评；原文1.8边界表未提供。所有文字与流程图元素为原生可编辑对象。"}
+{"kind":"slide","id":"sl/geww02","slide":4,"title":"PMC预测｜从日级填报到确认版本","textShapes":41}
+{"kind":"shape","id":"sh/i1crepoj","slide":4,"name":"白色画布","bbox":[0,0,2560,1440]}
+{"kind":"shape","id":"sh/54nap47u","slide":4,"name":"rect-1","bbox":[0,0,2560,1440]}
+{"kind":"shape","id":"sh/43e9gz69","slide":4,"name":"rect-2","bbox":[64,57,9,64]}
+{"kind":"textbox","id":"sh/rq5srep0","slide":4,"name":"PMC预测｜从日级填报到确认版本","text":"PMC预测｜从日级填报到确认版本","textPreview":"PMC预测｜从日级填报到确认版本","textChars":16,"textLines":1,"bbox":[95,56.04,789.19,71.05]}
+{"kind":"textbox","id":"sh/65wri9of","slide":4,"name":"2026 Q4 / V3.0","text":"2026 Q4 / V3.0","textPreview":"2026 Q4 / V3.0","textChars":14,"textLines":1,"bbox":[2293.65,68,202.35,36.25]}
+{"kind":"shape","id":"sh/tsnat476","slide":4,"name":"path-5","bbox":[64,144,2432,0.05]}
+{"kind":"textbox","id":"sh/sre9kz6l","slide":4,"name":"W周管理任务，天是销售填报单位；系统给基准，销售补充业务判断","text":"W周管理任务，天是销售填报单位；系统给基准，销售补充业务判断","textPreview":"W周管理任务，天是销售填报单位；系统给基准，销售补充业务判断","textChars":30,"textLines":1,"bbox":[64,164.92,850.45,39.15]}
+{"kind":"textbox","id":"sh/7ul8fapw","slide":4,"name":"04 / 模块展开","text":"04 / 模块展开","textPreview":"04 / 模块展开","textChars":9,"textLines":1,"bbox":[2333.72,169.08,162.28,33.35]}
+{"kind":"textbox","id":"sh/m9sr65ob","slide":4,"name":"业务动作","text":"业务动作","textPreview":"业务动作","textChars":4,"textLines":1,"bbox":[64,249.72,143.12,46.4]}
+{"kind":"shape","id":"sh/0velon25","slide":4,"name":"rect-9","bbox":[64,348,452,172]}
+{"kind":"shape","id":"sh/1wn2xs3q","slide":4,"name":"rect-10","bbox":[64,348,5,172]}
+{"kind":"textbox","id":"sh/etw3mdkz","slide":4,"name":"开启预测周期","text":"开启预测周期","textPreview":"开启预测周期","textChars":6,"textLines":1,"bbox":[178.92,358.64,222.16,49.3]}
+{"kind":"textbox","id":"sh/zu5kvilk","slide":4,"name":"PMC确定月份、W周与窗口","text":"PMC确定月份、W周与窗口","textPreview":"PMC确定月份、W周与窗口","textChars":13,"textLines":1,"bbox":[113.96,415.92,352.08,39.15]}
+{"kind":"textbox","id":"sh/ojyls721","slide":4,"name":"日期引用计划日历","text":"日期引用计划日历","textPreview":"日期引用计划日历","textChars":8,"textLines":1,"bbox":[172.68,454.92,234.64,39.15]}
+{"kind":"textbox","id":"sh/9k7m1cjm","slide":4,"name":"01","text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[64,297.04,36,34.8]}
+{"kind":"shape","id":"sh/mxw3qxkb","slide":4,"name":"path-15","bbox":[516,434,41,0.05]}
+{"kind":"shape","id":"sh/ny5kz2lw","slide":4,"name":"arrowhead-15","bbox":[533,422,24,24]}
+{"kind":"shape","id":"sh/4nulg32x","slide":4,"name":"rect-16","bbox":[557,348,452,172]}
+{"kind":"shape","id":"sh/po32p83i","slide":4,"name":"rect-17","bbox":[557,348,5,172]}
+{"kind":"textbox","id":"sh/5kvit4v6","slide":4,"name":"维护日级预测","text":"维护日级预测","textPreview":"维护日级预测","textChars":6,"textLines":1,"bbox":[671.92,358.64,222.16,49.3]}
+{"kind":"textbox","id":"sh/4jm1kzul","slide":4,"name":"系统基准只读","text":"系统基准只读","textPreview":"系统基准只读","textChars":6,"textLines":1,"bbox":[693.76,415.92,178.48,39.15]}
+{"kind":"textbox","id":"sh/jid0rudg","slide":4,"name":"人工修正、结构化活动","text":"人工修正、结构化活动","textPreview":"人工修正、结构化活动","textChars":10,"textLines":1,"bbox":[637.6,454.92,290.8,39.15]}
+{"kind":"textbox","id":"sh/ih4jipcv","slide":4,"name":"02","text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[557,297.04,39.97,34.8]}
+{"kind":"shape","id":"sh/tofix4vi","slide":4,"name":"path-22","bbox":[1009,434,41,0.05]}
+{"kind":"shape","id":"sh/snm1ozux","slide":4,"name":"arrowhead-22","bbox":[1026,422,24,24]}
+{"kind":"shape","id":"sh/rmd0vudc","slide":4,"name":"rect-23","bbox":[1050,348,452,172]}
+{"kind":"shape","id":"sh/6l4jm9cr","slide":4,"name":"rect-24","bbox":[1050,348,5,172]}
+{"kind":"textbox","id":"sh/1cfi1ove","slide":4,"name":"销售确认","text":"销售确认","textPreview":"销售确认","textChars":4,"textLines":1,"bbox":[1200.28,358.64,151.44,49.3]}
+{"kind":"textbox","id":"sh/gr61sjut","slide":4,"name":"逐日核对最终预测","text":"逐日核对最终预测","textPreview":"逐日核对最终预测","textChars":8,"textLines":1,"bbox":[1158.68,415.92,234.64,39.15]}
+{"kind":"textbox","id":"sh/elg76hof","slide":4,"name":"提交本W周期","text":"提交本W周期","textPreview":"提交本W周期","textChars":6,"textLines":1,"bbox":[1187.74,454.92,176.53,39.15]}
+{"kind":"textbox","id":"sh/zmpozmpk","slide":4,"name":"03","text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[1050,297.04,39.97,34.8]}
+{"kind":"shape","id":"sh/0nyp8r65","slide":4,"name":"path-29","bbox":[1502,434,41,0.05]}
+{"kind":"shape","id":"sh/1o761w7q","slide":4,"name":"arrowhead-29","bbox":[1519,422,24,24]}
+{"kind":"shape","id":"sh/mpg7a1ob","slide":4,"name":"rect-30","bbox":[1543,348,452,172]}
+{"kind":"shape","id":"sh/nqpo36pw","slide":4,"name":"rect-31","bbox":[1543,348,5,172]}
+{"kind":"textbox","id":"sh/obypcr6h","slide":4,"name":"PMC审核","text":"PMC审核","textPreview":"PMC审核","textChars":5,"textLines":1,"bbox":[1688.14,358.64,161.71,49.3]}
+{"kind":"textbox","id":"sh/9cr65w72","slide":4,"name":"查看差异与调整原因","text":"查看差异与调整原因","textPreview":"查看差异与调整原因","textChars":9,"textLines":1,"bbox":[1637.64,415.92,262.72,39.15]}
+{"kind":"textbox","id":"sh/ad07e1o7","slide":4,"name":"确认或退回销售修改","text":"确认或退回销售修改","textPreview":"确认或退回销售修改","textChars":9,"textLines":1,"bbox":[1637.64,454.92,262.72,39.15]}
+{"kind":"textbox","id":"sh/ve9876ps","slide":4,"name":"04","text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[1543,297.04,39.97,34.8]}
+{"kind":"shape","id":"sh/ja5or6hw","slide":4,"name":"path-36","bbox":[1995,434,41,0.05]}
+{"kind":"shape","id":"sh/i9w7i1gr","slide":4,"name":"arrowhead-36","bbox":[2012,422,24,24]}
+{"kind":"shape","id":"sh/5wn6tgz2","slide":4,"name":"rect-37","bbox":[2036,348,452,172]}
+{"kind":"shape","id":"sh/4bepkbyh","slide":4,"name":"rect-38","bbox":[2036,348,5,172]}
+{"kind":"textbox","id":"sh/rypov6h8","slide":4,"name":"确认预测版本","text":"确认预测版本","textPreview":"确认预测版本","textChars":6,"textLines":1,"bbox":[2150.92,358.64,222.16,49.3]}
+{"kind":"textbox","id":"sh/6xw7m1gn","slide":4,"name":"保留来源、原因与版本","text":"保留来源、原因与版本","textPreview":"保留来源、原因与版本","textChars":10,"textLines":1,"bbox":[2116.6,415.92,290.8,39.15]}
+{"kind":"textbox","id":"sh/t076xgze","slide":4,"name":"作为备货需求输入","text":"作为备货需求输入","textPreview":"作为备货需求输入","textChars":8,"textLines":1,"bbox":[2144.68,454.92,234.64,39.15]}
+{"kind":"textbox","id":"sh/szypobyt","slide":4,"name":"05","text":"05","textPreview":"05","textChars":2,"textLines":1,"bbox":[2036,297.04,39.97,34.8]}
+{"kind":"shape","id":"sh/n2lojmh4","slide":4,"name":"path-43","bbox":[783,520,986,114]}
+{"kind":"shape","id":"sh/m1cnahgj","slide":4,"name":"arrowhead-43","bbox":[767,520,32,32]}
+{"kind":"shape","id":"sh/c7alkne1","slide":4,"name":"rect-44","bbox":[1087.44,602,365.12,37]}
+{"kind":"textbox","id":"sh/d8jmtsfm","slide":4,"name":"审核退回 → 修改并重新提交","text":"审核退回 → 修改并重新提交","textPreview":"审核退回 → 修改并重新提交","textChars":14,"textLines":1,"bbox":[1093.75,599.96,352.5,37.7]}
+{"kind":"shape","id":"sh/ql83idwb","slide":4,"name":"path-46","bbox":[64,746,1148,0.05]}
+{"kind":"shape","id":"sh/b6h4rixw","slide":4,"name":"path-47","bbox":[1324,746,1172,0.05]}
+{"kind":"textbox","id":"sh/ojqlg3e5","slide":4,"name":"三条输入与一个最终结果","text":"三条输入与一个最终结果","textPreview":"三条输入与一个最终结果","textChars":11,"textLines":1,"bbox":[64,764.68,387.52,47.85]}
+{"kind":"textbox","id":"sh/pkzmp8fq","slide":4,"name":"状态与追溯","text":"状态与追溯","textPreview":"状态与追溯","textChars":5,"textLines":1,"bbox":[1324,764.68,181.6,47.85]}
+{"kind":"textbox","id":"sh/2h83edwz","slide":4,"name":"系统基准：引用数仓 / 预测模型结果","text":"系统基准：引用数仓 / 预测模型结果","textPreview":"系统基准：引用数仓 / 预测模型结果","textChars":18,"textLines":1,"bbox":[64,833.84,497.58,42.05]}
+{"kind":"textbox","id":"sh/3ihknyxk","slide":4,"name":"人工修正：未调整时沿用系统基准","text":"人工修正：未调整时沿用系统基准","textPreview":"人工修正：未调整时沿用系统基准","textChars":15,"textLines":1,"bbox":[64,895.84,462.4,42.05]}
+{"kind":"textbox","id":"sh/8fuls7e9","slide":4,"name":"活动影响：结构化记录类型、名称与增量","text":"活动影响：结构化记录类型、名称与增量","textPreview":"活动影响：结构化记录类型、名称与增量","textChars":18,"textLines":1,"bbox":[64,957.84,552.88,42.05]}
+{"kind":"textbox","id":"sh/9g3m1cfu","slide":4,"name":"最终预测 = 选用基准 + 活动增量","text":"最终预测 = 选用基准 + 活动增量","textPreview":"最终预测 = 选用基准 + 活动增量","textChars":18,"textLines":1,"bbox":[64,1019.84,448.59,42.05]}
+{"kind":"textbox","id":"sh/hwzmls7y","slide":4,"name":"销售提交后只读，退回后恢复修改","text":"销售提交后只读，退回后恢复修改","textPreview":"销售提交后只读，退回后恢复修改","textChars":15,"textLines":1,"bbox":[1324,833.84,462.4,42.05]}
+{"kind":"textbox","id":"sh/wvqlc76d","slide":4,"name":"人工修改必须说明原因","text":"人工修改必须说明原因","textPreview":"人工修改必须说明原因","textChars":10,"textLines":1,"bbox":[1324,895.84,311.6,42.05]}
+{"kind":"textbox","id":"sh/vuh4j2p8","slide":4,"name":"保留原值、调整值、操作人和时间","text":"保留原值、调整值、操作人和时间","textPreview":"保留原值、调整值、操作人和时间","textChars":15,"textLines":1,"bbox":[1324,957.84,462.4,42.05]}
+{"kind":"textbox","id":"sh/uto3axon","slide":4,"name":"预测版本用于追溯，不新增版本菜单","text":"预测版本用于追溯，不新增版本菜单","textPreview":"预测版本用于追溯，不新增版本菜单","textChars":16,"textLines":1,"bbox":[1324,1019.84,492.56,42.05]}
+{"kind":"shape","id":"sh/9sfmhs72","slide":4,"name":"rect-58","bbox":[64,1165,2432,100]}
+{"kind":"textbox","id":"sh/8r6l8n6h","slide":4,"name":"交接结果","text":"交接结果","textPreview":"交接结果","textChars":4,"textLines":1,"bbox":[91,1196.8,134.8,43.5]}
+{"kind":"textbox","id":"sh/7qxkfipw","slide":4,"name":"确认后的日级预测及周汇总，交给PMC备货计划","text":"确认后的日级预测及周汇总，交给PMC备货计划","textPreview":"确认后的日级预测及周汇总，交给PMC备货计划","textChars":22,"textLines":1,"bbox":[300,1197.84,652.12,42.05]}
+{"kind":"textbox","id":"sh/m5o36dob","slide":4,"name":"退回沿用同一周期与商品任务；不重复创建一轮预测。","text":"退回沿用同一周期与商品任务；不重复创建一轮预测。","textPreview":"退回沿用同一周期与商品任务；不重复创建一轮预测。","textChars":24,"textLines":1,"bbox":[64,1305,634,36.25]}
+{"kind":"shape","id":"sh/l4f2d87q","slide":4,"name":"path-62","bbox":[64,1384,2432,0.05]}
+{"kind":"textbox","id":"sh/k36l4n65","slide":4,"name":"Q4供应链产品建设方案 · 汇报分层版 · 目标业务蓝图，按P0 / P1推进","text":"Q4供应链产品建设方案 · 汇报分层版 · 目标业务蓝图，按P0 / P1推进","textPreview":"Q4供应链产品建设方案 · 汇报分层版 · 目标业务蓝图，按P0 / P1推进","textChars":39,"textLines":1,"bbox":[64,1397.12,722.73,31.9]}
+{"kind":"textbox","id":"sh/qxkryp0r","slide":4,"name":"04 / 10","text":"04 / 10","textPreview":"04 / 10","textChars":7,"textLines":1,"bbox":[2408.8,1397.12,87.2,31.9]}
+{"kind":"notes","id":"nt/geww02","slide":4,"text":"来源：04_PMC预测详细流程_V3.0.svg。业务依据：《第四季度供应链系统建设方案》及本次《修改意见》。采用全景、职责边界、六角色泳道和七个模块详细流程分层组织。MRP为P1同步建设；PMC确认PR，SCM承载PR/PO管理。图中QC和入库为目标协同节点，一期接入范围需联评；原文1.8边界表未提供。所有文字与流程图元素为原生可编辑对象。"}
+{"kind":"slide","id":"sl/jvsq8m","slide":5,"title":"PMC备货｜从预测需求到采购需求","textShapes":41}
+{"kind":"shape","id":"sh/jepo3uto","slide":5,"name":"白色画布","bbox":[0,0,2560,1440]}
+{"kind":"shape","id":"sh/4fy5cfa9","slide":5,"name":"rect-1","bbox":[0,0,2560,1440]}
+{"kind":"shape","id":"sh/5g765kbu","slide":5,"name":"rect-2","bbox":[64,57,9,64]}
+{"kind":"textbox","id":"sh/6hgnepsf","slide":5,"name":"PMC备货｜从预测需求到采购需求","text":"PMC备货｜从预测需求到采购需求","textPreview":"PMC备货｜从预测需求到采购需求","textChars":16,"textLines":1,"bbox":[95,56.04,789.19,71.05]}
+{"kind":"textbox","id":"sh/ripo7u90","slide":5,"name":"2026 Q4 / V3.0","text":"2026 Q4 / V3.0","textPreview":"2026 Q4 / V3.0","textChars":14,"textLines":1,"bbox":[2293.65,68,202.35,36.25]}
+{"kind":"shape","id":"sh/sjypgza5","slide":5,"name":"path-5","bbox":[64,144,2432,0.05]}
+{"kind":"textbox","id":"sh/tk7694rq","slide":5,"name":"PMC确定采购对象、数量与需求日期，采购部门决定最终供应商分配","text":"PMC确定采购对象、数量与需求日期，采购部门决定最终供应商分配","textPreview":"PMC确定采购对象、数量与需求日期，采购部门决定最终供应商分配","textChars":31,"textLines":1,"bbox":[64,164.92,859.49,39.15]}
+{"kind":"textbox","id":"sh/el07i9sb","slide":5,"name":"05 / 模块展开","text":"05 / 模块展开","textPreview":"05 / 模块展开","textChars":9,"textLines":1,"bbox":[2333.72,169.08,162.28,33.35]}
+{"kind":"textbox","id":"sh/fm9obe9w","slide":5,"name":"业务动作","text":"业务动作","textPreview":"业务动作","textChars":4,"textLines":1,"bbox":[64,249.72,143.12,46.4]}
+{"kind":"shape","id":"sh/jm5cfmt0","slide":5,"name":"rect-9","bbox":[64,348,452,172]}
+{"kind":"shape","id":"sh/ilwv6hcv","slide":5,"name":"rect-10","bbox":[64,348,5,172]}
+{"kind":"textbox","id":"sh/5o7uhwb6","slide":5,"name":"汇总确认需求","text":"汇总确认需求","textPreview":"汇总确认需求","textChars":6,"textLines":1,"bbox":[178.92,358.64,222.16,49.3]}
+{"kind":"textbox","id":"sh/4ned8rul","slide":5,"name":"引用预测版本","text":"引用预测版本","textPreview":"引用预测版本","textChars":6,"textLines":1,"bbox":[200.76,415.92,178.48,39.15]}
+{"kind":"textbox","id":"sh/vi5cb2t4","slide":5,"name":"明确渠道、商品与时间","text":"明确渠道、商品与时间","textPreview":"明确渠道、商品与时间","textChars":10,"textLines":1,"bbox":[144.6,454.92,290.8,39.15]}
+{"kind":"textbox","id":"sh/uhwv2hcj","slide":5,"name":"01","text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[64,297.04,36,34.8]}
+{"kind":"shape","id":"sh/hknudcba","slide":5,"name":"path-15","bbox":[516,434,41,0.05]}
+{"kind":"shape","id":"sh/wjed47up","slide":5,"name":"arrowhead-15","bbox":[533,422,24,24]}
+{"kind":"shape","id":"sh/fepwn6t8","slide":5,"name":"rect-16","bbox":[557,348,452,172]}
+{"kind":"shape","id":"sh/edgve1cn","slide":5,"name":"rect-17","bbox":[557,348,5,172]}
+{"kind":"textbox","id":"sh/q9kfm5wv","slide":5,"name":"库存与时效校准","text":"库存与时效校准","textPreview":"库存与时效校准","textChars":7,"textLines":1,"bbox":[654.24,358.64,257.52,49.3]}
+{"kind":"textbox","id":"sh/batgfadg","slide":5,"name":"库存、在途、DOI与水位","text":"库存、在途、DOI与水位","textPreview":"库存、在途、DOI与水位","textChars":12,"textLines":1,"bbox":[627.63,415.92,310.74,39.15]}
+{"kind":"textbox","id":"sh/cb2xofe1","slide":5,"name":"安全库存、运输及到货期","text":"安全库存、运输及到货期","textPreview":"安全库存、运输及到货期","textChars":11,"textLines":1,"bbox":[623.56,454.92,318.88,39.15]}
+{"kind":"textbox","id":"sh/dcbyhkvm","slide":5,"name":"02","text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[557,297.04,39.97,34.8]}
+{"kind":"shape","id":"sh/ydkzqpw7","slide":5,"name":"path-22","bbox":[1009,434,41,0.05]}
+{"kind":"shape","id":"sh/zedgjads","slide":5,"name":"arrowhead-22","bbox":[1026,422,24,24]}
+{"kind":"shape","id":"sh/0fmhsfed","slide":5,"name":"rect-23","bbox":[1050,348,452,172]}
+{"kind":"shape","id":"sh/lgvylkvi","slide":5,"name":"rect-24","bbox":[1050,348,5,172]}
+{"kind":"textbox","id":"sh/eh0felw3","slide":5,"name":"拆解SKU版本","text":"拆解SKU版本","textPreview":"拆解SKU版本","textChars":7,"textLines":1,"bbox":[1163.17,358.64,225.67,49.3]}
+{"kind":"textbox","id":"sh/fi9g7qd8","slide":5,"name":"子ASIN映射至SKU版本","text":"子ASIN映射至SKU版本","textPreview":"子ASIN映射至SKU版本","textChars":13,"textLines":1,"bbox":[1126.65,415.92,298.7,39.15]}
+{"kind":"textbox","id":"sh/hwfidof6","slide":5,"name":"区分老版本库存与新版本","text":"区分老版本库存与新版本","textPreview":"区分老版本库存与新版本","textChars":11,"textLines":1,"bbox":[1116.56,454.92,318.88,39.15]}
+{"kind":"textbox","id":"sh/wb61kjyl","slide":5,"name":"03","text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[1050,297.04,39.97,34.8]}
+{"kind":"shape","id":"sh/vax0bex0","slide":5,"name":"path-29","bbox":[1502,434,41,0.05]}
+{"kind":"shape","id":"sh/u9oji9gf","slide":5,"name":"arrowhead-29","bbox":[1519,422,24,24]}
+{"kind":"shape","id":"sh/50z2h8f2","slide":5,"name":"rect-30","bbox":[1543,348,452,172]}
+{"kind":"shape","id":"sh/4zq1o3yh","slide":5,"name":"rect-31","bbox":[1543,348,5,172]}
+{"kind":"textbox","id":"sh/jyh0fyxw","slide":5,"name":"校准供货能力","text":"校准供货能力","textPreview":"校准供货能力","textChars":6,"textLines":1,"bbox":[1657.92,358.64,222.16,49.3]}
+{"kind":"textbox","id":"sh/ixojmtgb","slide":5,"name":"引用产能、交期与约束","text":"引用产能、交期与约束","textPreview":"引用产能、交期与约束","textChars":10,"textLines":1,"bbox":[1623.6,415.92,290.8,39.15]}
+{"kind":"textbox","id":"sh/l4vi54fy","slide":5,"name":"调整需求量和计划日期","text":"调整需求量和计划日期","textPreview":"调整需求量和计划日期","textChars":10,"textLines":1,"bbox":[1623.6,454.92,290.8,39.15]}
+{"kind":"textbox","id":"sh/03m1czyd","slide":5,"name":"04","text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[1543,297.04,39.97,34.8]}
+{"kind":"shape","id":"sh/ozulk7i1","slide":5,"name":"path-36","bbox":[1995,434,41,0.05]}
+{"kind":"shape","id":"sh/p03mdcz6","slide":5,"name":"arrowhead-36","bbox":[2012,422,24,24]}
+{"kind":"shape","id":"sh/2xc3ix0v","slide":5,"name":"rect-37","bbox":[2036,348,452,172]}
+{"kind":"shape","id":"sh/3yl4b2hg","slide":5,"name":"rect-38","bbox":[2036,348,5,172]}
+{"kind":"textbox","id":"sh/gvalg7ip","slide":5,"name":"确认最终计划","text":"确认最终计划","textPreview":"确认最终计划","textChars":6,"textLines":1,"bbox":[2150.92,358.64,222.16,49.3]}
+{"kind":"textbox","id":"sh/1wjm9sza","slide":5,"name":"保留调整依据与审批","text":"保留调整依据与审批","textPreview":"保留调整依据与审批","textChars":9,"textLines":1,"bbox":[2130.64,415.92,262.72,39.15]}
+{"kind":"textbox","id":"sh/ets3ex0j","slide":5,"name":"形成采购需求并确认PR","text":"形成采购需求并确认PR","textPreview":"形成采购需求并确认PR","textChars":11,"textLines":1,"bbox":[2112.13,454.92,299.74,39.15]}
+{"kind":"textbox","id":"sh/fu1472h4","slide":5,"name":"05","text":"05","textPreview":"05","textChars":2,"textLines":1,"bbox":[2036,297.04,39.97,34.8]}
+{"kind":"shape","id":"sh/sralcnit","slide":5,"name":"path-43","bbox":[290,520,1972,114]}
+{"kind":"shape","id":"sh/tsjm5sze","slide":5,"name":"arrowhead-43","bbox":[274,520,32,32]}
+{"kind":"shape","id":"sh/v2h4vi10","slide":5,"name":"rect-44","bbox":[1039.6,602,460.8,37]}
+{"kind":"textbox","id":"sh/u18nmdkf","slide":5,"name":"执行偏差 → PMC重新校准需求与计划","text":"执行偏差 → PMC重新校准需求与计划","textPreview":"执行偏差 → PMC重新校准需求与计划","textChars":19,"textLines":1,"bbox":[1035.87,599.96,468.25,37.7]}
+{"kind":"shape","id":"sh/h4zmxsj6","slide":5,"name":"path-46","bbox":[64,746,1148,0.05]}
+{"kind":"shape","id":"sh/w3q5on2l","slide":5,"name":"path-47","bbox":[1324,746,1172,0.05]}
+{"kind":"textbox","id":"sh/jq14z21w","slide":5,"name":"商品与库存关系","text":"商品与库存关系","textPreview":"商品与库存关系","textChars":7,"textLines":1,"bbox":[64,764.68,250.24,47.85]}
+{"kind":"textbox","id":"sh/ip8nqxkr","slide":5,"name":"业务判断与采购边界","text":"业务判断与采购边界","textPreview":"业务判断与采购边界","textChars":9,"textLines":1,"bbox":[1324,764.68,318.88,47.85]}
+{"kind":"textbox","id":"sh/5sjm1sj2","slide":5,"name":"父子ASIN及变更关系来自商品映射","text":"父子ASIN及变更关系来自商品映射","textPreview":"父子ASIN及变更关系来自商品映射","textChars":17,"textLines":1,"bbox":[64,833.84,469.79,42.05]}
+{"kind":"textbox","id":"sh/4ra5sn2h","slide":5,"name":"子ASIN与各SKU版本关系保留生效口径","text":"子ASIN与各SKU版本关系保留生效口径","textPreview":"子ASIN与各SKU版本关系保留生效口径","textChars":20,"textLines":1,"bbox":[64,895.84,531.2,42.05]}
+{"kind":"textbox","id":"sh/ru1o3218","slide":5,"name":"老SKU库存、新SKU供给分别识别","text":"老SKU库存、新SKU供给分别识别","textPreview":"老SKU库存、新SKU供给分别识别","textChars":17,"textLines":1,"bbox":[64,957.84,464.58,42.05]}
+{"kind":"textbox","id":"sh/6tsnuxkn","slide":5,"name":"库存与在途只按明确口径参与覆盖","text":"库存与在途只按明确口径参与覆盖","textPreview":"库存与在途只按明确口径参与覆盖","textChars":15,"textLines":1,"bbox":[64,1019.84,462.4,42.05]}
+{"kind":"textbox","id":"sh/21wzi587","slide":5,"name":"系统测算需求，PMC判断是否及如何调整","text":"系统测算需求，PMC判断是否及如何调整","textPreview":"系统测算需求，PMC判断是否及如何调整","textChars":19,"textLines":1,"bbox":[1324,833.84,560.49,42.05]}
+{"kind":"textbox","id":"sh/n2pgbaps","slide":5,"name":"供货能力用于校准可执行性","text":"供货能力用于校准可执行性","textPreview":"供货能力用于校准可执行性","textChars":12,"textLines":1,"bbox":[1324,895.84,371.92,42.05]}
+{"kind":"textbox","id":"sh/o3yhkvqd","slide":5,"name":"采购负责向谁买、如何拆并及PO执行","text":"采购负责向谁买、如何拆并及PO执行","textPreview":"采购负责向谁买、如何拆并及PO执行","textChars":17,"textLines":1,"bbox":[1324,957.84,504.91,42.05]}
+{"kind":"textbox","id":"sh/p47yd07i","slide":5,"name":"计划变更应留痕并同步下游需求","text":"计划变更应留痕并同步下游需求","textPreview":"计划变更应留痕并同步下游需求","textChars":14,"textLines":1,"bbox":[1324,1019.84,432.24,42.05]}
+{"kind":"shape","id":"sh/exwzel8v","slide":5,"name":"rect-58","bbox":[64,1165,2432,100]}
+{"kind":"textbox","id":"sh/fy5g7qpg","slide":5,"name":"交接结果","text":"交接结果","textPreview":"交接结果","textChars":4,"textLines":1,"bbox":[91,1196.8,134.8,43.5]}
+{"kind":"textbox","id":"sh/0zehgvq1","slide":5,"name":"最终备货计划并行驱动SCM采购与MRP面辅料计划","text":"最终备货计划并行驱动SCM采购与MRP面辅料计划","textPreview":"最终备货计划并行驱动SCM采购与MRP面辅料计划","textChars":24,"textLines":1,"bbox":[300,1197.84,689.85,42.05]}
+{"kind":"textbox","id":"sh/10ny907m","slide":5,"name":"MOQ、运输时效等使用配置与来源数据，不在图中新增算法或固定阈值。","text":"MOQ、运输时效等使用配置与来源数据，不在图中新增算法或固定阈值。","textPreview":"MOQ、运输时效等使用配置与来源数据，不在图中新增算法或固定阈值。","textChars":33,"textLines":1,"bbox":[64,1305,852.82,36.25]}
+{"kind":"shape","id":"sh/ytgzqp8f","slide":5,"name":"path-62","bbox":[64,1384,2432,0.05]}
+{"kind":"textbox","id":"sh/zu90jup0","slide":5,"name":"Q4供应链产品建设方案 · 汇报分层版 · 目标业务蓝图，按P0 / P1推进","text":"Q4供应链产品建设方案 · 汇报分层版 · 目标业务蓝图，按P0 / P1推进","textPreview":"Q4供应链产品建设方案 · 汇报分层版 · 目标业务蓝图，按P0 / P1推进","textChars":39,"textLines":1,"bbox":[64,1397.12,722.73,31.9]}
+{"kind":"textbox","id":"sh/tob29or2","slide":5,"name":"05 / 10","text":"05 / 10","textPreview":"05 / 10","textChars":7,"textLines":1,"bbox":[2408.8,1397.12,87.2,31.9]}
+{"kind":"notes","id":"nt/jvsq8m","slide":5,"text":"来源：05_PMC备货详细流程_V3.0.svg。业务依据：《第四季度供应链系统建设方案》及本次《修改意见》。采用全景、职责边界、六角色泳道和七个模块详细流程分层组织。MRP为P1同步建设；PMC确认PR，SCM承载PR/PO管理。图中QC和入库为目标协同节点，一期接入范围需联评；原文1.8边界表未提供。所有文字与流程图元素为原生可编辑对象。"}
+{"kind":"slide","id":"sl/a4avx2","slide":6,"title":"MRP｜成衣计划驱动物料准备","textShapes":41}
+{"kind":"shape","id":"sh/udofm5w3","slide":6,"name":"白色画布","bbox":[0,0,2560,1440]}
+{"kind":"shape","id":"sh/hgfehkfu","slide":6,"name":"rect-1","bbox":[0,0,2560,1440]}
+{"kind":"shape","id":"sh/gf6xofe9","slide":6,"name":"rect-2","bbox":[64,57,9,64]}
+{"kind":"textbox","id":"sh/3ixwjuxk","slide":6,"name":"MRP｜成衣计划驱动物料准备","text":"MRP｜成衣计划驱动物料准备","textPreview":"MRP｜成衣计划驱动物料准备","textChars":14,"textLines":1,"bbox":[95,56.04,685.48,71.05]}
+{"kind":"textbox","id":"sh/2hofqpwf","slide":6,"name":"2026 Q4 / V3.0","text":"2026 Q4 / V3.0","textPreview":"2026 Q4 / V3.0","textChars":14,"textLines":1,"bbox":[2293.65,68,202.35,36.25]}
+{"kind":"shape","id":"sh/pkzelkfq","slide":6,"name":"path-5","bbox":[64,144,2432,0.05]}
+{"kind":"textbox","id":"sh/4j6xsze5","slide":6,"name":"P1同步建设；MRP计算需要多少面辅料，SCM负责物料采购与供应商执行","text":"P1同步建设；MRP计算需要多少面辅料，SCM负责物料采购与供应商执行","textPreview":"P1同步建设；MRP计算需要多少面辅料，SCM负责物料采购与供应商执行","textChars":35,"textLines":1,"bbox":[64,164.92,922.19,39.15]}
+{"kind":"textbox","id":"sh/jmdw7qxg","slide":6,"name":"06 / 模块展开","text":"06 / 模块展开","textPreview":"06 / 模块展开","textChars":9,"textLines":1,"bbox":[2333.72,169.08,162.28,33.35]}
+{"kind":"textbox","id":"sh/yl4velwv","slide":6,"name":"业务动作","text":"业务动作","textPreview":"业务动作","textChars":4,"textLines":1,"bbox":[64,249.72,143.12,46.4]}
+{"kind":"shape","id":"sh/4zq50ryd","slide":6,"name":"rect-9","bbox":[64,348,452,172]}
+{"kind":"shape","id":"sh/50z69wfy","slide":6,"name":"rect-10","bbox":[64,348,5,172]}
+{"kind":"textbox","id":"sh/ix8nyhg7","slide":6,"name":"成衣计划与BOM","text":"成衣计划与BOM","textPreview":"成衣计划与BOM","textChars":8,"textLines":1,"bbox":[154.73,358.64,270.54,49.3]}
+{"kind":"textbox","id":"sh/3yho7mxs","slide":6,"name":"读取成衣采购计划","text":"读取成衣采购计划","textPreview":"读取成衣采购计划","textChars":8,"textLines":1,"bbox":[172.68,415.92,234.64,39.15]}
+{"kind":"textbox","id":"sh/s3ap4by9","slide":6,"name":"物料规格、用量与版本","text":"物料规格、用量与版本","textPreview":"物料规格、用量与版本","textChars":10,"textLines":1,"bbox":[144.6,454.92,290.8,39.15]}
+{"kind":"textbox","id":"sh/d4j6dgfu","slide":6,"name":"01","text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[64,297.04,36,34.8]}
+{"kind":"shape","id":"sh/q1sn21gj","slide":6,"name":"path-15","bbox":[516,434,41,0.05]}
+{"kind":"shape","id":"sh/r21ob6xo","slide":6,"name":"arrowhead-15","bbox":[533,422,24,24]}
+{"kind":"shape","id":"sh/8765s7y5","slide":6,"name":"rect-16","bbox":[557,348,452,172]}
+{"kind":"shape","id":"sh/t8f61cfq","slide":6,"name":"rect-17","bbox":[557,348,5,172]}
+{"kind":"textbox","id":"sh/9cnu9432","slide":6,"name":"计算物料净需求","text":"计算物料净需求","textPreview":"计算物料净需求","textChars":7,"textLines":1,"bbox":[654.24,358.64,257.52,49.3]}
+{"kind":"textbox","id":"sh/oredgzmx","slide":6,"name":"扣减库存及有效在途","text":"扣减库存及有效在途","textPreview":"扣减库存及有效在途","textChars":9,"textLines":1,"bbox":[651.64,415.92,262.72,39.15]}
+{"kind":"textbox","id":"sh/nq5c7elc","slide":6,"name":"纳入安全库存与损耗","text":"纳入安全库存与损耗","textPreview":"纳入安全库存与损耗","textChars":9,"textLines":1,"bbox":[651.64,454.92,262.72,39.15]}
+{"kind":"textbox","id":"sh/mpwve94r","slide":6,"name":"02","text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[557,297.04,39.97,34.8]}
+{"kind":"shape","id":"sh/xg7udo3e","slide":6,"name":"path-22","bbox":[1009,434,41,0.05]}
+{"kind":"shape","id":"sh/wfydkjmt","slide":6,"name":"arrowhead-22","bbox":[1026,422,24,24]}
+{"kind":"shape","id":"sh/bepcbel8","slide":6,"name":"rect-23","bbox":[1050,348,452,172]}
+{"kind":"shape","id":"sh/adgvi94n","slide":6,"name":"rect-24","bbox":[1050,348,5,172]}
+{"kind":"textbox","id":"sh/lkreho3a","slide":6,"name":"分流物料需求","text":"分流物料需求","textPreview":"分流物料需求","textChars":6,"textLines":1,"bbox":[1164.92,358.64,222.16,49.3]}
+{"kind":"textbox","id":"sh/kjydojmp","slide":6,"name":"形成采购建议","text":"形成采购建议","textPreview":"形成采购建议","textChars":6,"textLines":1,"bbox":[1186.76,415.92,178.48,39.15]}
+{"kind":"textbox","id":"sh/ipsrilk7","slide":6,"name":"形成备料、发料需求","text":"形成备料、发料需求","textPreview":"形成备料、发料需求","textChars":9,"textLines":1,"bbox":[1144.64,454.92,262.72,39.15]}
+{"kind":"textbox","id":"sh/3q1sbq1s","slide":6,"name":"03","text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[1050,297.04,39.97,34.8]}
+{"kind":"shape","id":"sh/4ra9kv2d","slide":6,"name":"path-29","bbox":[1502,434,41,0.05]}
+{"kind":"shape","id":"sh/5sjad0jy","slide":6,"name":"arrowhead-29","bbox":[1519,422,24,24]}
+{"kind":"shape","id":"sh/qtsrm5kj","slide":6,"name":"rect-30","bbox":[1543,348,452,172]}
+{"kind":"shape","id":"sh/rulsfa14","slide":6,"name":"rect-31","bbox":[1543,348,5,172]}
+{"kind":"textbox","id":"sh/cvu9ov2p","slide":6,"name":"SCM物料采购","text":"SCM物料采购","textPreview":"SCM物料采购","textChars":7,"textLines":1,"bbox":[1652.86,358.64,232.28,49.3]}
+{"kind":"textbox","id":"sh/dw3ah0ju","slide":6,"name":"按净缺口采购","text":"按净缺口采购","textPreview":"按净缺口采购","textChars":6,"textLines":1,"bbox":[1679.76,415.92,178.48,39.15]}
+{"kind":"textbox","id":"sh/excbq5kf","slide":6,"name":"供应商、PO、交期跟进","text":"供应商、PO、交期跟进","textPreview":"供应商、PO、交期跟进","textChars":11,"textLines":1,"bbox":[1617.86,454.92,302.29,39.15]}
+{"kind":"textbox","id":"sh/zylsja10","slide":6,"name":"04","text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[1543,297.04,39.97,34.8]}
+{"kind":"shape","id":"sh/nehs3at4","slide":6,"name":"path-36","bbox":[1995,434,41,0.05]}
+{"kind":"shape","id":"sh/md8ra5cj","slide":6,"name":"arrowhead-36","bbox":[2012,422,24,24]}
+{"kind":"shape","id":"sh/9gja5kba","slide":6,"name":"rect-37","bbox":[2036,348,452,172]}
+{"kind":"shape","id":"sh/8fq9cfup","slide":6,"name":"rect-38","bbox":[2036,348,5,172]}
+{"kind":"textbox","id":"sh/vi1s7atg","slide":6,"name":"齐料与发料","text":"齐料与发料","textPreview":"齐料与发料","textChars":5,"textLines":1,"bbox":[2168.6,358.64,186.8,49.3]}
+{"kind":"textbox","id":"sh/ahsrepcv","slide":6,"name":"预计 / 实际到料、IQC","text":"预计 / 实际到料、IQC","textPreview":"预计 / 实际到料、IQC","textChars":13,"textLines":1,"bbox":[2118.03,415.92,287.94,39.15]}
+{"kind":"textbox","id":"sh/x4ja9kb6","slide":6,"name":"缺料预警与开工支持","text":"缺料预警与开工支持","textPreview":"缺料预警与开工支持","textChars":9,"textLines":1,"bbox":[2130.64,454.92,262.72,39.15]}
+{"kind":"textbox","id":"sh/w3a9gfu1","slide":6,"name":"05","text":"05","textPreview":"05","textChars":2,"textLines":1,"bbox":[2036,297.04,39.97,34.8]}
+{"kind":"shape","id":"sh/bmx8vqtw","slide":6,"name":"path-43","bbox":[1276,520,986,116]}
+{"kind":"shape","id":"sh/qlor2lcr","slide":6,"name":"arrowhead-43","bbox":[2246,520,32,32]}
+{"kind":"shape","id":"sh/gf2xgn6x","slide":6,"name":"rect-44","bbox":[1478,605,544,36]}
+{"kind":"textbox","id":"sh/hgbypsni","slide":6,"name":"现有可用物料 → 直接备料 / 发料，跳过外购","text":"现有可用物料 → 直接备料 / 发料，跳过外购","textPreview":"现有可用物料 → 直接备料 / 发料，跳过外购","textChars":23,"textLines":1,"bbox":[1487.18,603,525.65,36.25]}
+{"kind":"shape","id":"sh/udkfexo7","slide":6,"name":"path-46","bbox":[64,746,1148,0.05]}
+{"kind":"shape","id":"sh/vetgni5s","slide":6,"name":"path-47","bbox":[1324,746,1172,0.05]}
+{"kind":"textbox","id":"sh/8bixcn61","slide":6,"name":"计算所需输入","text":"计算所需输入","textPreview":"计算所需输入","textChars":6,"textLines":1,"bbox":[64,764.68,215.92,47.85]}
+{"kind":"textbox","id":"sh/tcbylsnm","slide":6,"name":"并行关系与执行边界","text":"并行关系与执行边界","textPreview":"并行关系与执行边界","textChars":9,"textLines":1,"bbox":[1324,764.68,318.88,47.85]}
+{"kind":"textbox","id":"sh/690fadov","slide":6,"name":"成衣采购计划与BOM版本","text":"成衣采购计划与BOM版本","textPreview":"成衣采购计划与BOM版本","textChars":12,"textLines":1,"bbox":[64,833.84,351.61,42.05]}
+{"kind":"textbox","id":"sh/7a9gji5g","slide":6,"name":"物料库存、在途与安全库存","text":"物料库存、在途与安全库存","textPreview":"物料库存、在途与安全库存","textChars":12,"textLines":1,"bbox":[64,895.84,371.92,42.05]}
+{"kind":"textbox","id":"sh/s7mho765","slide":6,"name":"损耗率、采购周期及备料周期","text":"损耗率、采购周期及备料周期","textPreview":"损耗率、采购周期及备料周期","textChars":13,"textLines":1,"bbox":[64,957.84,402.08,42.05]}
+{"kind":"textbox","id":"sh/d8vyxcnq","slide":6,"name":"输入数据及参数有来源和责任人","text":"输入数据及参数有来源和责任人","textPreview":"输入数据及参数有来源和责任人","textChars":14,"textLines":1,"bbox":[64,1019.84,432.24,42.05]}
+{"kind":"textbox","id":"sh/1ory1cfu","slide":6,"name":"成衣采购需求直接进入SCM主链","text":"成衣采购需求直接进入SCM主链","textPreview":"成衣采购需求直接进入SCM主链","textChars":15,"textLines":1,"bbox":[1324,833.84,439.55,42.05]}
+{"kind":"textbox","id":"sh/0nix87y9","slide":6,"name":"MRP同时形成物料需求与准备计划","text":"MRP同时形成物料需求与准备计划","textPreview":"MRP同时形成物料需求与准备计划","textChars":16,"textLines":1,"bbox":[1324,895.84,468.45,42.05]}
+{"kind":"textbox","id":"sh/z29gz2x4","slide":6,"name":"可用库存覆盖部分直接备料 / 发料","text":"可用库存覆盖部分直接备料 / 发料","textPreview":"可用库存覆盖部分直接备料 / 发料","textChars":17,"textLines":1,"bbox":[1324,957.84,467.42,42.05]}
+{"kind":"textbox","id":"sh/e10f6xgj","slide":6,"name":"物料采购和供应商分配由SCM执行","text":"物料采购和供应商分配由SCM执行","textPreview":"物料采购和供应商分配由SCM执行","textChars":16,"textLines":1,"bbox":[1324,1019.84,469.71,42.05]}
+{"kind":"shape","id":"sh/d0ryxcfy","slide":6,"name":"rect-58","bbox":[64,1165,2432,100]}
+{"kind":"textbox","id":"sh/czix47yd","slide":6,"name":"交接结果","text":"交接结果","textPreview":"交接结果","textChars":4,"textLines":1,"bbox":[91,1196.8,134.8,43.5]}
+{"kind":"textbox","id":"sh/ry9gv2xs","slide":6,"name":"面辅料需求、备料 / 发料计划及缺料状态，支撑成衣工厂生产","text":"面辅料需求、备料 / 发料计划及缺料状态，支撑成衣工厂生产","textPreview":"面辅料需求、备料 / 发料计划及缺料状态，支撑成衣工厂生产","textChars":29,"textLines":1,"bbox":[300,1197.84,829.34,42.05]}
+{"kind":"textbox","id":"sh/qxgf2xg7","slide":6,"name":"MRP作为明确建设域，不据此假设必须独立部署一套新系统。","text":"MRP作为明确建设域，不据此假设必须独立部署一套新系统。","textPreview":"MRP作为明确建设域，不据此假设必须独立部署一套新系统。","textChars":28,"textLines":1,"bbox":[64,1305,717.2,36.25]}
+{"kind":"shape","id":"sh/pw7etsfm","slide":6,"name":"path-62","bbox":[64,1384,2432,0.05]}
+{"kind":"textbox","id":"sh/4vyx0nyh","slide":6,"name":"Q4供应链产品建设方案 · 汇报分层版 · 目标业务蓝图，按P0 / P1推进","text":"Q4供应链产品建设方案 · 汇报分层版 · 目标业务蓝图，按P0 / P1推进","textPreview":"Q4供应链产品建设方案 · 汇报分层版 · 目标业务蓝图，按P0 / P1推进","textChars":39,"textLines":1,"bbox":[64,1397.12,722.73,31.9]}
+{"kind":"textbox","id":"sh/u1wvatwz","slide":6,"name":"06 / 10","text":"06 / 10","textPreview":"06 / 10","textChars":7,"textLines":1,"bbox":[2408.8,1397.12,87.2,31.9]}
+{"kind":"notes","id":"nt/a4avx2","slide":6,"text":"来源：06_MRP详细流程_V3.0.svg。业务依据：《第四季度供应链系统建设方案》及本次《修改意见》。采用全景、职责边界、六角色泳道和七个模块详细流程分层组织。MRP为P1同步建设；PMC确认PR，SCM承载PR/PO管理。图中QC和入库为目标协同节点，一期接入范围需联评；原文1.8边界表未提供。所有文字与流程图元素为原生可编辑对象。"}
+{"kind":"slide","id":"sl/q77fge","slide":7,"title":"SCM采购｜PR承接至PO执行","textShapes":41}
+{"kind":"shape","id":"sh/5gruhw72","slide":7,"name":"白色画布","bbox":[0,0,2560,1440]}
+{"kind":"shape","id":"sh/id0bmh8r","slide":7,"name":"rect-1","bbox":[0,0,2560,1440]}
+{"kind":"shape","id":"sh/3e9cfmpc","slide":7,"name":"rect-2","bbox":[64,57,9,64]}
+{"kind":"textbox","id":"sh/grytk7ql","slide":7,"name":"SCM采购｜PR承接至PO执行","text":"SCM采购｜PR承接至PO执行","textPreview":"SCM采购｜PR承接至PO执行","textChars":15,"textLines":1,"bbox":[95,56.04,675.96,71.05]}
+{"kind":"textbox","id":"sh/hsrudc76","slide":7,"name":"2026 Q4 / V3.0","text":"2026 Q4 / V3.0","textPreview":"2026 Q4 / V3.0","textChars":14,"textLines":1,"bbox":[2293.65,68,202.35,36.25]}
+{"kind":"shape","id":"sh/upgbix8f","slide":7,"name":"path-5","bbox":[64,144,2432,0.05]}
+{"kind":"textbox","id":"sh/vqpcb290","slide":7,"name":"P0核心链路；PMC确认PR，SCM管理单据，采购依据供应商能力组织执行","text":"P0核心链路；PMC确认PR，SCM管理单据，采购依据供应商能力组织执行","textPreview":"P0核心链路；PMC确认PR，SCM管理单据，采购依据供应商能力组织执行","textChars":36,"textLines":1,"bbox":[64,164.92,938.17,39.15]}
+{"kind":"textbox","id":"sh/0n2dwbqp","slide":7,"name":"07 / 模块展开","text":"07 / 模块展开","textPreview":"07 / 模块展开","textChars":9,"textLines":1,"bbox":[2334.99,169.08,161.01,33.35]}
+{"kind":"textbox","id":"sh/1obupg7a","slide":7,"name":"业务动作","text":"业务动作","textPreview":"业务动作","textChars":4,"textLines":1,"bbox":[64,249.72,143.12,46.4]}
+{"kind":"shape","id":"sh/xgnu983i","slide":7,"name":"rect-9","bbox":[64,348,452,172]}
+{"kind":"shape","id":"sh/wfedg3md","slide":7,"name":"rect-10","bbox":[64,348,5,172]}
+{"kind":"textbox","id":"sh/bu5c7yls","slide":7,"name":"承接采购需求","text":"承接采购需求","textPreview":"承接采购需求","textChars":6,"textLines":1,"bbox":[178.92,358.64,222.16,49.3]}
+{"kind":"textbox","id":"sh/atwvet47","slide":7,"name":"成衣需求来自PMC","text":"成衣需求来自PMC","textPreview":"成衣需求来自PMC","textChars":9,"textLines":1,"bbox":[169.14,415.92,241.73,39.15]}
+{"kind":"textbox","id":"sh/9snu5o3m","slide":7,"name":"物料需求来自MRP","text":"物料需求来自MRP","textPreview":"物料需求来自MRP","textChars":9,"textLines":1,"bbox":[169.87,454.92,240.26,39.15]}
+{"kind":"textbox","id":"sh/oredcjm1","slide":7,"name":"01","text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[64,297.04,36,34.8]}
+{"kind":"shape","id":"sh/nqlc3elg","slide":7,"name":"path-15","bbox":[516,434,41,0.05]}
+{"kind":"shape","id":"sh/mpcva94v","slide":7,"name":"arrowhead-15","bbox":[533,422,24,24]}
+{"kind":"shape","id":"sh/to7ehs3q","slide":7,"name":"rect-16","bbox":[557,348,452,172]}
+{"kind":"shape","id":"sh/8nydonm5","slide":7,"name":"rect-17","bbox":[557,348,5,172]}
+{"kind":"textbox","id":"sh/sr6xkruh","slide":7,"name":"PR管理","text":"PR管理","textPreview":"PR管理","textChars":4,"textLines":1,"bbox":[718.74,358.64,128.53,49.3]}
+{"kind":"textbox","id":"sh/tsfydwb2","slide":7,"name":"PMC业务确认","text":"PMC业务确认","textPreview":"PMC业务确认","textChars":7,"textLines":1,"bbox":[690.22,415.92,185.57,39.15]}
+{"kind":"textbox","id":"sh/6pofihcb","slide":7,"name":"审核、拆并、状态追溯","text":"审核、拆并、状态追溯","textPreview":"审核、拆并、状态追溯","textChars":10,"textLines":1,"bbox":[637.6,454.92,290.8,39.15]}
+{"kind":"textbox","id":"sh/rqxgbmtw","slide":7,"name":"02","text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[557,297.04,39.97,34.8]}
+{"kind":"shape","id":"sh/4n6xg7ul","slide":7,"name":"path-22","bbox":[1009,434,41,0.05]}
+{"kind":"shape","id":"sh/5ofe9cbq","slide":7,"name":"arrowhead-22","bbox":[1026,422,24,24]}
+{"kind":"shape","id":"sh/i14fehcf","slide":7,"name":"rect-23","bbox":[1050,348,452,172]}
+{"kind":"shape","id":"sh/jmxw7mt0","slide":7,"name":"rect-24","bbox":[1050,348,5,172]}
+{"kind":"textbox","id":"sh/wzmxc7u9","slide":7,"name":"供应商分配","text":"供应商分配","textPreview":"供应商分配","textChars":5,"textLines":1,"bbox":[1182.6,358.64,186.8,49.3]}
+{"kind":"textbox","id":"sh/h0ve5cbu","slide":7,"name":"产能、成本、交期与绩效","text":"产能、成本、交期与绩效","textPreview":"产能、成本、交期与绩效","textChars":11,"textLines":1,"bbox":[1116.56,415.92,318.88,39.15]}
+{"kind":"textbox","id":"sh/zutgv2dw","slide":7,"name":"库存、商品版本、包装","text":"库存、商品版本、包装","textPreview":"库存、商品版本、包装","textChars":10,"textLines":1,"bbox":[1130.6,454.92,290.8,39.15]}
+{"kind":"textbox","id":"sh/ytkfmxwb","slide":7,"name":"03","text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[1050,297.04,39.97,34.8]}
+{"kind":"shape","id":"sh/lwvyxcvm","slide":7,"name":"path-29","bbox":[1502,434,41,0.05]}
+{"kind":"shape","id":"sh/kvmxo7e1","slide":7,"name":"arrowhead-29","bbox":[1519,422,24,24]}
+{"kind":"shape","id":"sh/7ydgz2ds","slide":7,"name":"rect-30","bbox":[1543,348,452,172]}
+{"kind":"shape","id":"sh/mx4zqhw7","slide":7,"name":"rect-31","bbox":[1543,348,5,172]}
+{"kind":"textbox","id":"sh/90vylcvy","slide":7,"name":"PO与供应商接单","text":"PO与供应商接单","textPreview":"PO与供应商接单","textChars":8,"textLines":1,"bbox":[1632.63,358.64,272.73,49.3]}
+{"kind":"textbox","id":"sh/8zmhs7ed","slide":7,"name":"PR转PO、审批与货期","text":"PR转PO、审批与货期","textPreview":"PR转PO、审批与货期","textChars":11,"textLines":1,"bbox":[1627.43,415.92,283.15,39.15]}
+{"kind":"textbox","id":"sh/vmdgnmdo","slide":7,"name":"订单资料和任务交付","text":"订单资料和任务交付","textPreview":"订单资料和任务交付","textChars":9,"textLines":1,"bbox":[1637.64,454.92,262.72,39.15]}
+{"kind":"textbox","id":"sh/ul4zuhwj","slide":7,"name":"04","text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[1543,297.04,39.97,34.8]}
+{"kind":"shape","id":"sh/ehwr6p8r","slide":7,"name":"path-36","bbox":[1995,434,41,0.05]}
+{"kind":"shape","id":"sh/fi5sfupc","slide":7,"name":"arrowhead-36","bbox":[2012,422,24,24]}
+{"kind":"shape","id":"sh/03e98zqx","slide":7,"name":"rect-37","bbox":[2036,348,452,172]}
+{"kind":"shape","id":"sh/147ah47i","slide":7,"name":"rect-38","bbox":[2036,348,5,172]}
+{"kind":"textbox","id":"sh/25grap8n","slide":7,"name":"执行与单据关闭","text":"执行与单据关闭","textPreview":"执行与单据关闭","textChars":7,"textLines":1,"bbox":[2133.24,358.64,257.52,49.3]}
+{"kind":"textbox","id":"sh/n6psjup8","slide":7,"name":"执行状态和异常回传","text":"执行状态和异常回传","textPreview":"执行状态和异常回传","textChars":9,"textLines":1,"bbox":[2130.64,415.92,262.72,39.15]}
+{"kind":"textbox","id":"sh/o7y9czqt","slide":7,"name":"整单 / SKU / 尾数关闭","text":"整单 / SKU / 尾数关闭","textPreview":"整单 / SKU / 尾数关闭","textChars":15,"textLines":1,"bbox":[2111.43,454.92,301.14,39.15]}
+{"kind":"textbox","id":"sh/p87al47e","slide":7,"name":"05","text":"05","textPreview":"05","textChars":2,"textLines":1,"bbox":[2036,297.04,39.97,34.8]}
+{"kind":"shape","id":"sh/i9cry58j","slide":7,"name":"path-43","bbox":[290,520,1972,114]}
+{"kind":"shape","id":"sh/3al87ap4","slide":7,"name":"arrowhead-43","bbox":[274,520,32,32]}
+{"kind":"shape","id":"sh/l4bud8rm","slide":7,"name":"rect-44","bbox":[1026.6,602,486.8,37]}
+{"kind":"textbox","id":"sh/k32dk3a1","slide":7,"name":"供货或交期不满足 → 反馈PMC协调计划","text":"供货或交期不满足 → 反馈PMC协调计划","textPreview":"供货或交期不满足 → 反馈PMC协调计划","textChars":20,"textLines":1,"bbox":[1022.35,599.96,495.29,37.7]}
+{"kind":"shape","id":"sh/z29cby9g","slide":7,"name":"path-46","bbox":[64,746,1148,0.05]}
+{"kind":"shape","id":"sh/y10bitsv","slide":7,"name":"path-47","bbox":[1324,746,1172,0.05]}
+{"kind":"textbox","id":"sh/9sbuh8ri","slide":7,"name":"PMC与采购的交接","text":"PMC与采购的交接","textPreview":"PMC与采购的交接","textChars":9,"textLines":1,"bbox":[64,764.68,294.52,47.85]}
+{"kind":"textbox","id":"sh/872donad","slide":7,"name":"Q4重点治理","text":"Q4重点治理","textPreview":"Q4重点治理","textChars":6,"textLines":1,"bbox":[1324,764.68,194.47,47.85]}
+{"kind":"textbox","id":"sh/76tcfi9s","slide":7,"name":"PMC：买什么、买多少、什么时候要","text":"PMC：买什么、买多少、什么时候要","textPreview":"PMC：买什么、买多少、什么时候要","textChars":17,"textLines":1,"bbox":[64,833.84,500.17,42.05]}
+{"kind":"textbox","id":"sh/m5kvmds7","slide":7,"name":"采购：向谁买、如何拆分和合并","text":"采购：向谁买、如何拆分和合并","textPreview":"采购：向谁买、如何拆分和合并","textChars":14,"textLines":1,"bbox":[64,895.84,432.24,42.05]}
+{"kind":"textbox","id":"sh/pcru5ore","slide":7,"name":"SCM：以PR / PO承载审核及执行状态","text":"SCM：以PR / PO承载审核及执行状态","textPreview":"SCM：以PR / PO承载审核及执行状态","textChars":21,"textLines":1,"bbox":[64,957.84,526.8,42.05]}
+{"kind":"textbox","id":"sh/obytcjat","slide":7,"name":"需求变化返回计划侧确认，保留关联","text":"需求变化返回计划侧确认，保留关联","textPreview":"需求变化返回计划侧确认，保留关联","textChars":16,"textLines":1,"bbox":[64,1019.84,492.56,42.05]}
+{"kind":"textbox","id":"sh/gf2dsjip","slide":7,"name":"PO整单、SKU和尾数关闭口径","text":"PO整单、SKU和尾数关闭口径","textPreview":"PO整单、SKU和尾数关闭口径","textChars":15,"textLines":1,"bbox":[1324,833.84,415.5,42.05]}
+{"kind":"textbox","id":"sh/1gbuloza","slide":7,"name":"供应商接单撤销及异常流转","text":"供应商接单撤销及异常流转","textPreview":"供应商接单撤销及异常流转","textChars":12,"textLines":1,"bbox":[1324,895.84,371.92,42.05]}
+{"kind":"textbox","id":"sh/edkvq90j","slide":7,"name":"多PR合并、一PR拆多PO的关系追溯","text":"多PR合并、一PR拆多PO的关系追溯","textPreview":"多PR合并、一PR拆多PO的关系追溯","textChars":18,"textLines":1,"bbox":[1324,957.84,493.93,42.05]}
+{"kind":"textbox","id":"sh/fetcjeh4","slide":7,"name":"执行状态反馈PMC，减少重复录入","text":"执行状态反馈PMC，减少重复录入","textPreview":"执行状态反馈PMC，减少重复录入","textChars":16,"textLines":1,"bbox":[1324,1019.84,470.01,42.05]}
+{"kind":"shape","id":"sh/ojmdw3i1","slide":7,"name":"rect-58","bbox":[64,1165,2432,100]}
+{"kind":"textbox","id":"sh/pkvup8z6","slide":7,"name":"交接结果","text":"交接结果","textPreview":"交接结果","textChars":4,"textLines":1,"bbox":[91,1196.8,134.8,43.5]}
+{"kind":"textbox","id":"sh/2h4vut0v","slide":7,"name":"供应商可执行的PO、交期与任务，并持续返回执行状态","text":"供应商可执行的PO、交期与任务，并持续返回执行状态","textPreview":"供应商可执行的PO、交期与任务，并持续返回执行状态","textChars":25,"textLines":1,"bbox":[300,1197.84,746.82,42.05]}
+{"kind":"textbox","id":"sh/3idcnyhg","slide":7,"name":"PR生成接口、审核层级和权限在实施设计中细化，业务职责不再整体标为待定。","text":"PR生成接口、审核层级和权限在实施设计中细化，业务职责不再整体标为待定。","textPreview":"PR生成接口、审核层级和权限在实施设计中细化，业务职责不再整体标为待定。","textChars":36,"textLines":1,"bbox":[64,1305,928.27,36.25]}
+{"kind":"shape","id":"sh/cnmd03ix","slide":7,"name":"path-62","bbox":[64,1384,2432,0.05]}
+{"kind":"textbox","id":"sh/d8fut8zi","slide":7,"name":"Q4供应链产品建设方案 · 汇报分层版 · 目标业务蓝图，按P0 / P1推进","text":"Q4供应链产品建设方案 · 汇报分层版 · 目标业务蓝图，按P0 / P1推进","textPreview":"Q4供应链产品建设方案 · 汇报分层版 · 目标业务蓝图，按P0 / P1推进","textChars":39,"textLines":1,"bbox":[64,1397.12,722.73,31.9]}
+{"kind":"textbox","id":"sh/7e1of65w","slide":7,"name":"07 / 10","text":"07 / 10","textPreview":"07 / 10","textChars":7,"textLines":1,"bbox":[2409.92,1397.12,86.08,31.9]}
+{"kind":"notes","id":"nt/q77fge","slide":7,"text":"来源：07_SCM采购详细流程_V3.0.svg。业务依据：《第四季度供应链系统建设方案》及本次《修改意见》。采用全景、职责边界、六角色泳道和七个模块详细流程分层组织。MRP为P1同步建设；PMC确认PR，SCM承载PR/PO管理。图中QC和入库为目标协同节点，一期接入范围需联评；原文1.8边界表未提供。所有文字与流程图元素为原生可编辑对象。"}
+{"kind":"slide","id":"sl/d6sxoe","slide":8,"title":"供应商执行｜从接单到交付","textShapes":41}
+{"kind":"shape","id":"sh/947ulcze","slide":8,"name":"白色画布","bbox":[0,0,2560,1440]}
+{"kind":"shape","id":"sh/m1gbqhg3","slide":8,"name":"rect-1","bbox":[0,0,2560,1440]}
+{"kind":"shape","id":"sh/n2pcjmho","slide":8,"name":"rect-2","bbox":[64,57,9,64]}
+{"kind":"textbox","id":"sh/0feto7yx","slide":8,"name":"供应商执行｜从接单到交付","text":"供应商执行｜从接单到交付","textPreview":"供应商执行｜从接单到交付","textChars":12,"textLines":1,"bbox":[95,56.04,621.52,71.05]}
+{"kind":"textbox","id":"sh/1gnuhczi","slide":8,"name":"2026 Q4 / V3.0","text":"2026 Q4 / V3.0","textPreview":"2026 Q4 / V3.0","textChars":14,"textLines":1,"bbox":[2293.65,68,202.35,36.25]}
+{"kind":"shape","id":"sh/edwbmxgr","slide":8,"name":"path-5","bbox":[64,144,2432,0.05]}
+{"kind":"textbox","id":"sh/ze5cf2hc","slide":8,"name":"用订单及执行状态承接采购要求，减少群聊、库存表和重复核对","text":"用订单及执行状态承接采购要求，减少群聊、库存表和重复核对","textPreview":"用订单及执行状态承接采购要求，减少群聊、库存表和重复核对","textChars":28,"textLines":1,"bbox":[64,164.92,796.24,39.15]}
+{"kind":"textbox","id":"sh/cbetkny1","slide":8,"name":"08 / 模块展开","text":"08 / 模块展开","textPreview":"08 / 模块展开","textChars":9,"textLines":1,"bbox":[2333.72,169.08,162.28,33.35]}
+{"kind":"textbox","id":"sh/dcnudszm","slide":8,"name":"业务动作","text":"业务动作","textPreview":"业务动作","textChars":4,"textLines":1,"bbox":[64,249.72,143.12,46.4]}
+{"kind":"shape","id":"sh/lkvqxsve","slide":8,"name":"rect-9","bbox":[64,348,452,172]}
+{"kind":"shape","id":"sh/0jmponut","slide":8,"name":"rect-10","bbox":[64,348,5,172]}
+{"kind":"textbox","id":"sh/zid8vid8","slide":8,"name":"接单与货期确认","text":"接单与货期确认","textPreview":"接单与货期确认","textChars":7,"textLines":1,"bbox":[161.24,358.64,257.52,49.3]}
+{"kind":"textbox","id":"sh/yhk7mdcn","slide":8,"name":"确认PO、SKU与数量","text":"确认PO、SKU与数量","textPreview":"确认PO、SKU与数量","textChars":11,"textLines":1,"bbox":[152.39,415.92,275.22,39.15]}
+{"kind":"textbox","id":"sh/dgbqt8v2","slide":8,"name":"确认承诺交期","text":"确认承诺交期","textPreview":"确认承诺交期","textChars":6,"textLines":1,"bbox":[200.76,454.92,178.48,39.15]}
+{"kind":"textbox","id":"sh/cf2pk3uh","slide":8,"name":"01","text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[64,297.04,36,34.8]}
+{"kind":"shape","id":"sh/but8rydc","slide":8,"name":"path-15","bbox":[516,434,41,0.05]}
+{"kind":"shape","id":"sh/qtk7idwr","slide":8,"name":"arrowhead-15","bbox":[533,422,24,24]}
+{"kind":"shape","id":"sh/psbqp8v6","slide":8,"name":"rect-16","bbox":[557,348,452,172]}
+{"kind":"shape","id":"sh/4r2pg3el","slide":8,"name":"rect-17","bbox":[557,348,5,172]}
+{"kind":"textbox","id":"sh/gvm9w3mh","slide":8,"name":"技术资料就绪","text":"技术资料就绪","textPreview":"技术资料就绪","textChars":6,"textLines":1,"bbox":[671.92,358.64,222.16,49.3]}
+{"kind":"textbox","id":"sh/hwfq5832","slide":8,"name":"BOM、工艺、纸样、尺寸","text":"BOM、工艺、纸样、尺寸","textPreview":"BOM、工艺、纸样、尺寸","textChars":12,"textLines":1,"bbox":[618.98,415.92,328.05,39.15]}
+{"kind":"textbox","id":"sh/u947ut4b","slide":8,"name":"包装与发货要求","text":"包装与发货要求","textPreview":"包装与发货要求","textChars":7,"textLines":1,"bbox":[679.72,454.92,206.56,39.15]}
+{"kind":"textbox","id":"sh/vad83ylw","slide":8,"name":"02","text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[557,297.04,39.97,34.8]}
+{"kind":"shape","id":"sh/87mp8jm5","slide":8,"name":"path-22","bbox":[1009,434,41,0.05]}
+{"kind":"shape","id":"sh/t8vq1o3q","slide":8,"name":"arrowhead-22","bbox":[1026,422,24,24]}
+{"kind":"shape","id":"sh/65476t4f","slide":8,"name":"rect-23","bbox":[1050,348,452,172]}
+{"kind":"shape","id":"sh/76d8zyl0","slide":8,"name":"rect-24","bbox":[1050,348,5,172]}
+{"kind":"textbox","id":"sh/c3q94n2p","slide":8,"name":"物料与交期协同","text":"物料与交期协同","textPreview":"物料与交期协同","textChars":7,"textLines":1,"bbox":[1147.24,358.64,257.52,49.3]}
+{"kind":"textbox","id":"sh/d4zqds3a","slide":8,"name":"预计 / 实际到料","text":"预计 / 实际到料","textPreview":"预计 / 实际到料","textChars":9,"textLines":1,"bbox":[1170.39,415.92,211.22,39.15]}
+{"kind":"textbox","id":"sh/ny1c3m5c","slide":8,"name":"缺料与交付风险反馈","text":"缺料与交付风险反馈","textPreview":"缺料与交付风险反馈","textChars":9,"textLines":1,"bbox":[1144.64,454.92,262.72,39.15]}
+{"kind":"textbox","id":"sh/mxsbahor","slide":8,"name":"03","text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[1050,297.04,39.97,34.8]}
+{"kind":"shape","id":"sh/9kju5wni","slide":8,"name":"path-29","bbox":[1502,434,41,0.05]}
+{"kind":"shape","id":"sh/ozatcrmx","slide":8,"name":"arrowhead-29","bbox":[1519,422,24,24]}
+{"kind":"shape","id":"sh/bmlc7658","slide":8,"name":"rect-30","bbox":[1543,348,452,172]}
+{"kind":"shape","id":"sh/alsbe143","slide":8,"name":"rect-31","bbox":[1543,348,5,172]}
+{"kind":"textbox","id":"sh/xo3u9wne","slide":8,"name":"生产与质量协同","text":"生产与质量协同","textPreview":"生产与质量协同","textChars":7,"textLines":1,"bbox":[1640.24,358.64,257.52,49.3]}
+{"kind":"textbox","id":"sh/wnutgrmt","slide":8,"name":"与MES关联生产状态","text":"与MES关联生产状态","textPreview":"与MES关联生产状态","textChars":10,"textLines":1,"bbox":[1635.52,415.92,266.96,39.15]}
+{"kind":"textbox","id":"sh/rqhsv254","slide":8,"name":"按QC结果处理与放行","text":"按QC结果处理与放行","textPreview":"按QC结果处理与放行","textChars":10,"textLines":1,"bbox":[1630.69,454.92,276.63,39.15]}
+{"kind":"textbox","id":"sh/qp8b2xoj","slide":8,"name":"04","text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[1543,297.04,39.97,34.8]}
+{"kind":"shape","id":"sh/i9cbixwf","slide":8,"name":"path-36","bbox":[1995,434,41,0.05]}
+{"kind":"shape","id":"sh/3alcb2d0","slide":8,"name":"arrowhead-36","bbox":[2012,422,24,24]}
+{"kind":"shape","id":"sh/4butk7el","slide":8,"name":"rect-37","bbox":[2036,348,452,172]}
+{"kind":"shape","id":"sh/5c3udcv6","slide":8,"name":"rect-38","bbox":[2036,348,5,172]}
+{"kind":"textbox","id":"sh/qdcbmhwr","slide":8,"name":"发货履约","text":"发货履约","textPreview":"发货履约","textChars":4,"textLines":1,"bbox":[2186.28,358.64,151.44,49.3]}
+{"kind":"textbox","id":"sh/relcfmdw","slide":8,"name":"形成发货单","text":"形成发货单","textPreview":"形成发货单","textChars":5,"textLines":1,"bbox":[2186.8,415.92,150.4,39.15]}
+{"kind":"textbox","id":"sh/sfutoreh","slide":8,"name":"数量、日期与目的地","text":"数量、日期与目的地","textPreview":"数量、日期与目的地","textChars":9,"textLines":1,"bbox":[2130.64,454.92,262.72,39.15]}
+{"kind":"textbox","id":"sh/d0nuhcv2","slide":8,"name":"05","text":"05","textPreview":"05","textChars":2,"textLines":1,"bbox":[2036,297.04,39.97,34.8]}
+{"kind":"shape","id":"sh/e1wbqhwn","slide":8,"name":"path-43","bbox":[290,520,1972,114]}
+{"kind":"shape","id":"sh/f25cjmd8","slide":8,"name":"arrowhead-43","bbox":[274,520,32,32]}
+{"kind":"shape","id":"sh/98r65kjm","slide":8,"name":"rect-44","bbox":[987.6,602,564.8,37]}
+{"kind":"textbox","id":"sh/o7i5wf21","slide":8,"name":"延期、缺料、质量异常 → 采购协调并反馈PMC","text":"延期、缺料、质量异常 → 采购协调并反馈PMC","textPreview":"延期、缺料、质量异常 → 采购协调并反馈PMC","textChars":23,"textLines":1,"bbox":[981.79,599.96,576.41,37.7]}
+{"kind":"shape","id":"sh/n6943a1g","slide":8,"name":"path-46","bbox":[64,746,1148,0.05]}
+{"kind":"shape","id":"sh/m50nu5kv","slide":8,"name":"path-47","bbox":[1324,746,1172,0.05]}
+{"kind":"textbox","id":"sh/xcb69kji","slide":8,"name":"供应商需要明确的任务","text":"供应商需要明确的任务","textPreview":"供应商需要明确的任务","textChars":10,"textLines":1,"bbox":[64,764.68,353.2,47.85]}
+{"kind":"textbox","id":"sh/wbi50z2x","slide":8,"name":"质量与异常协同","text":"质量与异常协同","textPreview":"质量与异常协同","textChars":7,"textLines":1,"bbox":[1324,764.68,250.24,47.85]}
+{"kind":"textbox","id":"sh/ba9o7u1s","slide":8,"name":"采购订单、商品与版本、需求数量","text":"采购订单、商品与版本、需求数量","textPreview":"采购订单、商品与版本、需求数量","textChars":15,"textLines":1,"bbox":[64,833.84,462.4,42.05]}
+{"kind":"textbox","id":"sh/a90nypk7","slide":8,"name":"要求货期与供应商承诺货期","text":"要求货期与供应商承诺货期","textPreview":"要求货期与供应商承诺货期","textChars":12,"textLines":1,"bbox":[64,895.84,371.92,42.05]}
+{"kind":"textbox","id":"sh/lgb6d4ju","slide":8,"name":"有效的BOM、工艺和包装技术资料","text":"有效的BOM、工艺和包装技术资料","textPreview":"有效的BOM、工艺和包装技术资料","textChars":16,"textLines":1,"bbox":[64,957.84,472.25,42.05]}
+{"kind":"textbox","id":"sh/kf254z29","slide":8,"name":"发货要求及异常反馈责任","text":"发货要求及异常反馈责任","textPreview":"发货要求及异常反馈责任","textChars":11,"textLines":1,"bbox":[64,1019.84,341.76,42.05]}
+{"kind":"textbox","id":"sh/4jap03ql","slide":8,"name":"来料、首扎、中期、尾期及成品节点","text":"来料、首扎、中期、尾期及成品节点","textPreview":"来料、首扎、中期、尾期及成品节点","textChars":16,"textLines":1,"bbox":[1324,833.84,492.56,42.05]}
+{"kind":"textbox","id":"sh/5kjq98rq","slide":8,"name":"质量问题、返工、退货与放行结果","text":"质量问题、返工、退货与放行结果","textPreview":"质量问题、返工、退货与放行结果","textChars":15,"textLines":1,"bbox":[1324,895.84,462.4,42.05]}
+{"kind":"textbox","id":"sh/ihs7yd8f","slide":8,"name":"供应商质量档案与交付表现","text":"供应商质量档案与交付表现","textPreview":"供应商质量档案与交付表现","textChars":12,"textLines":1,"bbox":[1324,957.84,371.92,42.05]}
+{"kind":"textbox","id":"sh/ji187y90","slide":8,"name":"具体QC系统接入节点分阶段联评","text":"具体QC系统接入节点分阶段联评","textPreview":"具体QC系统接入节点分阶段联评","textChars":15,"textLines":1,"bbox":[1324,1019.84,447.17,42.05]}
+{"kind":"shape","id":"sh/snap4nqh","slide":8,"name":"rect-58","bbox":[64,1165,2432,100]}
+{"kind":"textbox","id":"sh/d83qdsr2","slide":8,"name":"交接结果","text":"交接结果","textPreview":"交接结果","textChars":4,"textLines":1,"bbox":[91,1196.8,134.8,43.5]}
+{"kind":"textbox","id":"sh/6ls72d8b","slide":8,"name":"供应商交期、到料、生产、质量与发货状态进入统一执行反馈","text":"供应商交期、到料、生产、质量与发货状态进入统一执行反馈","textPreview":"供应商交期、到料、生产、质量与发货状态进入统一执行反馈","textChars":27,"textLines":1,"bbox":[300,1197.84,824.32,42.05]}
+{"kind":"textbox","id":"sh/rm18bi9w","slide":8,"name":"图中QC表示业务协同，不表示本季度重建完整质量管理系统。","text":"图中QC表示业务协同，不表示本季度重建完整质量管理系统。","textPreview":"图中QC表示业务协同，不表示本季度重建完整质量管理系统。","textChars":28,"textLines":1,"bbox":[64,1305,724.87,36.25]}
+{"kind":"shape","id":"sh/8rqpsjqd","slide":8,"name":"path-62","bbox":[64,1384,2432,0.05]}
+{"kind":"textbox","id":"sh/9cz61ory","slide":8,"name":"Q4供应链产品建设方案 · 汇报分层版 · 目标业务蓝图，按P0 / P1推进","text":"Q4供应链产品建设方案 · 汇报分层版 · 目标业务蓝图，按P0 / P1推进","textPreview":"Q4供应链产品建设方案 · 汇报分层版 · 目标业务蓝图，按P0 / P1推进","textChars":39,"textLines":1,"bbox":[64,1397.12,722.73,31.9]}
+{"kind":"textbox","id":"sh/b65s7mtg","slide":8,"name":"08 / 10","text":"08 / 10","textPreview":"08 / 10","textChars":7,"textLines":1,"bbox":[2408.8,1397.12,87.2,31.9]}
+{"kind":"notes","id":"nt/d6sxoe","slide":8,"text":"来源：08_供应商执行详细流程_V3.0.svg。业务依据：《第四季度供应链系统建设方案》及本次《修改意见》。采用全景、职责边界、六角色泳道和七个模块详细流程分层组织。MRP为P1同步建设；PMC确认PR，SCM承载PR/PO管理。图中QC和入库为目标协同节点，一期接入范围需联评；原文1.8边界表未提供。所有文字与流程图元素为原生可编辑对象。"}
+{"kind":"slide","id":"sl/5et73w","slide":9,"title":"MES协同｜接入已有生产执行能力","textShapes":41}
+{"kind":"shape","id":"sh/hwzq94be","slide":9,"name":"白色画布","bbox":[0,0,2560,1440]}
+{"kind":"shape","id":"sh/ut8repcn","slide":9,"name":"rect-1","bbox":[0,0,2560,1440]}
+{"kind":"shape","id":"sh/vuh87ut8","slide":9,"name":"rect-2","bbox":[64,57,9,64]}
+{"kind":"textbox","id":"sh/4zq9kjup","slide":9,"name":"MES协同｜接入已有生产执行能力","text":"MES协同｜接入已有生产执行能力","textPreview":"MES协同｜接入已有生产执行能力","textChars":16,"textLines":1,"bbox":[95,56.04,784.39,71.05]}
+{"kind":"textbox","id":"sh/50jqdoba","slide":9,"name":"2026 Q4 / V3.0","text":"2026 Q4 / V3.0","textPreview":"2026 Q4 / V3.0","textChars":14,"textLines":1,"bbox":[2293.65,68,202.35,36.25]}
+{"kind":"shape","id":"sh/ix8ri9cz","slide":9,"name":"path-5","bbox":[64,144,2432,0.05]}
+{"kind":"textbox","id":"sh/3yh8bet4","slide":9,"name":"P1已有系统协同；订单关联、进度同步与延期预警，同时推进推广和问题治理","text":"P1已有系统协同；订单关联、进度同步与延期预警，同时推进推广和问题治理","textPreview":"P1已有系统协同；订单关联、进度同步与延期预警，同时推进推广和问题治理","textChars":35,"textLines":1,"bbox":[64,164.92,965.94,39.15]}
+{"kind":"textbox","id":"sh/cna9oju1","slide":9,"name":"09 / 模块展开","text":"09 / 模块展开","textPreview":"09 / 模块展开","textChars":9,"textLines":1,"bbox":[2333.72,169.08,162.28,33.35]}
+{"kind":"textbox","id":"sh/dojahobm","slide":9,"name":"业务动作","text":"业务动作","textPreview":"业务动作","textChars":4,"textLines":1,"bbox":[64,249.72,143.12,46.4]}
+{"kind":"shape","id":"sh/9sjml4nq","slide":9,"name":"rect-9","bbox":[64,348,452,172]}
+{"kind":"shape","id":"sh/orq5cz6l","slide":9,"name":"rect-10","bbox":[64,348,5,172]}
+{"kind":"textbox","id":"sh/nqh4ju50","slide":9,"name":"关联SCM订单","text":"关联SCM订单","textPreview":"关联SCM订单","textChars":7,"textLines":1,"bbox":[173.86,358.64,232.28,49.3]}
+{"kind":"textbox","id":"sh/mp8na9of","slide":9,"name":"明确生产任务来源","text":"明确生产任务来源","textPreview":"明确生产任务来源","textChars":8,"textLines":1,"bbox":[172.68,415.92,234.64,39.15]}
+{"kind":"textbox","id":"sh/xgjmpon2","slide":9,"name":"建立订单与SKU对应","text":"建立订单与SKU对应","textPreview":"建立订单与SKU对应","textChars":10,"textLines":1,"bbox":[158.13,454.92,263.74,39.15]}
+{"kind":"textbox","id":"sh/wva5gj6h","slide":9,"name":"01","text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[64,297.04,36,34.8]}
+{"kind":"shape","id":"sh/bu14ne5w","slide":9,"name":"path-15","bbox":[516,434,41,0.05]}
+{"kind":"shape","id":"sh/atsne9ob","slide":9,"name":"arrowhead-15","bbox":[533,422,24,24]}
+{"kind":"shape","id":"sh/dkfmdkni","slide":9,"name":"rect-16","bbox":[557,348,452,172]}
+{"kind":"shape","id":"sh/sz6l4f6d","slide":9,"name":"rect-17","bbox":[557,348,5,172]}
+{"kind":"textbox","id":"sh/4fudgji5","slide":9,"name":"下达任务与开工","text":"下达任务与开工","textPreview":"下达任务与开工","textChars":7,"textLines":1,"bbox":[654.24,358.64,257.52,49.3]}
+{"kind":"textbox","id":"sh/pg3e9ozq","slide":9,"name":"工厂承接生产要求","text":"工厂承接生产要求","textPreview":"工厂承接生产要求","textChars":8,"textLines":1,"bbox":[665.68,415.92,234.64,39.15]}
+{"kind":"textbox","id":"sh/idcve90f","slide":9,"name":"结合物料准备与齐料","text":"结合物料准备与齐料","textPreview":"结合物料准备与齐料","textChars":9,"textLines":1,"bbox":[651.64,454.92,262.72,39.15]}
+{"kind":"textbox","id":"sh/3elw7ehk","slide":9,"name":"02","text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[557,297.04,39.97,34.8]}
+{"kind":"shape","id":"sh/cjedk3ih","slide":9,"name":"path-22","bbox":[1009,434,41,0.05]}
+{"kind":"shape","id":"sh/dknedoz2","slide":9,"name":"arrowhead-22","bbox":[1026,422,24,24]}
+{"kind":"shape","id":"sh/qhcvit0b","slide":9,"name":"rect-23","bbox":[1050,348,452,172]}
+{"kind":"shape","id":"sh/rilwbyhw","slide":9,"name":"rect-24","bbox":[1050,348,5,172]}
+{"kind":"textbox","id":"sh/07edo3id","slide":9,"name":"生产执行与扫菲","text":"生产执行与扫菲","textPreview":"生产执行与扫菲","textChars":7,"textLines":1,"bbox":[1147.24,358.64,257.52,49.3]}
+{"kind":"textbox","id":"sh/18neh8zy","slide":9,"name":"采集工序及生产进度","text":"采集工序及生产进度","textPreview":"采集工序及生产进度","textChars":9,"textLines":1,"bbox":[1144.64,415.92,262.72,39.15]}
+{"kind":"textbox","id":"sh/b2pgn210","slide":9,"name":"保留生产异常","text":"保留生产异常","textPreview":"保留生产异常","textChars":6,"textLines":1,"bbox":[1186.76,454.92,178.48,39.15]}
+{"kind":"textbox","id":"sh/a1gzexkf","slide":9,"name":"03","text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[1050,297.04,39.97,34.8]}
+{"kind":"shape","id":"sh/x4rypcj6","slide":9,"name":"path-29","bbox":[1502,434,41,0.05]}
+{"kind":"shape","id":"sh/w3ihg72l","slide":9,"name":"arrowhead-29","bbox":[1519,422,24,24]}
+{"kind":"shape","id":"sh/nepgj214","slide":9,"name":"rect-30","bbox":[1543,348,452,172]}
+{"kind":"shape","id":"sh/mdgfaxkj","slide":9,"name":"rect-31","bbox":[1543,348,5,172]}
+{"kind":"textbox","id":"sh/9g7ylsja","slide":9,"name":"进度与延期反馈","text":"进度与延期反馈","textPreview":"进度与延期反馈","textChars":7,"textLines":1,"bbox":[1640.24,358.64,257.52,49.3]}
+{"kind":"textbox","id":"sh/ofyhcn2p","slide":9,"name":"对比计划与实际进度","text":"对比计划与实际进度","textPreview":"对比计划与实际进度","textChars":9,"textLines":1,"bbox":[1637.64,415.92,262.72,39.15]}
+{"kind":"textbox","id":"sh/7atgvm18","slide":9,"name":"协同处理延期风险","text":"协同处理延期风险","textPreview":"协同处理延期风险","textChars":8,"textLines":1,"bbox":[1651.68,454.92,234.64,39.15]}
+{"kind":"textbox","id":"sh/690zmhkn","slide":9,"name":"04","text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[1543,297.04,39.97,34.8]}
+{"kind":"shape","id":"sh/uh0jalg7","slide":9,"name":"path-36","bbox":[1995,434,41,0.05]}
+{"kind":"shape","id":"sh/fi9kjqxs","slide":9,"name":"arrowhead-36","bbox":[2012,422,24,24]}
+{"kind":"shape","id":"sh/gjilcvyx","slide":9,"name":"rect-37","bbox":[2036,348,452,172]}
+{"kind":"shape","id":"sh/hkr2lgfi","slide":9,"name":"rect-38","bbox":[2036,348,5,172]}
+{"kind":"textbox","id":"sh/6tgj61gv","slide":9,"name":"完工结果回传","text":"完工结果回传","textPreview":"完工结果回传","textChars":6,"textLines":1,"bbox":[2150.92,358.64,222.16,49.3]}
+{"kind":"textbox","id":"sh/7epkf6xg","slide":9,"name":"完工数量与时间","text":"完工数量与时间","textPreview":"完工数量与时间","textChars":7,"textLines":1,"bbox":[2158.72,415.92,206.56,39.15]}
+{"kind":"textbox","id":"sh/sfy18by1","slide":9,"name":"连接QC、发货和计划反馈","text":"连接QC、发货和计划反馈","textPreview":"连接QC、发货和计划反馈","textChars":12,"textLines":1,"bbox":[2095.61,454.92,332.79,39.15]}
+{"kind":"textbox","id":"sh/tg72hgfm","slide":9,"name":"05","text":"05","textPreview":"05","textChars":2,"textLines":1,"bbox":[2036,297.04,39.97,34.8]}
+{"kind":"shape","id":"sh/q9k3i5gf","slide":9,"name":"path-43","bbox":[290,520,1972,114]}
+{"kind":"shape","id":"sh/ratkraxk","slide":9,"name":"arrowhead-43","bbox":[274,520,32,32]}
+{"kind":"shape","id":"sh/l4vmh4z2","slide":9,"name":"rect-44","bbox":[1000.6,602,538.8,37]}
+{"kind":"textbox","id":"sh/03m58zih","slide":9,"name":"生产延期与完工差异 → 采购与PMC协调交期","text":"生产延期与完工差异 → 采购与PMC协调交期","textPreview":"生产延期与完工差异 → 采购与PMC协调交期","textChars":22,"textLines":1,"bbox":[995.31,599.96,549.37,37.7]}
+{"kind":"shape","id":"sh/zid4fuhw","slide":9,"name":"path-46","bbox":[64,746,1148,0.05]}
+{"kind":"shape","id":"sh/yh4n6p0b","slide":9,"name":"path-47","bbox":[1324,746,1172,0.05]}
+{"kind":"textbox","id":"sh/dgvmdkzq","slide":9,"name":"Q4建设重点","text":"Q4建设重点","textPreview":"Q4建设重点","textChars":6,"textLines":1,"bbox":[64,764.68,194.47,47.85]}
+{"kind":"textbox","id":"sh/cf254fi5","slide":9,"name":"接口需落到执行口径","text":"接口需落到执行口径","textPreview":"接口需落到执行口径","textChars":9,"textLines":1,"bbox":[1324,764.68,318.88,47.85]}
+{"kind":"textbox","id":"sh/ret4buh0","slide":9,"name":"复用已有MES，推进工厂使用与培训","text":"复用已有MES，推进工厂使用与培训","textPreview":"复用已有MES，推进工厂使用与培训","textChars":17,"textLines":1,"bbox":[64,833.84,497.13,42.05]}
+{"kind":"textbox","id":"sh/qdkn2p0f","slide":9,"name":"订单接入及与SCM的业务关联","text":"订单接入及与SCM的业务关联","textPreview":"订单接入及与SCM的业务关联","textChars":14,"textLines":1,"bbox":[64,895.84,409.39,42.05]}
+{"kind":"textbox","id":"sh/xcf6poza","slide":9,"name":"生产开始、进度、延期和完工状态","text":"生产开始、进度、延期和完工状态","textPreview":"生产开始、进度、延期和完工状态","textChars":15,"textLines":1,"bbox":[64,957.84,462.4,42.05]}
+{"kind":"textbox","id":"sh/wb65gjip","slide":9,"name":"修复现场问题，形成持续治理清单","text":"修复现场问题，形成持续治理清单","textPreview":"修复现场问题，形成持续治理清单","textChars":15,"textLines":1,"bbox":[64,1019.84,462.4,42.05]}
+{"kind":"textbox","id":"sh/gryh8rux","slide":9,"name":"生产任务来源及订单关联标识","text":"生产任务来源及订单关联标识","textPreview":"生产任务来源及订单关联标识","textChars":13,"textLines":1,"bbox":[1324,833.84,402.08,42.05]}
+{"kind":"textbox","id":"sh/hs7y1wbi","slide":9,"name":"进度、完工和异常字段定义","text":"进度、完工和异常字段定义","textPreview":"进度、完工和异常字段定义","textChars":12,"textLines":1,"bbox":[1324,895.84,371.92,42.05]}
+{"kind":"textbox","id":"sh/upgz6hcr","slide":9,"name":"回传频率、责任人及异常补报","text":"回传频率、责任人及异常补报","textPreview":"回传频率、责任人及异常补报","textChars":13,"textLines":1,"bbox":[1324,957.84,402.08,42.05]}
+{"kind":"textbox","id":"sh/fqpgzmtc","slide":9,"name":"QC结果与生产返工节点如何联动","text":"QC结果与生产返工节点如何联动","textPreview":"QC结果与生产返工节点如何联动","textChars":15,"textLines":1,"bbox":[1324,1019.84,447.17,42.05]}
+{"kind":"shape","id":"sh/snex47u1","slide":9,"name":"rect-58","bbox":[64,1165,2432,100]}
+{"kind":"textbox","id":"sh/tonyxcbm","slide":9,"name":"交接结果","text":"交接结果","textPreview":"交接结果","textChars":4,"textLines":1,"bbox":[91,1196.8,134.8,43.5]}
+{"kind":"textbox","id":"sh/6lwf2hcv","slide":9,"name":"可追溯的生产进度、延期及完工数据，反馈SCM与PMC","text":"可追溯的生产进度、延期及完工数据，反馈SCM与PMC","textPreview":"可追溯的生产进度、延期及完工数据，反馈SCM与PMC","textChars":26,"textLines":1,"bbox":[300,1197.84,751.23,42.05]}
+{"kind":"textbox","id":"sh/7m5gv2tg","slide":9,"name":"MES属于已有能力协同，不画成必须等待PMC / MRP完工后才启动的重建项目。","text":"MES属于已有能力协同，不画成必须等待PMC / MRP完工后才启动的重建项目。","textPreview":"MES属于已有能力协同，不画成必须等待PMC / MRP完工后才启动的重建项目。","textChars":40,"textLines":1,"bbox":[64,1305,940,36.25]}
+{"kind":"shape","id":"sh/kzex07up","slide":9,"name":"path-62","bbox":[64,1384,2432,0.05]}
+{"kind":"textbox","id":"sh/50nytcba","slide":9,"name":"Q4供应链产品建设方案 · 汇报分层版 · 目标业务蓝图，按P0 / P1推进","text":"Q4供应链产品建设方案 · 汇报分层版 · 目标业务蓝图，按P0 / P1推进","textPreview":"Q4供应链产品建设方案 · 汇报分层版 · 目标业务蓝图，按P0 / P1推进","textChars":39,"textLines":1,"bbox":[64,1397.12,722.73,31.9]}
+{"kind":"textbox","id":"sh/nulgj2xc","slide":9,"name":"09 / 10","text":"09 / 10","textPreview":"09 / 10","textChars":7,"textLines":1,"bbox":[2408.8,1397.12,87.2,31.9]}
+{"kind":"notes","id":"nt/5et73w","slide":9,"text":"来源：09_MES协同详细流程_V3.0.svg。业务依据：《第四季度供应链系统建设方案》及本次《修改意见》。采用全景、职责边界、六角色泳道和七个模块详细流程分层组织。MRP为P1同步建设；PMC确认PR，SCM承载PR/PO管理。图中QC和入库为目标协同节点，一期接入范围需联评；原文1.8边界表未提供。所有文字与流程图元素为原生可编辑对象。"}
+{"kind":"slide","id":"sl/lrtfmy","slide":10,"title":"库存与执行回流｜进入下一轮计划","textShapes":41}
+{"kind":"shape","id":"sh/cfads3ih","slide":10,"name":"白色画布","bbox":[0,0,2560,1440]}
+{"kind":"shape","id":"sh/be1cjyhw","slide":10,"name":"rect-1","bbox":[0,0,2560,1440]}
+{"kind":"shape","id":"sh/adsvqt0b","slide":10,"name":"rect-2","bbox":[64,57,9,64]}
+{"kind":"textbox","id":"sh/l43ep8zy","slide":10,"name":"库存与执行回流｜进入下一轮计划","text":"库存与执行回流｜进入下一轮计划","textPreview":"库存与执行回流｜进入下一轮计划","textChars":15,"textLines":1,"bbox":[95,56.04,774.4,71.05]}
+{"kind":"textbox","id":"sh/kjudw3it","slide":10,"name":"2026 Q4 / V3.0","text":"2026 Q4 / V3.0","textPreview":"2026 Q4 / V3.0","textChars":14,"textLines":1,"bbox":[2293.65,68,202.35,36.25]}
+{"kind":"shape","id":"sh/zilcnyh8","slide":10,"name":"path-5","bbox":[64,144,2432,0.05]}
+{"kind":"textbox","id":"sh/yhcvut0n","slide":10,"name":"结果回流是滚动计划体系的组成部分；库存事实和清洗由来源系统负责","text":"结果回流是滚动计划体系的组成部分；库存事实和清洗由来源系统负责","textPreview":"结果回流是滚动计划体系的组成部分；库存事实和清洗由来源系统负责","textChars":31,"textLines":1,"bbox":[64,164.92,880.48,39.15]}
+{"kind":"textbox","id":"sh/98netsza","slide":10,"name":"10 / 模块展开","text":"10 / 模块展开","textPreview":"10 / 模块展开","textChars":9,"textLines":1,"bbox":[2338.48,169.08,157.52,33.35]}
+{"kind":"textbox","id":"sh/87ud0nip","slide":10,"name":"业务动作","text":"业务动作","textPreview":"业务动作","textChars":4,"textLines":1,"bbox":[64,249.72,143.12,46.4]}
+{"kind":"shape","id":"sh/2hcvmhkr","slide":10,"name":"rect-9","bbox":[64,348,452,172]}
+{"kind":"shape","id":"sh/nilcfm1c","slide":10,"name":"rect-10","bbox":[64,348,5,172]}
+{"kind":"textbox","id":"sh/ojudor2x","slide":10,"name":"收货与入库","text":"收货与入库","textPreview":"收货与入库","textChars":5,"textLines":1,"bbox":[196.6,358.64,186.8,49.3]}
+{"kind":"textbox","id":"sh/pk3uhcji","slide":10,"name":"按发货与订单核对","text":"按发货与订单核对","textPreview":"按发货与订单核对","textChars":8,"textLines":1,"bbox":[172.68,415.92,234.64,39.15]}
+{"kind":"textbox","id":"sh/alcvqh03","slide":10,"name":"质检、收货及入库结果","text":"质检、收货及入库结果","textPreview":"质检、收货及入库结果","textChars":10,"textLines":1,"bbox":[144.6,454.92,290.8,39.15]}
+{"kind":"textbox","id":"sh/bmlcjm1o","slide":10,"name":"01","text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[64,297.04,36,34.8]}
+{"kind":"shape","id":"sh/cnudsrit","slide":10,"name":"path-15","bbox":[516,434,41,0.05]}
+{"kind":"shape","id":"sh/xo3ulwje","slide":10,"name":"arrowhead-15","bbox":[533,422,24,24]}
+{"kind":"shape","id":"sh/qp8bexkj","slide":10,"name":"rect-16","bbox":[557,348,452,172]}
+{"kind":"shape","id":"sh/rq1c7214","slide":10,"name":"rect-17","bbox":[557,348,5,172]}
+{"kind":"textbox","id":"sh/vuxsfyhw","slide":10,"name":"更新库存事实","text":"更新库存事实","textPreview":"更新库存事实","textChars":6,"textLines":1,"bbox":[671.92,358.64,222.16,49.3]}
+{"kind":"textbox","id":"sh/utormt0b","slide":10,"name":"库存、在途与到货变化","text":"库存、在途与到货变化","textPreview":"库存、在途与到货变化","textChars":10,"textLines":1,"bbox":[637.6,415.92,290.8,39.15]}
+{"kind":"textbox","id":"sh/hwfah8z2","slide":10,"name":"保留业务来源与时间","text":"保留业务来源与时间","textPreview":"保留业务来源与时间","textChars":9,"textLines":1,"bbox":[651.64,454.92,262.72,39.15]}
+{"kind":"textbox","id":"sh/gv69o3ih","slide":10,"name":"02","text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[557,297.04,39.97,34.8]}
+{"kind":"shape","id":"sh/7qdsbeh0","slide":10,"name":"path-22","bbox":[1009,434,41,0.05]}
+{"kind":"shape","id":"sh/6p4ri90f","slide":10,"name":"arrowhead-22","bbox":[1026,422,24,24]}
+{"kind":"shape","id":"sh/tsfadozq","slide":10,"name":"rect-23","bbox":[1050,348,452,172]}
+{"kind":"shape","id":"sh/8r69kjil","slide":10,"name":"rect-24","bbox":[1050,348,5,172]}
+{"kind":"textbox","id":"sh/rmhsnih4","slide":10,"name":"汇集执行结果","text":"汇集执行结果","textPreview":"汇集执行结果","textChars":6,"textLines":1,"bbox":[1164.92,358.64,222.16,49.3]}
+{"kind":"textbox","id":"sh/ql8rudgj","slide":10,"name":"销量、采购与供应商状态","text":"销量、采购与供应商状态","textPreview":"销量、采购与供应商状态","textChars":11,"textLines":1,"bbox":[1116.56,415.92,318.88,39.15]}
+{"kind":"textbox","id":"sh/o72p8fy1","slide":10,"name":"生产、交期和质量结果","text":"生产、交期和质量结果","textPreview":"生产、交期和质量结果","textChars":10,"textLines":1,"bbox":[1130.6,454.92,290.8,39.15]}
+{"kind":"textbox","id":"sh/98b6hkfm","slide":10,"name":"03","text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[1050,297.04,39.97,34.8]}
+{"kind":"shape","id":"sh/250765gv","slide":10,"name":"path-29","bbox":[1502,434,41,0.05]}
+{"kind":"shape","id":"sh/n69ofaxg","slide":10,"name":"arrowhead-29","bbox":[1519,422,24,24]}
+{"kind":"shape","id":"sh/wb2pcfyd","slide":10,"name":"rect-30","bbox":[1543,348,452,172]}
+{"kind":"shape","id":"sh/xwb6lkfi","slide":10,"name":"rect-31","bbox":[1543,348,5,172]}
+{"kind":"textbox","id":"sh/a9k7a5g7","slide":10,"name":"PMC校准偏差","text":"PMC校准偏差","textPreview":"PMC校准偏差","textChars":7,"textLines":1,"bbox":[1652.78,358.64,232.43,49.3]}
+{"kind":"textbox","id":"sh/batojaxs","slide":10,"name":"对比需求、库存与供给","text":"对比需求、库存与供给","textPreview":"对比需求、库存与供给","textChars":10,"textLines":1,"bbox":[1623.6,415.92,290.8,39.15]}
+{"kind":"textbox","id":"sh/kzmpgzy9","slide":10,"name":"识别缺货、延期与数量差异","text":"识别缺货、延期与数量差异","textPreview":"识别缺货、延期与数量差异","textChars":12,"textLines":1,"bbox":[1595.52,454.92,346.96,39.15]}
+{"kind":"textbox","id":"sh/l0vqp4fu","slide":10,"name":"04","text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[1543,297.04,39.97,34.8]}
+{"kind":"shape","id":"sh/5w3y90fy","slide":10,"name":"path-36","bbox":[1995,434,41,0.05]}
+{"kind":"shape","id":"sh/kvahgvyd","slide":10,"name":"arrowhead-36","bbox":[2012,422,24,24]}
+{"kind":"shape","id":"sh/ju1g7qxs","slide":10,"name":"rect-37","bbox":[2036,348,452,172]}
+{"kind":"shape","id":"sh/itsfelg7","slide":10,"name":"rect-38","bbox":[2036,348,5,172]}
+{"kind":"textbox","id":"sh/xsjy5gfm","slide":10,"name":"下一轮预测与计划","text":"下一轮预测与计划","textPreview":"下一轮预测与计划","textChars":8,"textLines":1,"bbox":[2115.56,358.64,292.88,49.3]}
+{"kind":"textbox","id":"sh/w7axcby1","slide":10,"name":"调整销售需求判断","text":"调整销售需求判断","textPreview":"调整销售需求判断","textChars":8,"textLines":1,"bbox":[2144.68,415.92,234.64,39.15]}
+{"kind":"textbox","id":"sh/b61g36xg","slide":10,"name":"更新备货和采购需求","text":"更新备货和采购需求","textPreview":"更新备货和采购需求","textChars":9,"textLines":1,"bbox":[2130.64,454.92,262.72,39.15]}
+{"kind":"textbox","id":"sh/a5sfa1gb","slide":10,"name":"05","text":"05","textPreview":"05","textChars":2,"textLines":1,"bbox":[2036,297.04,39.97,34.8]}
+{"kind":"shape","id":"sh/honyhkf6","slide":10,"name":"path-43","bbox":[290,520,1972,114]}
+{"kind":"shape","id":"sh/g3ehofyl","slide":10,"name":"arrowhead-43","bbox":[274,520,32,32]}
+{"kind":"shape","id":"sh/e9ovixw3","slide":10,"name":"rect-44","bbox":[929.88,602,680.24,37]}
+{"kind":"textbox","id":"sh/zaxwb2d8","slide":10,"name":"下一轮计划 → 采购与执行 → 新的事实结果，再次循环","text":"下一轮计划 → 采购与执行 → 新的事实结果，再次循环","textPreview":"下一轮计划 → 采购与执行 → 新的事实结果，再次循环","textChars":27,"textLines":1,"bbox":[936.03,599.96,667.95,37.7]}
+{"kind":"shape","id":"sh/0b6dk7et","slide":10,"name":"path-46","bbox":[64,746,1148,0.05]}
+{"kind":"shape","id":"sh/1cfedcve","slide":10,"name":"path-47","bbox":[1324,746,1172,0.05]}
+{"kind":"textbox","id":"sh/q5ovexwr","slide":10,"name":"PMC需要消费的事实","text":"PMC需要消费的事实","textPreview":"PMC需要消费的事实","textChars":10,"textLines":1,"bbox":[64,764.68,328.84,47.85]}
+{"kind":"textbox","id":"sh/r6xc72dc","slide":10,"name":"数据责任与计划责任","text":"数据责任与计划责任","textPreview":"数据责任与计划责任","textChars":9,"textLines":1,"bbox":[1324,764.68,318.88,47.85]}
+{"kind":"textbox","id":"sh/c76dg7ex","slide":10,"name":"南沙、工厂、海外仓及平台可用库存","text":"南沙、工厂、海外仓及平台可用库存","textPreview":"南沙、工厂、海外仓及平台可用库存","textChars":16,"textLines":1,"bbox":[64,833.84,492.56,42.05]}
+{"kind":"textbox","id":"sh/d8fe9cvi","slide":10,"name":"采购在途、头程在途与预计到货","text":"采购在途、头程在途与预计到货","textPreview":"采购在途、头程在途与预计到货","textChars":14,"textLines":1,"bbox":[64,895.84,432.24,42.05]}
+{"kind":"textbox","id":"sh/a18vq1wv","slide":10,"name":"供应商履约、生产进度、交期与质量","text":"供应商履约、生产进度、交期与质量","textPreview":"供应商履约、生产进度、交期与质量","textChars":16,"textLines":1,"bbox":[64,957.84,492.56,42.05]}
+{"kind":"textbox","id":"sh/b2hwjmdg","slide":10,"name":"实际销量及经营结果","text":"实际销量及经营结果","textPreview":"实际销量及经营结果","textChars":9,"textLines":1,"bbox":[64,1019.84,281.44,42.05]}
+{"kind":"textbox","id":"sh/7mtsbet8","slide":10,"name":"领星、库存系统及数仓提供事实","text":"领星、库存系统及数仓提供事实","textPreview":"领星、库存系统及数仓提供事实","textChars":14,"textLines":1,"bbox":[1324,833.84,432.24,42.05]}
+{"kind":"textbox","id":"sh/6l0bitcn","slide":10,"name":"商品主数据负责身份与商品关系","text":"商品主数据负责身份与商品关系","textPreview":"商品主数据负责身份与商品关系","textChars":14,"textLines":1,"bbox":[1324,895.84,432.24,42.05]}
+{"kind":"textbox","id":"sh/t8badoby","slide":10,"name":"PMC引用事实，形成计划判断和调整","text":"PMC引用事实，形成计划判断和调整","textPreview":"PMC引用事实，形成计划判断和调整","textChars":17,"textLines":1,"bbox":[1324,957.84,500.17,42.05]}
+{"kind":"textbox","id":"sh/sn2tkjud","slide":10,"name":"原始销售、库存及映射清洗不放在PMC","text":"原始销售、库存及映射清洗不放在PMC","textPreview":"原始销售、库存及映射清洗不放在PMC","textChars":18,"textLines":1,"bbox":[1324,1019.84,530.33,42.05]}
+{"kind":"shape","id":"sh/fatsfyt4","slide":10,"name":"rect-58","bbox":[64,1165,2432,100]}
+{"kind":"textbox","id":"sh/u9kbmtcj","slide":10,"name":"交接结果","text":"交接结果","textPreview":"交接结果","textChars":4,"textLines":1,"bbox":[91,1196.8,134.8,43.5]}
+{"kind":"textbox","id":"sh/hcbah8ba","slide":10,"name":"实际结果持续进入下一轮预测、备货与采购计划","text":"实际结果持续进入下一轮预测、备货与采购计划","textPreview":"实际结果持续进入下一轮预测、备货与采购计划","textChars":21,"textLines":1,"bbox":[300,1197.84,643.36,42.05]}
+{"kind":"textbox","id":"sh/gb2to3up","slide":10,"name":"Q4不重建完整WMS、OMS、PMS；接口与库存口径按来源和业务责任落实。","text":"Q4不重建完整WMS、OMS、PMS；接口与库存口径按来源和业务责任落实。","textPreview":"Q4不重建完整WMS、OMS、PMS；接口与库存口径按来源和业务责任落实。","textChars":37,"textLines":1,"bbox":[64,1305,900.45,36.25]}
+{"kind":"shape","id":"sh/3edsjyt0","slide":10,"name":"path-62","bbox":[64,1384,2432,0.05]}
+{"kind":"textbox","id":"sh/2d4bqdcv","slide":10,"name":"Q4供应链产品建设方案 · 汇报分层版 · 目标业务蓝图，按P0 / P1推进","text":"Q4供应链产品建设方案 · 汇报分层版 · 目标业务蓝图，按P0 / P1推进","textPreview":"Q4供应链产品建设方案 · 汇报分层版 · 目标业务蓝图，按P0 / P1推进","textChars":39,"textLines":1,"bbox":[64,1397.12,722.73,31.9]}
+{"kind":"textbox","id":"sh/0jm903qt","slide":10,"name":"10 / 10","text":"10 / 10","textPreview":"10 / 10","textChars":7,"textLines":1,"bbox":[2413.18,1397.12,82.82,31.9]}
+{"kind":"notes","id":"nt/lrtfmy","slide":10,"text":"来源：10_库存回流详细流程_V3.0.svg。业务依据：《第四季度供应链系统建设方案》及本次《修改意见》。采用全景、职责边界、六角色泳道和七个模块详细流程分层组织。MRP为P1同步建设；PMC确认PR，SCM承载PR/PO管理。图中QC和入库为目标协同节点，一期接入范围需联评；原文1.8边界表未提供。所有文字与流程图元素为原生可编辑对象。"}

@@ -1,0 +1,16 @@
+.forecast-section-bar { display:flex; align-items:center; justify-content:space-between; height:24px; font-size:11px; color:var(--muted); }
+.forecast-section-bar .forecast-toggle-host { margin:0; }
+.forecast-table .forecast-section-fill { height:28px; background:var(--surface-2); padding:0; }
+.forecast-table tr:has(.forecast-section-bar) > .line-cell { padding-top:0; padding-bottom:0; background:var(--surface-2); }
+.forecast-table .line-cell.line-system { white-space:normal; }
+.forecast-table .reason-host { display:block; margin-top:3px; }
+.forecast-table .cell-reason { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; overflow-wrap:anywhere; white-space:pre-wrap; text-align:left; font-size:11px; line-height:16px; font-weight:400; color:var(--muted); cursor:help; }
+.cell-reason:focus-visible { outline:2px solid var(--blue); outline-offset:2px; }
+.reason-full { max-height:260px; overflow:auto; white-space:pre-wrap; overflow-wrap:anywhere; font-size:12px; line-height:20px; }
+.forecast-editor-context { color:var(--muted); font-size:12px; margin-bottom:16px; }
+.forecast-editor-footer { display:flex; justify-content:space-between; gap:12px; }
+.forecast-note-field { padding-bottom:14px; }
+.note-control-host { display:block; flex:1; min-width:0; }
+.inline-note-editor { width:100%; }
+.inline-note-editor .forecast-editor-footer { margin-top:6px; }
+#forecastMessages { position:fixed; z-index:2000; pointer-events:none; height:0; transform:translateZ(0); }

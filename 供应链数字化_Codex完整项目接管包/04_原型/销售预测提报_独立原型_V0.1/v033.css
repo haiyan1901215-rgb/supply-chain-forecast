@@ -1,0 +1,229 @@
+/*
+  V0.3.3 typography governance
+  13/600: product names and primary core information
+  12/400-600: business data, core codes, table headers, metrics
+  11/400: auxiliary information, dates, source labels, tags
+*/
+:root {
+  --type-title: 13px;
+  --type-body: 12px;
+  --type-help: 11px;
+  --weight-title: 600;
+  --weight-body: 400;
+}
+
+.reason-preview {
+  overflow: hidden;
+  overscroll-behavior: contain;
+}
+.reason-preview .forecast-editor-context { margin-bottom:12px; }
+
+.app {
+  font-size: var(--type-body);
+  font-weight: var(--weight-body);
+}
+
+/* Page and compact table titles: 13px / 600 */
+.app h1,
+.app .brand strong,
+.app .calendar-head strong,
+.app .drawer-head h2,
+.app .drawer-section h3,
+.app .modal-head h2,
+.app .summary-row td {
+  font-size: var(--type-title);
+  font-weight: var(--weight-title);
+}
+
+.app h1 {
+  margin: 4px 0 6px;
+  line-height: 1.3;
+  letter-spacing: 0;
+}
+
+/* Product names: 13px / 600 */
+.app .forecast-table .product-title,
+.app .drawer-head h2 {
+  font-size: var(--type-title);
+  font-weight: var(--weight-title);
+}
+
+/* Core codes: 12px / 500 */
+.app .forecast-table .product-sub.asin,
+.app .forecast-table .parent-code,
+.app .forecast-table .parent-code.spu,
+.app .forecast-table .code-value,
+.app .forecast-table .size-value {
+  font-size: var(--type-body);
+  font-weight: 500;
+}
+
+/* Core metrics: 12px / 600 */
+.app .summary-value,
+.app .forecast-table .metric strong,
+.app .detail strong,
+.app .formula-row strong {
+  font-size: var(--type-body);
+  font-weight: var(--weight-title);
+  letter-spacing: 0;
+}
+
+/* Normal business data: 13px / 400 */
+.app .subline,
+.app .button,
+.app .control,
+.app .status,
+.app .range-title,
+.app .range-current,
+.app .range-tabs button,
+.app .range-title strong,
+.app .range-display,
+.app .calendar-day,
+.app .calendar-selection,
+.app .forecast-table tbody td,
+.app .forecast-table .product-sub,
+.app .forecast-table .product-action,
+.app .forecast-table .note-button,
+.app .forecast-table .product-note,
+.app .forecast-table .line-cell,
+.app .forecast-table .entry-icon,
+.app .forecast-table .entry-value,
+.app .forecast-table .cell-number,
+.app .forecast-table .event-button,
+.app .forecast-table .event-chip,
+.app .forecast-table .final-value,
+.app .mapping-table,
+.app .formula-row,
+.app .callout,
+.app .toast {
+  font-size: var(--type-body);
+  font-weight: var(--weight-body);
+}
+
+/* Table headers: 12px / 500. Date header content: 11px / 500. */
+.app .forecast-table thead th {
+  font-size: var(--type-body);
+  font-weight: 500;
+}
+
+.app .forecast-table thead th.date-head > div,
+.app .forecast-table thead th.date-head > small {
+  font-size: var(--type-help);
+  font-weight: 500;
+}
+
+/* Auxiliary information: 12px / 400 */
+.app .brand small,
+.app .sider-section,
+.app .sider-foot,
+.app .field label,
+.app .summary-label,
+.app .summary-note,
+.app .summary-value em,
+.app .range-meta,
+.app .calendar-grid th,
+.app .product-meta,
+.app .forecast-table .size-color,
+.app .forecast-table .parent-shared,
+.app .forecast-table .parent-meta,
+.app .forecast-table .line-kicker,
+.app .forecast-table .source-tag,
+.app .forecast-table .partial-count,
+.app .forecast-table .metric label,
+.app .coverage-note,
+.app .workbench-foot,
+.app .drawer-head p,
+.app .detail label,
+.app .chart-legend,
+.app .trend-chart text,
+.app .note-error,
+.app .note-controls small,
+.app .code-tooltip {
+  font-size: var(--type-help);
+  font-weight: var(--weight-body);
+}
+
+/* Tag text: fixed 12px; tone only changes color/background. */
+.app .pill,
+.app .forecast-table .product-tags .pill,
+.app .status {
+  font-size: var(--type-help);
+}
+
+/* Preserve semantic emphasis through weight/color without changing layer size. */
+.app .forecast-table .product-sub strong,
+.app .coverage-note b,
+.app .formula-row.total span,
+.app .formula-row.total strong {
+  font-weight: var(--weight-title);
+}
+
+.app .forecast-table .product-title,
+.app .forecast-table .product-sub,
+.app .forecast-table .parent-code,
+.app .forecast-table .metric strong,
+.app .forecast-table .final-value,
+.app .forecast-table .date-col,
+.app .detail strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.app .forecast-table .product-actions {
+  flex-wrap: nowrap;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.app .forecast-table .product-action {
+  flex: 0 0 auto;
+  gap: 2px;
+}
+
+.app .forecast-table .product-action svg {
+  width: 13px;
+  height: 13px;
+}
+
+.app .forecast-table .product-tags {
+  gap: 4px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+.app .forecast-table .product-status-tags {
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+.app .forecast-table .identity-cell:has(.inline-note-editor) {
+  position: relative;
+  z-index: 12;
+  background: #fff;
+}
+
+.app .forecast-table .inline-note-editor {
+  position: relative;
+  z-index: 13;
+  padding: 6px 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, .08);
+}
+
+.app .forecast-table .inline-note-editor textarea {
+  min-height: 72px;
+}
+
+.app .forecast-table .parent-color > span:not(.code-value),
+.app .forecast-table .parent-skc > span:not(.code-value):not(.code-text),
+.app .forecast-table .parent-skc .skc-color {
+  color: var(--muted);
+  font-size: var(--type-help);
+  font-weight: var(--weight-body);
+}
+
+.app .forecast-table .line-cell .line-kicker,
+.app .forecast-table .source-tag {
+  line-height: 1.2;
+}

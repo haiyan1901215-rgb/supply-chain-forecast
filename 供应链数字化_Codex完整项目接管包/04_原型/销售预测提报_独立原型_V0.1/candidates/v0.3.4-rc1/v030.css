@@ -1,0 +1,179 @@
+/* V0.3.0: compact forecast rows, restrained semantic tags, and readable reason truncation. */
+.product-status-tags [data-tag-category="销售状态"] {
+  color: #356a9a;
+  background: #eef5fc;
+  border-color: #c9ddec;
+}
+.product-status-tags [data-tag-category="生命周期"] {
+  color: #66538f;
+  background: #f3effa;
+  border-color: #d9cceb;
+}
+.product-status-tags [data-tag-category="库存"] {
+  color: #996a1e;
+  background: #fff7e7;
+  border-color: #ecd8ad;
+}
+
+/* Keep the four forecast lines dense enough to show more ASINs on a laptop. */
+.forecast-table tbody .identity-cell[rowspan],
+.forecast-table tbody .context-cell[rowspan] {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+.forecast-table tbody .context-cell[rowspan] {
+  padding-left: 6px;
+  padding-right: 6px;
+}
+.forecast-table .context-section + .context-section {
+  margin-top: 3px;
+}
+.forecast-table .context-section-title {
+  margin-bottom: 2px;
+  font-size: 10px;
+  line-height: 13px;
+}
+.forecast-table .context-section .metric-grid {
+  gap: 1px 4px;
+}
+.forecast-table .context-section .metric {
+  min-height: 25px;
+}
+.forecast-table .context-section .metric label {
+  font-size: 9px;
+  line-height: 11px;
+}
+.forecast-table .context-section .metric strong {
+  margin-top: 0;
+  font-size: 11px;
+  line-height: 14px;
+}
+.forecast-table .context-cell .coverage-note {
+  margin-top: 3px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  line-height: 14px;
+}
+.forecast-table .product-box {
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 6px;
+}
+.forecast-table .thumb {
+  width: 44px;
+  height: 56px;
+}
+.forecast-table .product-title {
+  line-height: 15px;
+}
+.forecast-table .product-sub {
+  min-height: 15px;
+  line-height: 15px;
+}
+.forecast-table .product-tags {
+  gap: 2px;
+  margin-top: 2px;
+}
+.forecast-table .product-meta {
+  margin-top: 1px;
+  line-height: 14px;
+}
+.forecast-table .product-actions {
+  gap: 6px;
+  margin-top: 2px;
+  padding-top: 2px;
+}
+.forecast-table .product-action {
+  min-height: 17px;
+}
+.forecast-table .product-note {
+  min-height: 17px;
+  margin-top: 2px;
+}
+.forecast-table .product-note > span,
+.forecast-table .note-display button {
+  line-height: 17px;
+  height: 17px;
+}
+.forecast-table .history-toggle {
+  min-height: 18px;
+  height: 18px;
+  padding-top: 1px;
+  padding-bottom: 1px;
+}
+.forecast-table tbody tr[data-forecast-line="system"] > td {
+  height: 30px;
+  padding-top: 3px;
+  padding-bottom: 3px;
+}
+.forecast-table tbody tr[data-forecast-line="manual"] > td,
+.forecast-table tbody tr[data-forecast-line="activity"] > td {
+  height: 34px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+.forecast-table tbody tr[data-forecast-line="final"] > td {
+  height: 38px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+.forecast-table tbody tr[data-forecast-line="controls"] > td {
+  height: 24px;
+  padding-top: 1px;
+  padding-bottom: 1px;
+}
+.forecast-table tbody tr[data-forecast-line="system"] .line-cell,
+.forecast-table tbody tr[data-forecast-line="manual"] .line-cell,
+.forecast-table tbody tr[data-forecast-line="activity"] .line-cell,
+.forecast-table tbody tr[data-forecast-line="final"] .line-cell {
+  line-height: 16px;
+}
+
+/* The reason remains visible as a compact cue; the Ant Design Tooltip carries the full text. */
+.forecast-table .reason-host {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  margin-top: 2px;
+  overflow: hidden;
+}
+.forecast-table .cell-reason {
+  display: block;
+  max-width: 100%;
+  max-height: 14px;
+  overflow: hidden;
+  padding: 0;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 14px;
+  overflow-wrap: normal;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.forecast-table .cell-reason:focus-visible {
+  outline: 1px solid var(--blue);
+  outline-offset: 1px;
+}
+
+/* Preserve the second-line source marker without increasing the date-cell width. */
+.forecast-table .date-col .source-tag {
+  font-size: 10px;
+  line-height: 13px;
+  white-space: nowrap;
+}
+.forecast-table .cell-link.final-value {
+  min-height: 30px;
+  padding-top: 1px;
+  padding-bottom: 1px;
+}
+
+/* Keep editable controls usable inside the denser rows. */
+.forecast-table .entry-input,
+.forecast-table .entry-input .cell-number {
+  min-height: 24px;
+}
+.forecast-table .entry-icon,
+.forecast-table .entry-value {
+  min-height: 24px;
+}

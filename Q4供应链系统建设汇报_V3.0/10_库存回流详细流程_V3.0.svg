@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2560" height="1440" viewBox="0 0 2560 1440" role="img" aria-label="库存与执行回流｜进入下一轮计划"><defs><marker id="arrow-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#008DD5"/></marker><marker id="arrow-ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#18384E"/></marker><marker id="arrow-text" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3C566B"/></marker><marker id="arrow-muted" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6B7F90"/></marker><marker id="arrow-line" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#D5E1E9"/></marker><marker id="arrow-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#078E99"/></marker><marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#54963C"/></marker><marker id="arrow-orange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#DC8226"/></marker><marker id="arrow-purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#7B60A8"/></marker></defs><style>text{font-family:"PingFang SC","Microsoft YaHei",sans-serif}</style>
+<rect x="0" y="0" width="2560" height="1440" rx="0" fill="white" stroke="none" stroke-width="2" />
+<rect x="64" y="57" width="9" height="64" rx="0" fill="#008DD5" stroke="none" stroke-width="2" />
+<text x="95" y="107" font-size="49" fill="#008DD5" font-weight="650" text-anchor="start">库存与执行回流｜进入下一轮计划</text>
+<text x="2496" y="94" font-size="25" fill="#6B7F90" font-weight="500" text-anchor="end">2026 Q4 / V3.0</text>
+<path d="M64 144 L2496 144" fill="none" stroke="#008DD5" stroke-width="3"  />
+<text x="64" y="193" font-size="27" fill="#3C566B" font-weight="400" text-anchor="start">结果回流是滚动计划体系的组成部分；库存事实和清洗由来源系统负责</text>
+<text x="2496" y="193" font-size="23" fill="#6B7F90" font-weight="400" text-anchor="end">10 / 模块展开</text>
+<text x="64" y="283" font-size="32" fill="#18384E" font-weight="650" text-anchor="start">业务动作</text>
+<rect x="64" y="348" width="452" height="172" rx="5" fill="white" stroke="#078E99" stroke-width="2" />
+<rect x="64" y="348" width="5" height="172" rx="0" fill="#078E99" stroke="none" stroke-width="2" />
+<text x="290" y="394" font-size="34" fill="#18384E" font-weight="600" text-anchor="middle">收货与入库</text>
+<text x="290" y="444" font-size="27" fill="#3C566B" font-weight="400" text-anchor="middle">按发货与订单核对</text>
+<text x="290" y="483" font-size="27" fill="#3C566B" font-weight="400" text-anchor="middle">质检、收货及入库结果</text>
+<text x="64" y="322" font-size="24" fill="#078E99" font-weight="650" text-anchor="start">01</text>
+<path d="M516 434 L557 434" fill="none" stroke="#078E99" stroke-width="3"  marker-end="url(#arrow-teal)"/>
+<rect x="557" y="348" width="452" height="172" rx="5" fill="white" stroke="#078E99" stroke-width="2" />
+<rect x="557" y="348" width="5" height="172" rx="0" fill="#078E99" stroke="none" stroke-width="2" />
+<text x="783" y="394" font-size="34" fill="#18384E" font-weight="600" text-anchor="middle">更新库存事实</text>
+<text x="783" y="444" font-size="27" fill="#3C566B" font-weight="400" text-anchor="middle">库存、在途与到货变化</text>
+<text x="783" y="483" font-size="27" fill="#3C566B" font-weight="400" text-anchor="middle">保留业务来源与时间</text>
+<text x="557" y="322" font-size="24" fill="#078E99" font-weight="650" text-anchor="start">02</text>
+<path d="M1009 434 L1050 434" fill="none" stroke="#078E99" stroke-width="3"  marker-end="url(#arrow-teal)"/>
+<rect x="1050" y="348" width="452" height="172" rx="5" fill="white" stroke="#078E99" stroke-width="2" />
+<rect x="1050" y="348" width="5" height="172" rx="0" fill="#078E99" stroke="none" stroke-width="2" />
+<text x="1276" y="394" font-size="34" fill="#18384E" font-weight="600" text-anchor="middle">汇集执行结果</text>
+<text x="1276" y="444" font-size="27" fill="#3C566B" font-weight="400" text-anchor="middle">销量、采购与供应商状态</text>
+<text x="1276" y="483" font-size="27" fill="#3C566B" font-weight="400" text-anchor="middle">生产、交期和质量结果</text>
+<text x="1050" y="322" font-size="24" fill="#078E99" font-weight="650" text-anchor="start">03</text>
+<path d="M1502 434 L1543 434" fill="none" stroke="#078E99" stroke-width="3"  marker-end="url(#arrow-teal)"/>
+<rect x="1543" y="348" width="452" height="172" rx="5" fill="white" stroke="#078E99" stroke-width="2" />
+<rect x="1543" y="348" width="5" height="172" rx="0" fill="#078E99" stroke="none" stroke-width="2" />
+<text x="1769" y="394" font-size="34" fill="#18384E" font-weight="600" text-anchor="middle">PMC校准偏差</text>
+<text x="1769" y="444" font-size="27" fill="#3C566B" font-weight="400" text-anchor="middle">对比需求、库存与供给</text>
+<text x="1769" y="483" font-size="27" fill="#3C566B" font-weight="400" text-anchor="middle">识别缺货、延期与数量差异</text>
+<text x="1543" y="322" font-size="24" fill="#078E99" font-weight="650" text-anchor="start">04</text>
+<path d="M1995 434 L2036 434" fill="none" stroke="#078E99" stroke-width="3"  marker-end="url(#arrow-teal)"/>
+<rect x="2036" y="348" width="452" height="172" rx="5" fill="white" stroke="#078E99" stroke-width="2" />
+<rect x="2036" y="348" width="5" height="172" rx="0" fill="#078E99" stroke="none" stroke-width="2" />
+<text x="2262" y="394" font-size="34" fill="#18384E" font-weight="600" text-anchor="middle">下一轮预测与计划</text>
+<text x="2262" y="444" font-size="27" fill="#3C566B" font-weight="400" text-anchor="middle">调整销售需求判断</text>
+<text x="2262" y="483" font-size="27" fill="#3C566B" font-weight="400" text-anchor="middle">更新备货和采购需求</text>
+<text x="2036" y="322" font-size="24" fill="#078E99" font-weight="650" text-anchor="start">05</text>
+<path d="M2262 520 L2262 634 L290 634 L290 520" fill="none" stroke="#078E99" stroke-width="4"  marker-end="url(#arrow-teal)"/>
+<rect x="929.88" y="602" width="680.24" height="37" rx="0" fill="white" stroke="none" stroke-width="2" />
+<text x="1270" y="627" font-size="26" fill="#078E99" font-weight="500" text-anchor="middle">下一轮计划 → 采购与执行 → 新的事实结果，再次循环</text>
+<path d="M64 746 L1212 746" fill="none" stroke="#078E99" stroke-width="3"  />
+<path d="M1324 746 L2496 746" fill="none" stroke="#078E99" stroke-width="3"  />
+<text x="64" y="799" font-size="33" fill="#18384E" font-weight="650" text-anchor="start">PMC需要消费的事实</text>
+<text x="1324" y="799" font-size="33" fill="#18384E" font-weight="650" text-anchor="start">数据责任与计划责任</text>
+<text x="64" y="864" font-size="29" fill="#3C566B" font-weight="400" text-anchor="start">南沙、工厂、海外仓及平台可用库存</text>
+<text x="64" y="926" font-size="29" fill="#3C566B" font-weight="400" text-anchor="start">采购在途、头程在途与预计到货</text>
+<text x="64" y="988" font-size="29" fill="#3C566B" font-weight="400" text-anchor="start">供应商履约、生产进度、交期与质量</text>
+<text x="64" y="1050" font-size="29" fill="#3C566B" font-weight="400" text-anchor="start">实际销量及经营结果</text>
+<text x="1324" y="864" font-size="29" fill="#3C566B" font-weight="400" text-anchor="start">领星、库存系统及数仓提供事实</text>
+<text x="1324" y="926" font-size="29" fill="#3C566B" font-weight="400" text-anchor="start">商品主数据负责身份与商品关系</text>
+<text x="1324" y="988" font-size="29" fill="#3C566B" font-weight="400" text-anchor="start">PMC引用事实，形成计划判断和调整</text>
+<text x="1324" y="1050" font-size="29" fill="#3C566B" font-weight="400" text-anchor="start">原始销售、库存及映射清洗不放在PMC</text>
+<rect x="64" y="1165" width="2432" height="100" rx="0" fill="#F3F8FB" stroke="none" stroke-width="2" />
+<text x="91" y="1228" font-size="30" fill="#078E99" font-weight="650" text-anchor="start">交接结果</text>
+<text x="300" y="1228" font-size="29" fill="#18384E" font-weight="600" text-anchor="start">实际结果持续进入下一轮预测、备货与采购计划</text>
+<text x="64" y="1331" font-size="25" fill="#6B7F90" font-weight="400" text-anchor="start">Q4不重建完整WMS、OMS、PMS；接口与库存口径按来源和业务责任落实。</text>
+<path d="M64 1384 L2496 1384" fill="none" stroke="#D5E1E9" stroke-width="1.3"  />
+<text x="64" y="1420" font-size="22" fill="#6B7F90" font-weight="400" text-anchor="start">Q4供应链产品建设方案 · 汇报分层版 · 目标业务蓝图，按P0 / P1推进</text>
+<text x="2496" y="1420" font-size="22" fill="#008DD5" font-weight="500" text-anchor="end">10 / 10</text>
+</svg>

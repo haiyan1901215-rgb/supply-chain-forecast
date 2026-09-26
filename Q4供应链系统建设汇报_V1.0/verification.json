@@ -1,0 +1,20 @@
+[
+  {
+    "name": "01_Q4供应链业务主链图_V1.0",
+    "width": 2240,
+    "height": 1260,
+    "textCount": 83,
+    "overflow": [],
+    "overlaps": [],
+    "nodeOverflow": []
+  },
+  {
+    "name": "02_Q4供应链跨部门泳道图_V1.0",
+    "width": 2560,
+    "height": 1600,
+    "textCount": 93,
+    "overflow": [],
+    "overlaps": [],
+    "nodeOverflow": []
+  }
+]

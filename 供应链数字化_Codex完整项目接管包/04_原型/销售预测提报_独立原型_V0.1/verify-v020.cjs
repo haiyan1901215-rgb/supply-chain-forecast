@@ -1,0 +1,60 @@
+const assert=require('node:assert/strict');
+const path=require('node:path');
+const {chromium}=require('playwright');
+(async()=>{
+ const browser=await chromium.launch({channel:'chrome',headless:true});
+ const ctx=await browser.newContext({viewport:{width:1440,height:900},permissions:['clipboard-read','clipboard-write']}),page=await ctx.newPage(),errors=[],logs=[];
+ page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')logs.push(m.text());});page.setDefaultTimeout(10000);
+ const id='US-B0GRG5DRWW';
+ const shot=async n=>{await page.locator('#toast.show').waitFor({state:'hidden'});return page.screenshot({path:path.join(__dirname,'evidence','v020-'+n+'.png'),animations:'disabled'});};
+ const final=i=>page.locator(`[data-final="${id}"][data-index="${i}"]`);
+ const edit=async(i,n)=>{await page.locator(`[data-edit-manual="${id}"][data-index="${i}"]`).click();await page.locator('[data-manual]').fill(n);await page.locator('[data-manual]').press('Enter');};
+ const choose=async(name,label)=>{await page.getByRole('dialog',{name:'列配置',exact:true}).waitFor({state:'hidden'});await page.getByRole('dialog',{name:'放弃未应用的列配置？',exact:true}).waitFor({state:'hidden'});await page.getByRole('combobox',{name,exact:true}).press('ArrowDown');await page.locator('[title="'+label+'"]:visible').last().click();};
+ try{
+  await page.goto('http://127.0.0.1:8800/?v=0.2.0');await page.locator('#antdColumnButton').waitFor();
+  assert.deepEqual(errors,[]);assert.equal(await page.evaluate(()=>antd.version),'5.27.6');assert.equal(await page.locator('.site-row').count(),0);
+  assert.equal(await page.locator('.parent-site').count(),6);assert.match(await page.locator('.parent-strip').first().textContent(),/美国 \/ US · Amazon.*B0GRGFFVVN/);
+  const placement=await page.evaluate(()=>({icon:document.querySelector('#columnIcon').getBoundingClientRect().left,update:document.querySelector('.range-meta').getBoundingClientRect().right}));assert.ok(placement.icon>=placement.update);
+  assert.equal(await page.getByRole('button',{name:'复盘已发生日期',exact:true}).count(),0);assert.equal(await page.getByRole('button',{name:'预测批次视角',exact:true}).count(),0);
+  await shot('default');
+  const skc=page.locator('.parent-skc').first();await skc.hover();await skc.locator('.copy-code').click();assert.equal(await page.evaluate(()=>navigator.clipboard.readText()),'C0001A-91');
+  const parentLayout=await page.locator('.parent-strip').first().evaluate(el=>{const skc=el.querySelector('.parent-skc'),code=skc.querySelector('.code-text').getBoundingClientRect(),color=skc.querySelector('.skc-color').getBoundingClientRect(),copy=skc.querySelector('.copy-code').getBoundingClientRect(),owner=el.querySelector('.parent-sales').getBoundingClientRect();return {gap:color.left-code.right,copy:copy.left,color:color.right,owner:owner.left,skc:skc.getBoundingClientRect().right};});assert.ok(parentLayout.gap<2);assert.ok(parentLayout.copy>=parentLayout.color);assert.ok(parentLayout.owner>=parentLayout.skc);
+  await page.getByTestId('filter-market').click();await shot('antd-select');await page.getByTitle('英国 / UK',{exact:true}).click();await page.getByRole('button',{name:'查询',exact:true}).click();assert.equal(await page.locator('[data-record-id]').count(),1);await page.getByRole('button',{name:'重置',exact:true}).click();
+  await page.locator(`[data-child-toggle="${id}"]`).first().click();await edit(0,'1234');assert.equal((await final(0).textContent()).replace(/\s/g,''),'1,234(人工)');
+  const sizes=await final(0).evaluate(el=>Array.from(el.children).map(n=>getComputedStyle(n).fontSize));assert.deepEqual(sizes,['12px','12px']);assert.equal(await page.locator(`[data-edit-manual="${id}"][data-index="0"] .entry-number`).textContent(),'1,234');
+  const rects=await final(0).evaluate(el=>Array.from(el.children).map(n=>({top:n.getBoundingClientRect().top,bottom:n.getBoundingClientRect().bottom,right:n.getBoundingClientRect().right})));assert.ok(rects[1].top>=rects[0].bottom);const manualRight=await page.locator(`[data-edit-manual="${id}"][data-index="0"] .entry-number`).evaluate(el=>el.getBoundingClientRect().right);assert.ok(Math.abs(rects[0].right-manualRight)<2);
+  await edit(1,'0');assert.equal((await final(1).textContent()).replace(/\s/g,''),'0(人工)');
+  await page.locator(`[data-event="${id}"][data-date="2026-10-21"]`).click();await page.locator('#eventQty').fill('2345');await page.locator('#eventName').fill('促销');await page.locator('[data-action="modal-confirm"]').click();assert.equal((await final(0).textContent()).replace(/\s/g,''),'2,345(活动)');
+  await page.locator(`[data-history-toggle="${id}"]`).click();await shot('inline-history');
+  const before=await page.evaluate(()=>({batch:state.batch,start:dateKey(visibleDays()[0]),end:dateKey(visibleDays().at(-1))}));
+  await page.locator(`[data-review-inline="${id}"]`).first().click();await page.locator('.retro-control-row').waitFor();
+  assert.deepEqual(await page.evaluate(()=>({batch:state.batch,start:dateKey(visibleDays()[0]),end:dateKey(visibleDays().at(-1))})),before);
+  assert.equal(await page.locator('[data-review-kind="actual"][data-review-day="2026-10-20"]').textContent(),'32');assert.match(await page.locator('.retro-control-row').textContent(),/对比哪次提报.*2026\/10\/14/);
+  await shot('actual-review');
+  await choose('B0GRG5DRWW 对比提报日期','2026/10/07 提报');assert.equal(await page.locator('.retro-final th small').textContent(),'2026/10/07 提报');
+  await page.locator('#antdColumnButton').click();await page.getByRole('dialog',{name:'列配置',exact:true}).waitFor();await shot('column-config');
+  assert.equal(await page.locator('.antd-column-options input:disabled').count(),5);
+  await page.locator('[data-selected-field="adu7"]').hover();await page.getByRole('button',{name:'置顶7日 ADU',exact:true}).click();
+  await page.getByRole('checkbox',{name:'销售组合',exact:true}).check();await page.getByRole('button',{name:'保存并应用',exact:true}).click();assert.equal(await page.locator('.context-cell .metric').first().getAttribute('data-field'),'adu7');
+  await page.locator('#antdColumnButton').click();await page.getByRole('checkbox',{name:'销售组合',exact:true}).uncheck();await page.getByRole('button',{name:'取消',exact:true}).last().click();await page.getByRole('button',{name:'放弃修改',exact:true}).click();assert.equal(await page.locator('[data-code-tip^="销售组合"]').count(),13);
+  await choose('查看历史提报','2026/10/14 提报');assert.match(await page.locator('.submission-current').textContent(),/正在查看.*2026\/10\/14.*历史只读/);assert.equal(await page.locator('[data-edit-manual],[data-event]').count(),0);await page.getByRole('button',{name:'返回本次填报',exact:true}).click();assert.equal((await final(0).textContent()).replace(/\s/g,''),'2,345(活动)');
+  await page.locator('#antdColumnButton').click();await page.getByRole('button',{name:'恢复默认',exact:true}).click();await page.getByRole('button',{name:'保存并应用',exact:true}).click();
+  await page.getByRole('dialog',{name:'列配置',exact:true}).waitFor({state:'hidden'});
+  await page.locator('#antdColumnButton').click();
+  const dragSource=page.getByRole('treeitem').filter({has:page.locator('[data-selected-field="adu30"]')}),dragTarget=page.getByRole('treeitem').filter({has:page.locator('[data-selected-field="today"]')});
+  await dragSource.scrollIntoViewIfNeeded();await dragTarget.scrollIntoViewIfNeeded();await dragSource.dragTo(dragTarget,{targetPosition:{x:70,y:2}});
+  await page.getByRole('button',{name:'保存并应用',exact:true}).click();assert.equal(await page.locator('.context-cell .metric').first().getAttribute('data-field'),'adu30');
+  await page.getByRole('dialog',{name:'列配置',exact:true}).waitFor({state:'hidden'});
+  await page.locator('#antdColumnButton').click();await page.getByRole('button',{name:'恢复默认',exact:true}).click();await page.getByRole('button',{name:'保存并应用',exact:true}).click();await page.getByRole('dialog',{name:'列配置',exact:true}).waitFor({state:'hidden'});
+  const resize=await page.locator('[data-resize-column="identity"]').boundingBox();await page.mouse.move(resize.x+2,resize.y+15);await page.mouse.down();await page.mouse.move(resize.x+42,resize.y+15);await page.mouse.up();
+  const widthBefore=await page.locator('col[data-column="identity"]').getAttribute('style'),dayWidthBefore=await page.locator('col[data-column^="date:"]').first().getAttribute('style');
+  await page.locator('[data-range-size="30"]').click();assert.equal(await page.locator('.date-head').count(),30);assert.equal(await page.locator('col[data-column="identity"]').getAttribute('style'),widthBefore);assert.equal(await page.locator('col[data-column^="date:"]').first().getAttribute('style'),dayWidthBefore);
+  await page.locator('[data-range-size="14"]').click();await page.locator('[data-action="next"]').click();assert.equal(await page.evaluate(()=>dateKey(visibleDays()[0])),'2026-11-04');await page.locator('[data-action="previous"]').click();
+  await page.locator('[data-week-toggle="2026-W43"]').click();assert.equal(await page.locator('.date-head').count(),10);await page.locator('[data-week-toggle="2026-W43"]').click();assert.equal(await page.locator('.date-head').count(),14);
+  await page.evaluate(()=>{state.identityWidth=390;state.reviewOpen.clear();state.historyOpen.clear();renderTable();document.querySelector('#workbench').scrollTop=0;});
+  for(const [width,height] of [[1366,768],[1440,900],[1920,900]]){
+   await page.setViewportSize({width,height});const dims=await page.evaluate(()=>({body:document.documentElement.scrollWidth,footer:document.querySelector('.list-footer').getBoundingClientRect().bottom,range:document.querySelector('.range-bar').getBoundingClientRect().height,filter:document.querySelector('.filter-v020').getBoundingClientRect().height}));assert.ok(dims.body<=width);assert.equal(dims.footer,height);assert.ok(dims.range<50);assert.ok(dims.filter<70);await shot('layout-'+width);
+  }
+  assert.deepEqual(errors,[]);assert.deepEqual(logs,[]);console.log('Ant Design components, parent/site/SKC clipboard, thousands/12px/newline sources, inline actual review, config draft/pin/drag/protection, history readonly, fixed widths/14-30/ISO weeks and three desktop sizes PASS');
+ }catch(e){console.error(e);console.error('PAGE ERRORS',errors);console.error('CONSOLE ERRORS',logs);await shot('failure');process.exitCode=1;}finally{await browser.close();}
+})();

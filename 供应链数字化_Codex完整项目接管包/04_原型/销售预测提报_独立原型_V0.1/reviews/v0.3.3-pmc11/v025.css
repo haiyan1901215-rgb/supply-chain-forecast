@@ -1,0 +1,27 @@
+.product-identifiers .biz-code::before { content:'丨'; padding-right:3px; }
+.insight-identity { display:flex; align-items:center; flex-wrap:wrap; gap:8px 16px; color:var(--muted); font-size:12px; flex-shrink:0; margin-bottom:8px; }
+.insight-content { max-height:calc(100dvh - 166px); min-height:0; overflow:auto; padding-top:4px; }
+.sales-date-toolbar { display:flex; align-items:center; flex-wrap:wrap; gap:10px; font-size:12px; }
+.sales-cutoff { margin-left:auto; color:var(--muted); font-size:11px; }
+.sales-chart-controls { display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin-top:12px; }
+.sales-compare-options { display:flex; align-items:center; gap:12px; margin-left:auto; }
+.sales-summary { display:flex; gap:0; margin:24px 0 14px; padding-bottom:16px; border-bottom:1px solid var(--line); }
+.sales-summary-item { display:flex; flex:1; flex-direction:column; gap:6px; padding:0 20px; border-right:1px solid var(--line); color:var(--muted); min-width:0; font-size:12px; }
+.sales-summary-item:first-child { padding-left:0; }
+.sales-summary-item:last-child { border-right:0; }
+.sales-summary-item strong { color:var(--ink); font-size:23px; font-variant-numeric:tabular-nums; }
+.sales-summary-item:first-child strong { color:var(--blue); }
+.sales-summary-item small { font-size:11px; color:var(--muted); font-weight:400; }
+.sales-comparison-result { font-size:11px; line-height:18px; }
+.sales-comparison-result small { margin-left:5px; }
+.sales-comparison-ranges { display:flex; flex-wrap:wrap; gap:8px 22px; color:var(--muted); font-size:11px; min-height:18px; }
+.sales-echart { height:350px; width:100%; margin-top:8px; }
+.sales-chart-tooltip { font-size:12px; min-width:260px; }
+.sales-chart-tooltip strong { display:block; margin-bottom:8px; }
+.sales-chart-tooltip div { display:flex; align-items:center; gap:10px; line-height:24px; }
+.sales-chart-tooltip b { margin-left:auto; }
+.product-profile-heading { display:flex; align-items:center; gap:16px; margin-bottom:24px; }
+.product-profile-heading img { width:70px; height:86px; object-fit:contain; border:1px solid var(--line); border-radius:4px; }
+.product-profile-heading p,.insight-period { color:var(--muted); font-size:12px; }
+.product-profile h3 { font-size:14px; margin:22px 0 16px; }
+@media(max-width:900px){.sales-compare-options { margin-left:0; }.sales-summary-item { padding-inline:10px; }.sales-summary-item strong { font-size:20px; }}

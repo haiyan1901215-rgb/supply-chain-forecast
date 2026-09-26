@@ -1,0 +1,86 @@
+.forecast-note-field { padding-bottom:0; }
+.forecast-section-bar { height:auto; min-height:26px; display:block; }
+.forecast-section-bar .forecast-toggle-host { display:block; max-width:100%; }
+.forecast-toggle-action { max-width:100%; height:auto; min-height:24px; padding:2px 0; white-space:normal; text-align:left; }
+.forecast-section-bar { display:flex; align-items:center; min-height:30px; }
+.forecast-section-bar .forecast-toggle-host { width:100%; }
+.forecast-table .line-controls { background:#f8fafc; color:var(--blue); }
+.forecast-table .control-blank { background:#f8fafc; }
+.history-load-actions { display:flex; flex-direction:column; align-items:flex-start; max-width:100%; }
+.history-load-actions button { max-width:100%; height:auto; min-height:24px; white-space:normal; padding:2px 0; }
+.forecast-table .history-load-row > td { padding-top:3px; padding-bottom:3px; background:#fafbff; }
+.forecast-table .line-cell::before,.forecast-table .line-head::before { content:''; position:absolute; top:0; bottom:0; right:0; width:1px; background:var(--line-strong); pointer-events:none; z-index:9; }
+.forecast-table .line-cell,.forecast-table .line-head { border-right:1px solid var(--line-strong); }
+.note-display { display:flex; align-items:flex-start; gap:2px; min-width:0; }
+.note-saved-text { white-space:pre-wrap; overflow-wrap:anywhere; font-size:12px; line-height:22px; min-width:0; }
+.product-actions button,.toolbar-link,.history-toggle { font-size:12px; }
+#forecastFixedDivider { position:fixed; width:1px; background:var(--line-strong); pointer-events:none; z-index:11; }
+
+/* V0.2.4 compact laptop layout and true left-edge alignment. */
+.forecast-table thead th.date-head,
+.forecast-table thead th.week-head,
+.forecast-table tbody td.date-col,
+.forecast-table tbody td.num { text-align:left; }
+.forecast-table thead th.date-head { padding-left:8px; padding-right:8px; }
+.forecast-table tbody td.date-col { padding:6px 8px; }
+.forecast-table .cell-link.final-value { align-items:flex-start; justify-content:flex-start; text-align:left; min-height:38px; margin:0; padding:3px 0; }
+.forecast-table .final-value > span:first-child { line-height:16px; }
+.forecast-table .source-tag { font-size:12px; line-height:15px; text-align:left; white-space:nowrap; }
+.forecast-table .entry-icon,
+.forecast-table .entry-value { text-align:left; padding-left:0; }
+.forecast-table .edit-icon { right:2px; }
+.forecast-table .cell-number { text-align:left; outline-offset:1px; }
+.forecast-table .history-value { text-align:left; }
+.forecast-table .delta { display:block; margin-top:2px; font-size:10px; line-height:13px; }
+.forecast-table tr.focus-cross-row > td,
+.forecast-table .focus-cross-column { background-blend-mode:multiply; }
+.horizontal-scrollbar.is-dragging { cursor:grabbing; }
+.horizontal-scrollbar.is-dragging .horizontal-scroll-thumb { cursor:grabbing; background:#6f82a3; }
+
+/* Ant Design column configuration: the selected pane follows the supplied reference anatomy. */
+.antd-column-layout { min-height:0; flex:1; display:grid; grid-template-columns:minmax(0,1fr) 310px; border:1px solid #e5eaf2; }
+.antd-column-available { min-width:0; overflow:auto; padding:18px 20px 22px; }
+.antd-column-selected { min-width:0; overflow:auto; padding:18px 14px 14px 16px; background:#f7f8fa; border-left:1px solid #e0e6f0; }
+.antd-column-selected-header { display:flex; flex-direction:column; gap:3px; margin-bottom:14px; }
+.antd-column-selected-header strong { color:var(--ink); font-size:14px; font-weight:650; }
+.antd-column-selected-header span { color:var(--muted-2); font-size:11px; }
+.antd-selected-group { margin-bottom:12px; }
+.antd-selected-group-title { margin:12px 0 4px; color:var(--muted); font-size:11px; font-weight:650; }
+.antd-selected-field-row { display:grid; grid-template-columns:18px 24px minmax(0,1fr) auto; align-items:center; min-height:36px; border-radius:4px; }
+.antd-selected-field-row:hover { background:#edf2ff; }
+.antd-selected-field-drag { display:inline-flex; color:#aeb9ce; font-size:14px; cursor:grab; }
+.antd-selected-field-number { color:var(--muted-2); font-size:11px; font-variant-numeric:tabular-nums; }
+.antd-selected-field-name { min-width:0; overflow:hidden; color:var(--ink); font-size:12px; text-overflow:ellipsis; white-space:nowrap; }
+.antd-selected-field-tools { display:flex; align-items:center; gap:2px; width:76px; justify-content:flex-end; opacity:0; }
+.antd-selected-field-row:hover .antd-selected-field-tools,
+.antd-selected-field-row:focus-within .antd-selected-field-tools { opacity:1; }
+.column-quick-action { width:24px; height:24px; padding:0; }
+.column-quick-action.is-pinned { color:var(--blue); }
+.column-fixed-icon { margin-inline:5px; color:var(--muted-2); }
+.antd-selected-field-tools.has-pin { opacity:1; }
+.antd-selected-field-drag.is-locked { cursor:default; opacity:.35; }
+.antd-selected-field-row.is-drop-target { box-shadow:inset 0 2px var(--blue); }
+.antd-column-selected-hint { margin-top:16px; padding-top:12px; border-top:1px solid #e2e7ef; color:var(--muted-2); font-size:11px; text-align:center; }
+.antd-column-template { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+.antd-column-template { justify-content:space-between; }
+.antd-column-selected { display:flex; flex-direction:column; overflow:hidden; }
+.antd-selected-scroll { flex:1; min-height:0; overflow:auto; }
+.antd-column-selected-hint { margin-top:8px; flex-shrink:0; }
+.forecast-table .week-heading { justify-content:flex-start; }
+.product-note { gap:2px; }
+.note-display { display:inline-flex; max-width:100%; }
+.note-display button { width:16px; min-width:16px; }
+.forecast-table thead th.week-head { padding-left:8px; }
+.forecast-table .week-toggle { order:1; }
+.forecast-table [data-forecast-line="controls"] > td { height:34px; padding-top:2px; padding-bottom:2px; }
+.forecast-table .forecast-collapsed[data-forecast-line="summary"] > .line-cell,
+.forecast-table .forecast-collapsed[data-forecast-line="summary"] > .date-col { vertical-align:top; padding-top:10px; }
+.forecast-table .parent-band .parent-strip { gap:6px; }
+.parent-site { padding-right:6px; }
+.horizontal-scrollbar { padding:0 12px; touch-action:none; user-select:none; }
+.horizontal-scroll-track { height:14px; background:transparent; }
+.horizontal-scroll-thumb { height:14px; border:3px solid transparent; background-clip:padding-box; touch-action:none; }
+.horizontal-scrollbar.is-dragging .horizontal-scroll-thumb { background-clip:padding-box; }
+.forecast-table .summary-forecast { min-width:0; overflow-wrap:anywhere; }
+.forecast-table .summary-forecast small { white-space:normal; }
+.forecast-table .date-col .delta { font-size:11px; }

@@ -1,0 +1,216 @@
+{"kind":"deck","id":"pr/wz86de","name":"Deck"}
+{"kind":"layout","layoutId":"f8259864-6f2d-4b9e-b806-d80b976726c2","name":"Master","type":"master"}
+{"kind":"layout","layoutId":"3856dd13-c5fb-4676-bfce-8f186702865c","name":"Title Slide","type":"title"}
+{"kind":"slide","id":"sl/8kshea","slide":1,"title":"第四季度建设计划","textShapes":8}
+{"kind":"shape","id":"sh/m9sf6psj","slide":1,"bbox":[64,57,9,64]}
+{"kind":"textbox","id":"sh/9wje14ru","slide":1,"name":"第四季度建设计划","text":"第四季度建设计划","textPreview":"第四季度建设计划","textChars":8,"textLines":1,"bbox":[95,50,2000,78]}
+{"kind":"textbox","id":"sh/8bax8zqp","slide":1,"name":"2026 Q4 / 计划V1.0","text":"2026 Q4 / 计划V1.0","textPreview":"2026 Q4 / 计划V1.0","textChars":16,"textLines":1,"bbox":[2136,60,360,52]}
+{"kind":"shape","id":"sh/z61wvu9s","slide":1,"bbox":[64,144,2432,2]}
+{"kind":"textbox","id":"sh/y5sf2ps7","slide":1,"name":"10月建立计划能力，11月贯通采购主链，12月完成试点与稳定交付","text":"10月建立计划能力，11月贯通采购主链，12月完成试点与稳定交付","textPreview":"10月建立计划能力，11月贯通采购主链，12月完成试点与稳定交付","textChars":32,"textLines":1,"bbox":[64,164,2432,65]}
+{"kind":"shape","id":"sh/l8jexkry","slide":1,"bbox":[64,1384,2432,2]}
+{"kind":"textbox","id":"sh/07ax4zad","slide":1,"name":"建议排期 · 4名开发 · 接续业务蓝图V3.0 · 10/10技术评审后锁定基线","text":"建议排期 · 4名开发 · 接续业务蓝图V3.0 · 10/10技术评审后锁定基线","textPreview":"建议排期 · 4名开发 · 接续业务蓝图V3.0 · 10/10技术评审后锁定基线","textChars":41,"textLines":1,"bbox":[64,1396,2200,36]}
+{"kind":"textbox","id":"sh/j2lg7e9c","slide":1,"name":"01 / 10","text":"01 / 10","textPreview":"01 / 10","textChars":7,"textLines":1,"bbox":[2360,1396,136,36]}
+{"kind":"textbox","id":"sh/ob2lw761","slide":1,"name":"P0保底：计划—采购—供应商执行状态","text":"P0保底：计划—采购—供应商执行状态","textPreview":"P0保底：计划—采购—供应商执行状态","textChars":18,"textLines":1,"bbox":[64,1040,1150,58]}
+{"kind":"textbox","id":"sh/pwvmpcnm","slide":1,"name":"P1：MRP限定场景与已有MES最小接入，依赖就绪且不挤占P0稳定性工作。","text":"P1：MRP限定场景与已有MES最小接入，依赖就绪且不挤占P0稳定性工作。","textPreview":"P1：MRP限定场景与已有MES最小接入，依赖就绪且不挤占P0稳定性工作。","textChars":37,"textLines":1,"bbox":[64,1108,2432,70]}
+{"kind":"textbox","id":"sh/29k3uhov","slide":1,"name":"本计划为4人团队的建议基线；复用既有系统，不把原型可演示等同于生产系统已完成。","text":"本计划为4人团队的建议基线；复用既有系统，不把原型可演示等同于生产系统已完成。","textPreview":"本计划为4人团队的建议基线；复用既有系统，不把原型可演示等同于生产系统已完成。","textChars":39,"textLines":1,"bbox":[64,1300,2432,70]}
+{"kind":"table","id":"tb/z2tc7m98","slide":1,"name":"","rows":4,"cols":4,"preview":"阶段 | 建设内容 | 可验收交付 | 建议节点","bbox":[64,295,2432,658]}
+{"kind":"notes","id":"nt/8kshea","slide":1,"text":"第四季度建设计划\n依据用户提供的《第四季度供应链系统建设方案》和业务蓝图V3.0。2026年10—12月，4名开发为用户给定约束。所有分工、人日、里程碑、试点范围和验收安排均为本次建议，尚未获团队承诺。人员默认全职、1前端+2后端+1全栈，复用既有基础框架与SCM/MES接口；产品及业务验收由外部责任人配合。法定日历来源：https://big5.www.gov.cn/gate/big5/www.gov.cn/zhengce/zhengceku/202511/content_7047091.htm（国务院办公厅2025年11月4日通知，2026年9月16日检索）。10/1—10/7放假，10/10补班；11—12月按双休计，未扣公司年假。计算得到18+21+23=62工作日，4人248人日；功能148，联调质量52，预留48。"}
+{"kind":"slide","id":"sl/s1eb9c","slide":2,"title":"节假日与可用工作量","textShapes":10}
+{"kind":"shape","id":"sh/fml8jq5w","slide":2,"bbox":[64,57,9,64]}
+{"kind":"textbox","id":"sh/0nupcvmh","slide":2,"name":"节假日与可用工作量","text":"节假日与可用工作量","textPreview":"节假日与可用工作量","textChars":9,"textLines":1,"bbox":[95,50,2000,78]}
+{"kind":"textbox","id":"sh/1o3ql0n2","slide":2,"name":"2026 Q4 / 计划V1.0","text":"2026 Q4 / 计划V1.0","textPreview":"2026 Q4 / 计划V1.0","textChars":16,"textLines":1,"bbox":[2136,60,360,52]}
+{"kind":"shape","id":"sh/qhs76lof","slide":2,"bbox":[64,144,2432,2]}
+{"kind":"textbox","id":"sh/ri1ofq5k","slide":2,"name":"国庆10/01—10/07放假，10/10周六补班；9/20补班在Q4之外，不计入资源","text":"国庆10/01—10/07放假，10/10周六补班；9/20补班在Q4之外，不计入资源","textPreview":"国庆10/01—10/07放假，10/10周六补班；9/20补班在Q4之外，不计入资源","textChars":43,"textLines":1,"bbox":[64,164,2432,65]}
+{"kind":"shape","id":"sh/sjap8v65","slide":2,"bbox":[64,1384,2432,2]}
+{"kind":"textbox","id":"sh/dk36h0nq","slide":2,"name":"建议排期 · 4名开发 · 接续业务蓝图V3.0 · 10/10技术评审后锁定基线","text":"建议排期 · 4名开发 · 接续业务蓝图V3.0 · 10/10技术评审后锁定基线","textPreview":"建议排期 · 4名开发 · 接续业务蓝图V3.0 · 10/10技术评审后锁定基线","textChars":41,"textLines":1,"bbox":[64,1396,2200,36]}
+{"kind":"textbox","id":"sh/adw7ip4j","slide":2,"name":"02 / 10","text":"02 / 10","textPreview":"02 / 10","textChars":7,"textLines":1,"bbox":[2360,1396,136,36]}
+{"kind":"shape","id":"sh/fel0balw","slide":2,"bbox":[64,945,2432,88]}
+{"kind":"textbox","id":"sh/udszi54b","slide":2,"name":"已安排200人日（81%）：功能148 + 联调质量52；另保留48人日（19%）处理不确定性。","text":"已安排200人日（81%）：功能148 + 联调质量52；另保留48人日（19%）处理不确定性。","textPreview":"已安排200人日（81%）：功能148 + 联调质量52；另保留48人日（19%）处理不确定性。","textChars":48,"textLines":1,"bbox":[90,955,2378,65]}
+{"kind":"textbox","id":"sh/hg3id03m","slide":2,"name":"52人日涵盖交叉测试、联调、回归、缺陷修复、发布和试点支持，由4名开发承担。","text":"52人日涵盖交叉测试、联调、回归、缺陷修复、发布和试点支持，由4名开发承担。","textPreview":"52人日涵盖交叉测试、联调、回归、缺陷修复、发布和试点支持，由4名开发承担。","textChars":38,"textLines":1,"bbox":[64,1068,2432,60]}
+{"kind":"textbox","id":"sh/gfuhkfm1","slide":2,"name":"48人日暂不分配新功能；公司年假、临时支持、接口阻塞或返工将消耗这部分资源。","text":"48人日暂不分配新功能；公司年假、临时支持、接口阻塞或返工将消耗这部分资源。","textPreview":"48人日暂不分配新功能；公司年假、临时支持、接口阻塞或返工将消耗这部分资源。","textChars":38,"textLines":1,"bbox":[64,1135,2432,60]}
+{"kind":"textbox","id":"sh/3il0fals","slide":2,"name":"11—12月按国内双休基线排期；海外协作方休假和跨年新调休需另行核对。","text":"11—12月按国内双休基线排期；海外协作方休假和跨年新调休需另行核对。","textPreview":"11—12月按国内双休基线排期；海外协作方休假和跨年新调休需另行核对。","textChars":35,"textLines":1,"bbox":[64,1202,2432,60]}
+{"kind":"textbox","id":"sh/2hczm547","slide":2,"name":"工作日按国务院2026年节假日通知计算；人日分配为本次计划假设。","text":"工作日按国务院2026年节假日通知计算；人日分配为本次计划假设。","textPreview":"工作日按国务院2026年节假日通知计算；人日分配为本次计划假设。","textChars":32,"textLines":1,"bbox":[64,1300,2432,70]}
+{"kind":"table","id":"tb/e9sbu1g3","slide":2,"name":"","rows":5,"cols":6,"preview":"月份 | 工作日 / 人 | 4人理论人日 | 功能建设 | 联调与质量 | 风险预留","bbox":[64,300,2432,576]}
+{"kind":"notes","id":"nt/s1eb9c","slide":2,"text":"节假日与可用工作量\n依据用户提供的《第四季度供应链系统建设方案》和业务蓝图V3.0。2026年10—12月，4名开发为用户给定约束。所有分工、人日、里程碑、试点范围和验收安排均为本次建议，尚未获团队承诺。人员默认全职、1前端+2后端+1全栈，复用既有基础框架与SCM/MES接口；产品及业务验收由外部责任人配合。法定日历来源：https://big5.www.gov.cn/gate/big5/www.gov.cn/zhengce/zhengceku/202511/content_7047091.htm（国务院办公厅2025年11月4日通知，2026年9月16日检索）。10/1—10/7放假，10/10补班；11—12月按双休计，未扣公司年假。计算得到18+21+23=62工作日，4人248人日；功能148，联调质量52，预留48。"}
+{"kind":"slide","id":"sl/zaj4nb","slide":3,"title":"10—12月实施路线图","textShapes":34}
+{"kind":"shape","id":"sh/b6tsnm54","slide":3,"bbox":[64,57,9,64]}
+{"kind":"textbox","id":"sh/w729wrmp","slide":3,"name":"10—12月实施路线图","text":"10—12月实施路线图","textPreview":"10—12月实施路线图","textChars":11,"textLines":1,"bbox":[95,50,2000,78]}
+{"kind":"textbox","id":"sh/x8bapwna","slide":3,"name":"2026 Q4 / 计划V1.0","text":"2026 Q4 / 计划V1.0","textPreview":"2026 Q4 / 计划V1.0","textChars":16,"textLines":1,"bbox":[2136,60,360,52]}
+{"kind":"shape","id":"sh/y9kby14v","slide":3,"bbox":[64,144,2432,2]}
+{"kind":"textbox","id":"sh/jatsr650","slide":3,"name":"主链优先，按验收结果进入下一阶段；MRP与SCM并行业务关系不因排期改变","text":"主链优先，按验收结果进入下一阶段；MRP与SCM并行业务关系不因排期改变","textPreview":"主链优先，按验收结果进入下一阶段；MRP与SCM并行业务关系不因排期改变","textChars":36,"textLines":1,"bbox":[64,164,2432,65]}
+{"kind":"shape","id":"sh/kbmt0rml","slide":3,"bbox":[64,1384,2432,2]}
+{"kind":"textbox","id":"sh/lcvatwn6","slide":3,"name":"建议排期 · 4名开发 · 接续业务蓝图V3.0 · 10/10技术评审后锁定基线","text":"建议排期 · 4名开发 · 接续业务蓝图V3.0 · 10/10技术评审后锁定基线","textPreview":"建议排期 · 4名开发 · 接续业务蓝图V3.0 · 10/10技术评审后锁定基线","textChars":41,"textLines":1,"bbox":[64,1396,2200,36]}
+{"kind":"textbox","id":"sh/6d4b214r","slide":3,"name":"03 / 10","text":"03 / 10","textPreview":"03 / 10","textChars":7,"textLines":1,"bbox":[2360,1396,136,36]}
+{"kind":"shape","id":"sh/7edsv65c","slide":3,"bbox":[530,270,618,63]}
+{"kind":"textbox","id":"sh/z21wru9s","slide":3,"name":"10月 · 基础与预测","text":"10月 · 基础与预测","textPreview":"10月 · 基础与预测","textChars":11,"textLines":1,"bbox":[545,277,588,45]}
+{"kind":"shape","id":"sh/y1sfyp8n","slide":3,"bbox":[1160,270,618,63]}
+{"kind":"textbox","id":"sh/lojyt4ry","slide":3,"name":"11月 · 主链贯通","text":"11月 · 主链贯通","textPreview":"11月 · 主链贯通","textChars":10,"textLines":1,"bbox":[1175,277,588,45]}
+{"kind":"shape","id":"sh/0nax0zqd","slide":3,"bbox":[1790,270,618,63]}
+{"kind":"textbox","id":"sh/byhwna9w","slide":3,"name":"12月 · 试点与收口","text":"12月 · 试点与收口","textPreview":"12月 · 试点与收口","textChars":11,"textLines":1,"bbox":[1805,277,588,45]}
+{"kind":"textbox","id":"sh/qx8fupsb","slide":3,"name":"公共基础 / 配置","text":"公共基础 / 配置","textPreview":"公共基础 / 配置","textChars":9,"textLines":1,"bbox":[64,357,446,83]}
+{"kind":"shape","id":"sh/d0zepkr2","slide":3,"bbox":[530,357,618,86]}
+{"kind":"shape","id":"sh/czqxwfah","slide":3,"bbox":[530,357,5,86]}
+{"kind":"textbox","id":"sh/vulgze90","slide":3,"name":"10/08—10/16 定版与实现","text":"10/08—10/16 定版与实现","textPreview":"10/08—10/16 定版与实现","textChars":17,"textLines":1,"bbox":[548,371,581,54]}
+{"kind":"shape","id":"sh/utcf698f","slide":3,"bbox":[1160,357,618,86]}
+{"kind":"shape","id":"sh/6pwzydsn","slide":3,"bbox":[1160,357,5,86]}
+{"kind":"textbox","id":"sh/rq50rit8","slide":3,"name":"口径变更按版本控制","text":"口径变更按版本控制","textPreview":"口径变更按版本控制","textChars":9,"textLines":1,"bbox":[1178,371,581,54]}
+{"kind":"shape","id":"sh/sre10nat","slide":3,"bbox":[1790,357,618,86]}
+{"kind":"shape","id":"sh/ts7itsbe","slide":3,"bbox":[1790,357,5,86]}
+{"kind":"textbox","id":"sh/edgj2dsz","slide":3,"name":"仅修复和必要维护","text":"仅修复和必要维护","textPreview":"仅修复和必要维护","textChars":8,"textLines":1,"bbox":[1808,371,581,54]}
+{"kind":"shape","id":"sh/fep0vitk","slide":3,"bbox":[64,457,2432,2]}
+{"kind":"textbox","id":"sh/gfy14na5","slide":3,"name":"PMC预测 / 备货","text":"PMC预测 / 备货","textPreview":"PMC预测 / 备货","textChars":10,"textLines":1,"bbox":[64,484,446,83]}
+{"kind":"shape","id":"sh/1g7ixsba","slide":3,"bbox":[530,484,618,86]}
+{"kind":"shape","id":"sh/uhczqtcv","slide":3,"bbox":[530,484,5,86]}
+{"kind":"textbox","id":"sh/vil0jyt0","slide":3,"name":"10/12—10/30 预测与计划基础","text":"10/12—10/30 预测与计划基础","textPreview":"10/12—10/30 预测与计划基础","textChars":19,"textLines":1,"bbox":[548,498,581,54]}
+{"kind":"shape","id":"sh/dcb25wvi","slide":3,"bbox":[1160,484,618,86]}
+{"kind":"shape","id":"sh/cb2lwrud","slide":3,"bbox":[1160,484,5,86]}
+{"kind":"textbox","id":"sh/ba9k3mds","slide":3,"name":"11/02—11/27 备货与UAT","text":"11/02—11/27 备货与UAT","textPreview":"11/02—11/27 备货与UAT","textChars":18,"textLines":1,"bbox":[1178,498,581,54]}
+{"kind":"shape","id":"sh/q903uhc7","slide":3,"bbox":[1790,484,618,86]}
+{"kind":"shape","id":"sh/lgbmtgvu","slide":3,"bbox":[1790,484,5,86]}
+{"kind":"textbox","id":"sh/0f2l0bu9","slide":3,"name":"12/01—12/24 试点修复","text":"12/01—12/24 试点修复","textPreview":"12/01—12/24 试点修复","textChars":16,"textLines":1,"bbox":[1808,498,581,54]}
+{"kind":"shape","id":"sh/zet4r6do","slide":3,"bbox":[64,584,2432,2]}
+{"kind":"textbox","id":"sh/ydk3y1c3","slide":3,"name":"SCM / 供应商","text":"SCM / 供应商","textPreview":"SCM / 供应商","textChars":9,"textLines":1,"bbox":[64,611,446,83]}
+{"kind":"shape","id":"sh/1kr2xcvq","slide":3,"bbox":[530,611,618,86]}
+{"kind":"shape","id":"sh/gjylo7u5","slide":3,"bbox":[530,611,5,86]}
+{"kind":"textbox","id":"sh/kz65wfet","slide":3,"name":"数据与接口契约准备","text":"数据与接口契约准备","textPreview":"数据与接口契约准备","textChars":9,"textLines":1,"bbox":[548,625,581,54]}
+{"kind":"shape","id":"sh/50f65kfy","slide":3,"bbox":[1160,611,618,86]}
+{"kind":"shape","id":"sh/ixonu5wn","slide":3,"bbox":[1160,611,5,86]}
+{"kind":"textbox","id":"sh/jyxo3ax8","slide":3,"name":"11/02—11/30 PR/PO主链","text":"11/02—11/30 PR/PO主链","textPreview":"11/02—11/30 PR/PO主链","textChars":19,"textLines":1,"bbox":[1178,625,581,54]}
+{"kind":"shape","id":"sh/wb65sfeh","slide":3,"bbox":[1790,611,618,86]}
+{"kind":"shape","id":"sh/xcf610f2","slide":3,"bbox":[1790,611,5,86]}
+{"kind":"textbox","id":"sh/a94nq5wb","slide":3,"name":"关键状态补齐，稳定运行","text":"关键状态补齐，稳定运行","textPreview":"关键状态补齐，稳定运行","textChars":11,"textLines":1,"bbox":[1808,625,581,54]}
+{"kind":"shape","id":"sh/vaxozaxw","slide":3,"bbox":[64,711,2432,2]}
+{"kind":"textbox","id":"sh/87m5ovel","slide":3,"name":"MRP限定样板","text":"MRP限定样板","textPreview":"MRP限定样板","textChars":7,"textLines":1,"bbox":[64,738,446,83]}
+{"kind":"shape","id":"sh/98v6x0fq","slide":3,"bbox":[530,738,618,86]}
+{"kind":"shape","id":"sh/b2to7qhs","slide":3,"bbox":[530,738,5,86]}
+{"kind":"textbox","id":"sh/q1k7yl07","slide":3,"name":"10/30前锁定BOM和库存样例","text":"10/30前锁定BOM和库存样例","textPreview":"10/30前锁定BOM和库存样例","textChars":16,"textLines":1,"bbox":[548,752,581,54]}
+{"kind":"shape","id":"sh/d4v690zy","slide":3,"bbox":[1160,738,618,86]}
+{"kind":"shape","id":"sh/c3mp0vid","slide":3,"bbox":[1160,738,5,86]}
+{"kind":"textbox","id":"sh/z6dobaho","slide":3,"name":"11月数据就绪后启动","text":"11月数据就绪后启动","textPreview":"11月数据就绪后启动","textChars":10,"textLines":1,"bbox":[1178,752,581,54]}
+{"kind":"shape","id":"sh/y547250j","slide":3,"bbox":[1790,738,618,86]}
+{"kind":"shape","id":"sh/l8vqd0zu","slide":3,"bbox":[1790,738,5,86]}
+{"kind":"textbox","id":"sh/07mp4vi9","slide":3,"name":"12/18前样例对账与联评","text":"12/18前样例对账与联评","textPreview":"12/18前样例对账与联评","textChars":13,"textLines":1,"bbox":[1808,752,581,54]}
+{"kind":"shape","id":"sh/nad8fah0","slide":3,"bbox":[64,838,2432,2]}
+{"kind":"textbox","id":"sh/m947650f","slide":3,"name":"已有MES接入","text":"已有MES接入","textPreview":"已有MES接入","textChars":7,"textLines":1,"bbox":[64,865,446,83]}
+{"kind":"shape","id":"sh/i1sjudoz","slide":3,"bbox":[530,865,618,86]}
+{"kind":"shape","id":"sh/3210ny5k","slide":3,"bbox":[530,865,5,86]}
+{"kind":"textbox","id":"sh/43a1w36p","slide":3,"name":"范围与接口责任人明确","text":"范围与接口责任人明确","textPreview":"范围与接口责任人明确","textChars":10,"textLines":1,"bbox":[548,879,581,54]}
+{"kind":"shape","id":"sh/54jip8na","slide":3,"bbox":[1160,865,618,86]}
+{"kind":"shape","id":"sh/ud8jqton","slide":3,"bbox":[1160,865,5,86]}
+{"kind":"textbox","id":"sh/veh0jy58","slide":3,"name":"11/13前接口/环境就绪","text":"11/13前接口/环境就绪","textPreview":"11/13前接口/环境就绪","textChars":13,"textLines":1,"bbox":[1178,879,581,54]}
+{"kind":"shape","id":"sh/gfq1s36t","slide":3,"bbox":[1790,865,618,86]}
+{"kind":"shape","id":"sh/h0jil8ne","slide":3,"bbox":[1790,865,5,86]}
+{"kind":"textbox","id":"sh/e9cj2xo7","slide":3,"name":"12/01—12/18 最小接入","text":"12/01—12/18 最小接入","textPreview":"12/01—12/18 最小接入","textChars":16,"textLines":1,"bbox":[1808,879,581,54]}
+{"kind":"shape","id":"sh/falkv25s","slide":3,"bbox":[64,965,2432,2]}
+{"kind":"textbox","id":"sh/p4nm1w7u","slide":3,"name":"验收 / 试点","text":"验收 / 试点","textPreview":"验收 / 试点","textChars":7,"textLines":1,"bbox":[64,992,446,83]}
+{"kind":"shape","id":"sh/o3elsrq9","slide":3,"bbox":[530,992,618,86]}
+{"kind":"shape","id":"sh/n254zmpo","slide":3,"bbox":[530,992,5,86]}
+{"kind":"textbox","id":"sh/21w3qh83","slide":3,"name":"G1 10/30：预测闭环","text":"G1 10/30：预测闭环","textPreview":"G1 10/30：预测闭环","textChars":13,"textLines":1,"bbox":[548,1006,581,54]}
+{"kind":"shape","id":"sh/10nmxc7i","slide":3,"bbox":[1160,992,618,86]}
+{"kind":"shape","id":"sh/0zelo7qd","slide":3,"bbox":[1160,992,5,86]}
+{"kind":"textbox","id":"sh/fyl4v2ps","slide":3,"name":"G2 11/30：P0试点准入","text":"G2 11/30：P0试点准入","textPreview":"G2 11/30：P0试点准入","textChars":15,"textLines":1,"bbox":[1178,1006,581,54]}
+{"kind":"shape","id":"sh/exc3mh87","slide":3,"bbox":[1790,992,618,86]}
+{"kind":"shape","id":"sh/lw7m9g72","slide":3,"bbox":[1790,992,5,86]}
+{"kind":"textbox","id":"sh/kvy50b6h","slide":3,"name":"G3 12/24：验收与冻结","text":"G3 12/24：验收与冻结","textPreview":"G3 12/24：验收与冻结","textChars":14,"textLines":1,"bbox":[1808,1006,581,54]}
+{"kind":"shape","id":"sh/wr2psfap","slide":3,"bbox":[64,1092,2432,2]}
+{"kind":"shape","id":"sh/hsb61kra","slide":3,"bbox":[64,1170,2432,88]}
+{"kind":"textbox","id":"sh/up07q5sj","slide":3,"name":"12/25—12/31：观察与缺陷收尾，归档Q4交付并确定Q1待办；不安排常规大版本上线。","text":"12/25—12/31：观察与缺陷收尾，归档Q4交付并确定Q1待办；不安排常规大版本上线。","textPreview":"12/25—12/31：观察与缺陷收尾，归档Q4交付并确定Q1待办；不安排常规大版本上线。","textChars":45,"textLines":1,"bbox":[90,1180,2378,65]}
+{"kind":"textbox","id":"sh/vqtoza94","slide":3,"name":"具体起止日期为建议；P1仅对完成数据及接口准备的试点场景开展，不承诺全渠道/全工厂覆盖。","text":"具体起止日期为建议；P1仅对完成数据及接口准备的试点场景开展，不承诺全渠道/全工厂覆盖。","textPreview":"具体起止日期为建议；P1仅对完成数据及接口准备的试点场景开展，不承诺全渠道/全工厂覆盖。","textChars":44,"textLines":1,"bbox":[64,1300,2432,70]}
+{"kind":"notes","id":"nt/zaj4nb","slide":3,"text":"10—12月实施路线图\n依据用户提供的《第四季度供应链系统建设方案》和业务蓝图V3.0。2026年10—12月，4名开发为用户给定约束。所有分工、人日、里程碑、试点范围和验收安排均为本次建议，尚未获团队承诺。人员默认全职、1前端+2后端+1全栈，复用既有基础框架与SCM/MES接口；产品及业务验收由外部责任人配合。法定日历来源：https://big5.www.gov.cn/gate/big5/www.gov.cn/zhengce/zhengceku/202511/content_7047091.htm（国务院办公厅2025年11月4日通知，2026年9月16日检索）。10/1—10/7放假，10/10补班；11—12月按双休计，未扣公司年假。计算得到18+21+23=62工作日，4人248人日；功能148，联调质量52，预留48。"}
+{"kind":"slide","id":"sl/q20l8d","slide":4,"title":"建设范围与功能人日预算","textShapes":7}
+{"kind":"shape","id":"sh/z69kbep8","slide":4,"bbox":[64,57,9,64]}
+{"kind":"textbox","id":"sh/07ilkjqt","slide":4,"name":"建设范围与功能人日预算","text":"建设范围与功能人日预算","textPreview":"建设范围与功能人日预算","textChars":11,"textLines":1,"bbox":[95,50,2000,78]}
+{"kind":"textbox","id":"sh/l8r2do7e","slide":4,"name":"2026 Q4 / 计划V1.0","text":"2026 Q4 / 计划V1.0","textPreview":"2026 Q4 / 计划V1.0","textChars":16,"textLines":1,"bbox":[2136,60,360,52]}
+{"kind":"shape","id":"sh/q1g3e98r","slide":4,"bbox":[64,144,2432,2]}
+{"kind":"textbox","id":"sh/b2pk7epc","slide":4,"name":"148人日用于功能建设；联调质量52人日、风险预留48人日另计","text":"148人日用于功能建设；联调质量52人日、风险预留48人日另计","textPreview":"148人日用于功能建设；联调质量52人日、风险预留48人日另计","textChars":31,"textLines":1,"bbox":[64,164,2432,65]}
+{"kind":"shape","id":"sh/c3ylgjqx","slide":4,"bbox":[64,1384,2432,2]}
+{"kind":"textbox","id":"sh/d4729o7i","slide":4,"name":"建议排期 · 4名开发 · 接续业务蓝图V3.0 · 10/10技术评审后锁定基线","text":"建议排期 · 4名开发 · 接续业务蓝图V3.0 · 10/10技术评审后锁定基线","textPreview":"建议排期 · 4名开发 · 接续业务蓝图V3.0 · 10/10技术评审后锁定基线","textChars":41,"textLines":1,"bbox":[64,1396,2200,36]}
+{"kind":"textbox","id":"sh/2xgjap8v","slide":4,"name":"04 / 10","text":"04 / 10","textPreview":"04 / 10","textChars":7,"textLines":1,"bbox":[2360,1396,136,36]}
+{"kind":"shape","id":"sh/faxgfmtw","slide":4,"bbox":[64,1140,2432,88]}
+{"kind":"textbox","id":"sh/e9oz6hcb","slide":4,"name":"P0功能预算120人日，P1样板预算28人日；若P0或基础接口超出预算，先缩减P1扩展范围。","text":"P0功能预算120人日，P1样板预算28人日；若P0或基础接口超出预算，先缩减P1扩展范围。","textPreview":"P0功能预算120人日，P1样板预算28人日；若P0或基础接口超出预算，先缩减P1扩展范围。","textChars":46,"textLines":1,"bbox":[90,1150,2378,65]}
+{"kind":"textbox","id":"sh/1wfihwbm","slide":4,"name":"不含完整WMS/OMS/PMS、算法平台、全量历史治理或完整QC系统重建；配置仅建设试点必需项。","text":"不含完整WMS/OMS/PMS、算法平台、全量历史治理或完整QC系统重建；配置仅建设试点必需项。","textPreview":"不含完整WMS/OMS/PMS、算法平台、全量历史治理或完整QC系统重建；配置仅建设试点必需项。","textChars":48,"textLines":1,"bbox":[64,1300,2432,70]}
+{"kind":"table","id":"tb/ipg7q1wj","slide":4,"name":"","rows":7,"cols":7,"preview":"工作包 | 级别 | 本季度交付边界 | 10月 | 11月 | 12月 | 合计","bbox":[64,280,2432,820]}
+{"kind":"notes","id":"nt/q20l8d","slide":4,"text":"建设范围与功能人日预算\n依据用户提供的《第四季度供应链系统建设方案》和业务蓝图V3.0。2026年10—12月，4名开发为用户给定约束。所有分工、人日、里程碑、试点范围和验收安排均为本次建议，尚未获团队承诺。人员默认全职、1前端+2后端+1全栈，复用既有基础框架与SCM/MES接口；产品及业务验收由外部责任人配合。法定日历来源：https://big5.www.gov.cn/gate/big5/www.gov.cn/zhengce/zhengceku/202511/content_7047091.htm（国务院办公厅2025年11月4日通知，2026年9月16日检索）。10/1—10/7放假，10/10补班；11—12月按双休计，未扣公司年假。计算得到18+21+23=62工作日，4人248人日；功能148，联调质量52，预留48。"}
+{"kind":"slide","id":"sl/bus63f","slide":5,"title":"4名开发的建议分工","textShapes":8}
+{"kind":"shape","id":"sh/l8fut0rm","slide":5,"bbox":[64,57,9,64]}
+{"kind":"textbox","id":"sh/y54vylsv","slide":5,"name":"4名开发的建议分工","text":"4名开发的建议分工","textPreview":"4名开发的建议分工","textChars":9,"textLines":1,"bbox":[95,50,2000,78]}
+{"kind":"textbox","id":"sh/j6dcrq9g","slide":5,"name":"2026 Q4 / 计划V1.0","text":"2026 Q4 / 计划V1.0","textPreview":"2026 Q4 / 计划V1.0","textChars":16,"textLines":1,"bbox":[2136,60,360,52]}
+{"kind":"shape","id":"sh/8b6d4fax","slide":5,"bbox":[64,144,2432,2]}
+{"kind":"textbox","id":"sh/tcfux0ri","slide":5,"name":"暂按1名前端、2名后端、1名全栈/接口配置；不额外假设专职测试开发","text":"暂按1名前端、2名后端、1名全栈/接口配置；不额外假设专职测试开发","textPreview":"暂按1名前端、2名后端、1名全栈/接口配置；不额外假设专职测试开发","textChars":33,"textLines":1,"bbox":[64,164,2432,65]}
+{"kind":"shape","id":"sh/69ov25s7","slide":5,"bbox":[64,1384,2432,2]}
+{"kind":"textbox","id":"sh/7axcva9s","slide":5,"name":"建议排期 · 4名开发 · 接续业务蓝图V3.0 · 10/10技术评审后锁定基线","text":"建议排期 · 4名开发 · 接续业务蓝图V3.0 · 10/10技术评审后锁定基线","textPreview":"建议排期 · 4名开发 · 接续业务蓝图V3.0 · 10/10技术评审后锁定基线","textChars":41,"textLines":1,"bbox":[64,1396,2200,36]}
+{"kind":"textbox","id":"sh/of2dsbat","slide":5,"name":"05 / 10","text":"05 / 10","textPreview":"05 / 10","textChars":7,"textLines":1,"bbox":[2360,1396,136,36]}
+{"kind":"shape","id":"sh/ts3q1wnu","slide":5,"bbox":[64,1080,2432,88]}
+{"kind":"textbox","id":"sh/sra9sr69","slide":5,"name":"每人按18 / 21 / 23工作日排期，季度合计62人日；预留已经包含在表内，不能重复计算。","text":"每人按18 / 21 / 23工作日排期，季度合计62人日；预留已经包含在表内，不能重复计算。","textPreview":"每人按18 / 21 / 23工作日排期，季度合计62人日；预留已经包含在表内，不能重复计算。","textChars":47,"textLines":1,"bbox":[90,1090,2378,65]}
+{"kind":"textbox","id":"sh/7q18zm5o","slide":5,"name":"D1和D2共同交付PMC，D3承接SCM，D4按“数据接入 → MRP样板 → MES最小接入”推进。","text":"D1和D2共同交付PMC，D3承接SCM，D4按“数据接入 → MRP样板 → MES最小接入”推进。","textPreview":"D1和D2共同交付PMC，D3承接SCM，D4按“数据接入 → MRP样板 → MES最小接入”推进。","textChars":51,"textLines":1,"bbox":[64,1190,2432,60]}
+{"kind":"textbox","id":"sh/6psrqhoj","slide":5,"name":"模块负责人不代表单人独立完成；统一契约、自测与交叉评审，按周检查实际投入和剩余工作量。","text":"模块负责人不代表单人独立完成；统一契约、自测与交叉评审，按周检查实际投入和剩余工作量。","textPreview":"模块负责人不代表单人独立完成；统一契约、自测与交叉评审，按周检查实际投入和剩余工作量。","textChars":43,"textLines":1,"bbox":[64,1256,2432,60]}
+{"kind":"table","id":"tb/4jat47ah","slide":5,"name":"","rows":5,"cols":5,"preview":"开发角色 | 主要责任 | 10月 功能/质量/预留 | 11月 功能/质量/预留 | 12月 功能/质量/预留","bbox":[64,300,2432,724]}
+{"kind":"notes","id":"nt/bus63f","slide":5,"text":"4名开发的建议分工\n依据用户提供的《第四季度供应链系统建设方案》和业务蓝图V3.0。2026年10—12月，4名开发为用户给定约束。所有分工、人日、里程碑、试点范围和验收安排均为本次建议，尚未获团队承诺。人员默认全职、1前端+2后端+1全栈，复用既有基础框架与SCM/MES接口；产品及业务验收由外部责任人配合。法定日历来源：https://big5.www.gov.cn/gate/big5/www.gov.cn/zhengce/zhengceku/202511/content_7047091.htm（国务院办公厅2025年11月4日通知，2026年9月16日检索）。10/1—10/7放假，10/10补班；11—12月按双休计，未扣公司年假。计算得到18+21+23=62工作日，4人248人日；功能148，联调质量52，预留48。"}
+{"kind":"slide","id":"sl/yl57e7","slide":6,"title":"10月计划：预测闭环与数据基础","textShapes":8}
+{"kind":"shape","id":"sh/xcr2x43e","slide":6,"bbox":[64,57,9,64]}
+{"kind":"textbox","id":"sh/ap0j2pkn","slide":6,"name":"10月计划：预测闭环与数据基础","text":"10月计划：预测闭环与数据基础","textPreview":"10月计划：预测闭环与数据基础","textChars":15,"textLines":1,"bbox":[95,50,2000,78]}
+{"kind":"textbox","id":"sh/bq90bul8","slide":6,"name":"2026 Q4 / 计划V1.0","text":"2026 Q4 / 计划V1.0","textPreview":"2026 Q4 / 计划V1.0","textChars":16,"textLines":1,"bbox":[2136,60,360,52]}
+{"kind":"shape","id":"sh/kfi18j2p","slide":6,"bbox":[64,144,2432,2]}
+{"kind":"textbox","id":"sh/lgb2143a","slide":6,"name":"10/08启动开发，10/10补班用于评审和契约校准，国庆假期不安排正常开发任务","text":"10/08启动开发，10/10补班用于评审和契约校准，国庆假期不安排正常开发任务","textPreview":"10/08启动开发，10/10补班用于评审和契约校准，国庆假期不安排正常开发任务","textChars":40,"textLines":1,"bbox":[64,164,2432,65]}
+{"kind":"shape","id":"sh/yd0j69kz","slide":6,"bbox":[64,1384,2432,2]}
+{"kind":"textbox","id":"sh/ze9kzel4","slide":6,"name":"建议排期 · 4名开发 · 接续业务蓝图V3.0 · 10/10技术评审后锁定基线","text":"建议排期 · 4名开发 · 接续业务蓝图V3.0 · 10/10技术评审后锁定基线","textPreview":"建议排期 · 4名开发 · 接续业务蓝图V3.0 · 10/10技术评审后锁定基线","textChars":41,"textLines":1,"bbox":[64,1396,2200,36]}
+{"kind":"textbox","id":"sh/0jy1wf2l","slide":6,"name":"06 / 10","text":"06 / 10","textPreview":"06 / 10","textChars":7,"textLines":1,"bbox":[2360,1396,136,36]}
+{"kind":"textbox","id":"sh/p8325on2","slide":6,"name":"G1验收：填报、草稿、提交只读、退回修改、重提、PMC确认及审计链路可运行。","text":"G1验收：填报、草稿、提交只读、退回修改、重提、PMC确认及审计链路可运行。","textPreview":"G1验收：填报、草稿、提交只读、退回修改、重提、PMC确认及审计链路可运行。","textChars":38,"textLines":1,"bbox":[64,1145,2432,60]}
+{"kind":"textbox","id":"sh/47ulcj6x","slide":6,"name":"10月交付不等于正式上线；规则、库存口径、BOM和接口缺口纳入11月准入清单。","text":"10月交付不等于正式上线；规则、库存口径、BOM和接口缺口纳入11月准入清单。","textPreview":"10月交付不等于正式上线；规则、库存口径、BOM和接口缺口纳入11月准入清单。","textChars":39,"textLines":1,"bbox":[64,1215,2432,60]}
+{"kind":"textbox","id":"sh/36lk3e5c","slide":6,"name":"10月资源：72人日 = 功能48 + 联调质量12 + 预留12。","text":"10月资源：72人日 = 功能48 + 联调质量12 + 预留12。","textPreview":"10月资源：72人日 = 功能48 + 联调质量12 + 预留12。","textChars":34,"textLines":1,"bbox":[64,1310,2432,70]}
+{"kind":"table","id":"tb/8ze14jid","slide":6,"name":"","rows":4,"cols":4,"preview":"时间 / 工作日 | 建设工作 | 交付物 | 验收节点","bbox":[64,285,2432,724]}
+{"kind":"notes","id":"nt/yl57e7","slide":6,"text":"10月计划：预测闭环与数据基础\n依据用户提供的《第四季度供应链系统建设方案》和业务蓝图V3.0。2026年10—12月，4名开发为用户给定约束。所有分工、人日、里程碑、试点范围和验收安排均为本次建议，尚未获团队承诺。人员默认全职、1前端+2后端+1全栈，复用既有基础框架与SCM/MES接口；产品及业务验收由外部责任人配合。法定日历来源：https://big5.www.gov.cn/gate/big5/www.gov.cn/zhengce/zhengceku/202511/content_7047091.htm（国务院办公厅2025年11月4日通知，2026年9月16日检索）。10/1—10/7放假，10/10补班；11—12月按双休计，未扣公司年假。计算得到18+21+23=62工作日，4人248人日；功能148，联调质量52，预留48。"}
+{"kind":"slide","id":"sl/26e9fw","slide":7,"title":"11月计划：PMC到SCM主链贯通","textShapes":8}
+{"kind":"shape","id":"sh/d0vuxwfq","slide":7,"bbox":[64,57,9,64]}
+{"kind":"textbox","id":"sh/qx4v2hgf","slide":7,"name":"11月计划：PMC到SCM主链贯通","text":"11月计划：PMC到SCM主链贯通","textPreview":"11月计划：PMC到SCM主链贯通","textChars":17,"textLines":1,"bbox":[95,50,2000,78]}
+{"kind":"textbox","id":"sh/rydcvmxk","slide":7,"name":"2026 Q4 / 计划V1.0","text":"2026 Q4 / 计划V1.0","textPreview":"2026 Q4 / 计划V1.0","textChars":16,"textLines":1,"bbox":[2136,60,360,52]}
+{"kind":"shape","id":"sh/4vmd07y9","slide":7,"bbox":[64,144,2432,2]}
+{"kind":"textbox","id":"sh/5wvutcfu","slide":7,"name":"完成真实接口联调与业务UAT，11/30评审通过后进入12月限定试点","text":"完成真实接口联调与业务UAT，11/30评审通过后进入12月限定试点","textPreview":"完成真实接口联调与业务UAT，11/30评审通过后进入12月限定试点","textChars":34,"textLines":1,"bbox":[64,164,2432,65]}
+{"kind":"shape","id":"sh/itkvyxg3","slide":7,"bbox":[64,1384,2432,2]}
+{"kind":"textbox","id":"sh/3udcr2xo","slide":7,"name":"建议排期 · 4名开发 · 接续业务蓝图V3.0 · 10/10技术评审后锁定基线","text":"建议排期 · 4名开发 · 接续业务蓝图V3.0 · 10/10技术评审后锁定基线","textPreview":"建议排期 · 4名开发 · 接续业务蓝图V3.0 · 10/10技术评审后锁定基线","textChars":41,"textLines":1,"bbox":[64,1396,2200,36]}
+{"kind":"textbox","id":"sh/or6dcbyd","slide":7,"name":"07 / 10","text":"07 / 10","textPreview":"07 / 10","textChars":7,"textLines":1,"bbox":[2360,1396,136,36]}
+{"kind":"textbox","id":"sh/hsjalcr6","slide":7,"name":"G2验收：确认计划能追溯PR/PO，重复请求不重复建单，异常可补偿，关键执行状态可回流。","text":"G2验收：确认计划能追溯PR/PO，重复请求不重复建单，异常可补偿，关键执行状态可回流。","textPreview":"G2验收：确认计划能追溯PR/PO，重复请求不重复建单，异常可补偿，关键执行状态可回流。","textChars":44,"textLines":1,"bbox":[64,1145,2432,60]}
+{"kind":"textbox","id":"sh/w7atc7q1","slide":7,"name":"若只实现导出再导入，只可算业务过渡方案，不算PMC—SCM自动闭环通过。","text":"若只实现导出再导入，只可算业务过渡方案，不算PMC—SCM自动闭环通过。","textPreview":"若只实现导出再导入，只可算业务过渡方案，不算PMC—SCM自动闭环通过。","textChars":36,"textLines":1,"bbox":[64,1215,2432,60]}
+{"kind":"textbox","id":"sh/v61sj29g","slide":7,"name":"11月资源：84人日 = 功能58 + 联调质量12 + 预留14。","text":"11月资源：84人日 = 功能58 + 联调质量12 + 预留14。","textPreview":"11月资源：84人日 = 功能58 + 联调质量12 + 预留14。","textChars":34,"textLines":1,"bbox":[64,1310,2432,70]}
+{"kind":"table","id":"tb/cbu5wz25","slide":7,"name":"","rows":5,"cols":4,"preview":"时间 / 工作日 | 建设工作 | 交付物 | 验收节点","bbox":[64,285,2432,804]}
+{"kind":"notes","id":"nt/26e9fw","slide":7,"text":"11月计划：PMC到SCM主链贯通\n依据用户提供的《第四季度供应链系统建设方案》和业务蓝图V3.0。2026年10—12月，4名开发为用户给定约束。所有分工、人日、里程碑、试点范围和验收安排均为本次建议，尚未获团队承诺。人员默认全职、1前端+2后端+1全栈，复用既有基础框架与SCM/MES接口；产品及业务验收由外部责任人配合。法定日历来源：https://big5.www.gov.cn/gate/big5/www.gov.cn/zhengce/zhengceku/202511/content_7047091.htm（国务院办公厅2025年11月4日通知，2026年9月16日检索）。10/1—10/7放假，10/10补班；11—12月按双休计，未扣公司年假。计算得到18+21+23=62工作日，4人248人日；功能148，联调质量52，预留48。"}
+{"kind":"slide","id":"sl/95q8sj","slide":8,"title":"12月计划：限定试点与季度验收","textShapes":8}
+{"kind":"shape","id":"sh/gbi9sv25","slide":8,"bbox":[64,57,9,64]}
+{"kind":"textbox","id":"sh/va98zq1k","slide":8,"name":"12月计划：限定试点与季度验收","text":"12月计划：限定试点与季度验收","textPreview":"12月计划：限定试点与季度验收","textChars":15,"textLines":1,"bbox":[95,50,2000,78]}
+{"kind":"textbox","id":"sh/u907qlkz","slide":8,"name":"2026 Q4 / 计划V1.0","text":"2026 Q4 / 计划V1.0","textPreview":"2026 Q4 / 计划V1.0","textChars":16,"textLines":1,"bbox":[2136,60,360,52]}
+{"kind":"shape","id":"sh/50bq50jm","slide":8,"bbox":[64,144,2432,2]}
+{"kind":"textbox","id":"sh/4z29wf21","slide":8,"name":"先稳定P0，再验证MRP与MES限定场景；12/24冻结常规变更，月底留出观察时间","text":"先稳定P0，再验证MRP与MES限定场景；12/24冻结常规变更，月底留出观察时间","textPreview":"先稳定P0，再验证MRP与MES限定场景；12/24冻结常规变更，月底留出观察时间","textChars":41,"textLines":1,"bbox":[64,164,2432,65]}
+{"kind":"shape","id":"sh/3yt83a1w","slide":8,"bbox":[64,1384,2432,2]}
+{"kind":"textbox","id":"sh/ix0ru5kb","slide":8,"name":"建议排期 · 4名开发 · 接续业务蓝图V3.0 · 10/10技术评审后锁定基线","text":"建议排期 · 4名开发 · 接续业务蓝图V3.0 · 10/10技术评审后锁定基线","textPreview":"建议排期 · 4名开发 · 接续业务蓝图V3.0 · 10/10技术评审后锁定基线","textChars":41,"textLines":1,"bbox":[64,1396,2200,36]}
+{"kind":"textbox","id":"sh/d4bq9kjy","slide":8,"name":"08 / 10","text":"08 / 10","textPreview":"08 / 10","textChars":7,"textLines":1,"bbox":[2360,1396,136,36]}
+{"kind":"textbox","id":"sh/uxk7qxw7","slide":8,"name":"试点建议：1个渠道/站点、1个品类、1—2家供应商及1家MES工厂，名单由业务确定。","text":"试点建议：1个渠道/站点、1个品类、1—2家供应商及1家MES工厂，名单由业务确定。","textPreview":"试点建议：1个渠道/站点、1个品类、1—2家供应商及1家MES工厂，名单由业务确定。","textChars":42,"textLines":1,"bbox":[64,1145,2432,60]}
+{"kind":"textbox","id":"sh/vidoz2xs","slide":8,"name":"P1交付为限定样板；BOM、库存或MES接口未就绪时，保留差距清单并列入Q1。","text":"P1交付为限定样板；BOM、库存或MES接口未就绪时，保留差距清单并列入Q1。","textPreview":"P1交付为限定样板；BOM、库存或MES接口未就绪时，保留差距清单并列入Q1。","textChars":39,"textLines":1,"bbox":[64,1215,2432,60]}
+{"kind":"textbox","id":"sh/wjmps7ed","slide":8,"name":"12月资源：92人日 = 功能42 + 联调质量28 + 预留22。","text":"12月资源：92人日 = 功能42 + 联调质量28 + 预留22。","textPreview":"12月资源：92人日 = 功能42 + 联调质量28 + 预留22。","textChars":34,"textLines":1,"bbox":[64,1310,2432,70]}
+{"kind":"table","id":"tb/x836p8r2","slide":8,"name":"","rows":5,"cols":4,"preview":"时间 / 工作日 | 建设工作 | 交付物 | 验收节点","bbox":[64,285,2432,804]}
+{"kind":"notes","id":"nt/95q8sj","slide":8,"text":"12月计划：限定试点与季度验收\n依据用户提供的《第四季度供应链系统建设方案》和业务蓝图V3.0。2026年10—12月，4名开发为用户给定约束。所有分工、人日、里程碑、试点范围和验收安排均为本次建议，尚未获团队承诺。人员默认全职、1前端+2后端+1全栈，复用既有基础框架与SCM/MES接口；产品及业务验收由外部责任人配合。法定日历来源：https://big5.www.gov.cn/gate/big5/www.gov.cn/zhengce/zhengceku/202511/content_7047091.htm（国务院办公厅2025年11月4日通知，2026年9月16日检索）。10/1—10/7放假，10/10补班；11—12月按双休计，未扣公司年假。计算得到18+21+23=62工作日，4人248人日；功能148，联调质量52，预留48。"}
+{"kind":"slide","id":"sl/hb2dr8","slide":9,"title":"关键依赖与延误处理","textShapes":6}
+{"kind":"shape","id":"sh/0fm1wjq5","slide":9,"bbox":[64,57,9,64]}
+{"kind":"textbox","id":"sh/fed0ne9k","slide":9,"name":"关键依赖与延误处理","text":"关键依赖与延误处理","textPreview":"关键依赖与延误处理","textChars":9,"textLines":1,"bbox":[95,50,2000,78]}
+{"kind":"textbox","id":"sh/ed4ju98f","slide":9,"name":"2026 Q4 / 计划V1.0","text":"2026 Q4 / 计划V1.0","textPreview":"2026 Q4 / 计划V1.0","textChars":16,"textLines":1,"bbox":[2136,60,360,52]}
+{"kind":"shape","id":"sh/dcbil4ru","slide":9,"bbox":[64,144,2432,2]}
+{"kind":"textbox","id":"sh/sb21szq9","slide":9,"name":"4人交付能力依赖现有系统复用、数据就绪和业务验收支持；按具体日期检查","text":"4人交付能力依赖现有系统复用、数据就绪和业务验收支持；按具体日期检查","textPreview":"4人交付能力依赖现有系统复用、数据就绪和业务验收支持；按具体日期检查","textChars":34,"textLines":1,"bbox":[64,164,2432,65]}
+{"kind":"shape","id":"sh/rat0ju9o","slide":9,"bbox":[64,1384,2432,2]}
+{"kind":"textbox","id":"sh/q9kjqp83","slide":9,"name":"建议排期 · 4名开发 · 接续业务蓝图V3.0 · 10/10技术评审后锁定基线","text":"建议排期 · 4名开发 · 接续业务蓝图V3.0 · 10/10技术评审后锁定基线","textPreview":"建议排期 · 4名开发 · 接续业务蓝图V3.0 · 10/10技术评审后锁定基线","textChars":41,"textLines":1,"bbox":[64,1396,2200,36]}
+{"kind":"textbox","id":"sh/58bih4ri","slide":9,"name":"09 / 10","text":"09 / 10","textPreview":"09 / 10","textChars":7,"textLines":1,"bbox":[2360,1396,136,36]}
+{"kind":"textbox","id":"sh/e1w3ulkv","slide":9,"name":"以上为跨团队配合要求，未将这些责任方计入4名开发的人日；需在10/10评审时落实到具体人员。","text":"以上为跨团队配合要求，未将这些责任方计入4名开发的人日；需在10/10评审时落实到具体人员。","textPreview":"以上为跨团队配合要求，未将这些责任方计入4名开发的人日；需在10/10评审时落实到具体人员。","textChars":46,"textLines":1,"bbox":[64,1300,2432,70]}
+{"kind":"table","id":"tb/t0by9gzq","slide":9,"name":"","rows":7,"cols":4,"preview":"最晚检查点 | 依赖项 | 协同责任方（建议） | 未就绪处理","bbox":[64,285,2432,898]}
+{"kind":"notes","id":"nt/hb2dr8","slide":9,"text":"关键依赖与延误处理\n依据用户提供的《第四季度供应链系统建设方案》和业务蓝图V3.0。2026年10—12月，4名开发为用户给定约束。所有分工、人日、里程碑、试点范围和验收安排均为本次建议，尚未获团队承诺。人员默认全职、1前端+2后端+1全栈，复用既有基础框架与SCM/MES接口；产品及业务验收由外部责任人配合。法定日历来源：https://big5.www.gov.cn/gate/big5/www.gov.cn/zhengce/zhengceku/202511/content_7047091.htm（国务院办公厅2025年11月4日通知，2026年9月16日检索）。10/1—10/7放假，10/10补班；11—12月按双休计，未扣公司年假。计算得到18+21+23=62工作日，4人248人日；功能148，联调质量52，预留48。"}
+{"kind":"slide","id":"sl/38o93e","slide":10,"title":"季度交付标准与资源决策","textShapes":8}
+{"kind":"shape","id":"sh/zuh4zulk","slide":10,"bbox":[64,57,9,64]}
+{"kind":"textbox","id":"sh/kfq58zm5","slide":10,"name":"季度交付标准与资源决策","text":"季度交付标准与资源决策","textPreview":"季度交付标准与资源决策","textChars":11,"textLines":1,"bbox":[95,50,2000,78]}
+{"kind":"textbox","id":"sh/lgj6143a","slide":10,"name":"2026 Q4 / 计划V1.0","text":"2026 Q4 / 计划V1.0","textPreview":"2026 Q4 / 计划V1.0","textChars":16,"textLines":1,"bbox":[2136,60,360,52]}
+{"kind":"shape","id":"sh/ap8n2p4n","slide":10,"bbox":[64,144,2432,2]}
+{"kind":"textbox","id":"sh/bqh4vul8","slide":10,"name":"12/24按已批准试点范围验收，12/31完成交接；新增需求通过变更评审调整日期或范围","text":"12/24按已批准试点范围验收，12/31完成交接；新增需求通过变更评审调整日期或范围","textPreview":"12/24按已批准试点范围验收，12/31完成交接；新增需求通过变更评审调整日期或范围","textChars":43,"textLines":1,"bbox":[64,164,2432,65]}
+{"kind":"shape","id":"sh/crq54fmt","slide":10,"bbox":[64,1384,2432,2]}
+{"kind":"textbox","id":"sh/xszmxk3e","slide":10,"name":"建议排期 · 4名开发 · 接续业务蓝图V3.0 · 10/10技术评审后锁定基线","text":"建议排期 · 4名开发 · 接续业务蓝图V3.0 · 10/10技术评审后锁定基线","textPreview":"建议排期 · 4名开发 · 接续业务蓝图V3.0 · 10/10技术评审后锁定基线","textChars":41,"textLines":1,"bbox":[64,1396,2200,36]}
+{"kind":"textbox","id":"sh/ulsne947","slide":10,"name":"10 / 10","text":"10 / 10","textPreview":"10 / 10","textChars":7,"textLines":1,"bbox":[2360,1396,136,36]}
+{"kind":"textbox","id":"sh/76t4vip4","slide":10,"name":"请管理层确认","text":"请管理层确认","textPreview":"请管理层确认","textChars":6,"textLines":1,"bbox":[64,1100,1150,58]}
+{"kind":"textbox","id":"sh/65k3md8j","slide":10,"name":"4人投入比例与技能组合；试点范围及协同人员；P0优先、P1按依赖就绪推进的交付策略。","text":"4人投入比例与技能组合；试点范围及协同人员；P0优先、P1按依赖就绪推进的交付策略。","textPreview":"4人投入比例与技能组合；试点范围及协同人员；P0优先、P1按依赖就绪推进的交付策略。","textChars":42,"textLines":1,"bbox":[64,1165,2432,60]}
+{"kind":"textbox","id":"sh/t8vmxs7a","slide":10,"name":"如1人整季仅投入50%，资源减少31人日；需重排范围，不能继续按248人日承诺。","text":"如1人整季仅投入50%，资源减少31人日；需重排范围，不能继续按248人日承诺。","textPreview":"如1人整季仅投入50%，资源减少31人日；需重排范围，不能继续按248人日承诺。","textChars":40,"textLines":1,"bbox":[64,1300,2432,70]}
+{"kind":"table","id":"tb/i9cr258z","slide":10,"name":"","rows":5,"cols":3,"preview":"验收对象 | 通过标准 | 建议证据","bbox":[64,285,2432,744]}
+{"kind":"notes","id":"nt/38o93e","slide":10,"text":"季度交付标准与资源决策\n依据用户提供的《第四季度供应链系统建设方案》和业务蓝图V3.0。2026年10—12月，4名开发为用户给定约束。所有分工、人日、里程碑、试点范围和验收安排均为本次建议，尚未获团队承诺。人员默认全职、1前端+2后端+1全栈，复用既有基础框架与SCM/MES接口；产品及业务验收由外部责任人配合。法定日历来源：https://big5.www.gov.cn/gate/big5/www.gov.cn/zhengce/zhengceku/202511/content_7047091.htm（国务院办公厅2025年11月4日通知，2026年9月16日检索）。10/1—10/7放假，10/10补班；11—12月按双休计，未扣公司年假。计算得到18+21+23=62工作日，4人248人日；功能148，联调质量52，预留48。"}

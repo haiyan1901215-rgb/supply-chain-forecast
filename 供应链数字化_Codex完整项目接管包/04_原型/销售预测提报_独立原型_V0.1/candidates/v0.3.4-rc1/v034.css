@@ -1,0 +1,22 @@
+/* Candidate-only visual hierarchy. Date cells remain white. */
+.forecast-table .product-title,
+.forecast-table .child-asin-line > .code-value > .code-text { font-size:14px; font-weight:600; line-height:20px; }
+.forecast-table .product-meta,.forecast-table .child-store { color:var(--muted); }
+.forecast-table .context-section-title { font-size:12px; font-weight:500; margin-bottom:4px; }
+.forecast-table .metric[data-field="weighted"] strong,
+.forecast-table .metric[data-field="doi"] strong { font-size:14px; font-weight:600; line-height:18px; }
+.forecast-table tbody tr[data-forecast-line="system"] > td.line-cell { color:var(--muted); }
+.forecast-table tbody tr[data-forecast-line="manual"] > td.line-cell { border-left:2px solid var(--blue-2); }
+.forecast-table tbody tr[data-forecast-line="activity"] > td.line-cell { border-left:2px solid var(--amber-2); }
+.forecast-table tbody tr[data-forecast-line="final"] > td.line-cell,
+.forecast-table tbody tr[data-forecast-line="final"] > td.date-col { border-top:1px solid var(--line-strong); }
+.forecast-table tbody tr[data-forecast-line="final"] > td.line-cell,
+.forecast-table .final-value > span:first-child { font-weight:600; }
+.candidate-editor-anchor { position:absolute; left:8px; top:6px; width:calc(100% - 16px); height:24px; pointer-events:none; }
+.candidate-editor-panel { font-size:12px; }
+.candidate-editor-title { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+.candidate-editor-panel .forecast-editor-context { margin-bottom:8px; }
+.candidate-editor-panel .forecast-editor-footer { margin-top:8px; }
+.reason-preview { max-height:none; overflow:visible; }
+.reason-preview .forecast-editor-context { margin-bottom:8px; }
+.forecast-table .product-note > .note-control-host { height:auto; }

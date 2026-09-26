@@ -1,0 +1,11 @@
+.product-status-tags { display:inline-flex; gap:4px; flex-wrap:wrap; align-items:center; }
+.forecast-table .context-section { padding:6px; border-radius:3px; }
+.forecast-table .context-section + .context-section { margin-top:6px; }
+.forecast-table .context-section[data-section='sales'] { background-color:color-mix(in srgb,var(--blue-2) 50%,var(--surface)); }
+.forecast-table .context-section[data-section='stock'] { background-color:color-mix(in srgb,var(--cyan-2) 50%,var(--surface)); }
+.forecast-table .context-section-title { margin-bottom:5px; color:var(--muted); }
+.parent-child-count { color:var(--muted); font-weight:400; font-size:11px; white-space:nowrap; }
+.child-store { display:inline-flex; align-items:center; }
+.child-store::before { flex-shrink:0; }
+.store-icon { display:inline-flex; flex-shrink:0; align-items:center; margin-right:3px; font-size:12px; color:var(--muted); }
+.store-name { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }

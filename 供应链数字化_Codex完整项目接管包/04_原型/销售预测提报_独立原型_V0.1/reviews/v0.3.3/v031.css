@@ -1,0 +1,117 @@
+/* V0.3.1: pagination anatomy, white forecast surfaces, and tighter laptop headers. */
+
+/* Forecast lines use white as the default surface. Meaning remains in the line label,
+   source marker, borders, and text color; the sales/inventory sections are untouched. */
+.forecast-table tbody tr[data-forecast-line] > .date-col,
+.forecast-table tbody tr[data-forecast-line] > .line-cell {
+  background-color: var(--surface);
+}
+
+/* Reduce the two date-header rows and keep date + weekday aligned in the same compact cell. */
+.forecast-table thead th {
+  height: 28px;
+}
+.forecast-table thead tr:nth-child(2) th {
+  top: 28px;
+  height: 34px;
+  padding: 2px 8px;
+}
+.forecast-table thead th.week-head {
+  padding: 3px 8px;
+  white-space: nowrap;
+}
+.forecast-table thead th.date-head {
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+.forecast-table thead th.date-head > div {
+  font-size: 11px;
+  line-height: 13px;
+}
+.forecast-table thead th.date-head > small {
+  display: block;
+  font-size: 10px;
+  line-height: 11px;
+}
+.forecast-table .week-heading {
+  gap: 3px;
+  white-space: nowrap;
+}
+.forecast-table .week-toggle {
+  width: 15px;
+  height: 15px;
+  flex-basis: 15px;
+}
+
+.forecast-table .size-value {
+  color: #32405d;
+  font-size: 11px;
+  font-weight: 400;
+}
+
+/* Compact analysis links follow the supplied reference: icon and label share one semantic color. */
+.forecast-table .product-actions {
+  gap: 9px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+.forecast-table .product-action {
+  gap: 3px;
+  text-decoration: none;
+  font-size: 10px;
+  font-weight: 500;
+}
+.forecast-table .product-action:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.forecast-table .product-action.sales { color: var(--blue); }
+.forecast-table .product-action.analysis { color: #8062c8; }
+.forecast-table .product-action.mapping { color: #159da3; }
+.forecast-table .product-action.sales svg,
+.forecast-table .product-action.analysis svg,
+.forecast-table .product-action.mapping svg {
+  color: currentColor;
+}
+
+/* Ant Design Popover owns the reason surface; the cell itself is no longer a help cursor. */
+.forecast-table .cell-reason {
+  cursor: default;
+}
+.reason-full {
+  max-width: 320px;
+  max-height: 220px;
+  overflow: auto;
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 18px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* The wrapper keeps the official Pagination and its summary in the reference order. */
+.list-footer {
+  justify-content: flex-end;
+  padding: 6px 12px;
+  background: #fff;
+}
+.forecast-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+  margin-left: auto;
+}
+.forecast-pagination-bar,
+.forecast-page-jump { display:flex; align-items:center; gap:8px; white-space:nowrap; font-size:12px; }
+.forecast-page-total {
+  margin-right: 8px;
+  color: var(--muted);
+  white-space: nowrap;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.forecast-page-total b {
+  color: var(--ink);
+  font-weight: 500;
+}

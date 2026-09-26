@@ -1,0 +1,2179 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PMC FBA Excel 线上化原型 V0.1</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --panel-soft: #f8fafc;
+      --line: #d9e2ef;
+      --line-strong: #b8c4d6;
+      --text: #1f2937;
+      --muted: #64748b;
+      --weak: #94a3b8;
+      --primary: #1677ff;
+      --primary-soft: #e6f4ff;
+      --green: #16a34a;
+      --green-soft: #eaf8ef;
+      --orange: #d97706;
+      --orange-soft: #fff7e6;
+      --red: #dc2626;
+      --red-soft: #fff1f0;
+      --violet: #6d5bd0;
+      --violet-soft: #f1efff;
+      --teal: #0f766e;
+      --teal-soft: #e8f7f4;
+      --shadow: 0 12px 30px rgba(15, 23, 42, .08);
+      --radius: 8px;
+      --sidebar: 236px;
+      --header: 56px;
+      --tabs: 38px;
+      --control: 32px;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      height: 100vh;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    button, input, select, textarea {
+      font: inherit;
+    }
+
+    button {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--text);
+      height: var(--control);
+      padding: 0 12px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    button.primary {
+      border-color: var(--primary);
+      background: var(--primary);
+      color: #fff;
+    }
+
+    button.text {
+      border-color: transparent;
+      background: transparent;
+      padding: 0 8px;
+      color: var(--muted);
+    }
+
+    button.icon {
+      width: 32px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+    }
+
+    button.danger {
+      border-color: #ffccc7;
+      color: var(--red);
+      background: #fff;
+    }
+
+    input, select, textarea {
+      height: var(--control);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 0 10px;
+      background: #fff;
+      color: var(--text);
+      outline: none;
+      min-width: 0;
+    }
+
+    textarea {
+      height: 76px;
+      padding: 8px 10px;
+      resize: vertical;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(22, 119, 255, .12);
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: var(--sidebar) minmax(0, 1fr);
+      height: 100vh;
+      transition: grid-template-columns .18s ease;
+    }
+
+    .app.collapsed {
+      grid-template-columns: 68px minmax(0, 1fr);
+    }
+
+    .sidebar {
+      background: #101828;
+      color: #e5edf8;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .brand {
+      height: var(--header);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 14px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      white-space: nowrap;
+    }
+
+    .mark {
+      width: 30px;
+      height: 30px;
+      border-radius: 7px;
+      background: linear-gradient(135deg, #1677ff, #0f766e);
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      color: #fff;
+      flex: none;
+    }
+
+    .brand-title {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .brand-title strong {
+      font-size: 14px;
+      line-height: 18px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .brand-title span {
+      color: #9fb0c6;
+      font-size: 11px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .app.collapsed .brand-title,
+    .app.collapsed .menu-label,
+    .app.collapsed .menu-group,
+    .app.collapsed .menu-sub {
+      display: none;
+    }
+
+    .side-tools {
+      padding: 10px 12px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .side-tools button {
+      background: rgba(255,255,255,.08);
+      border-color: rgba(255,255,255,.1);
+      color: #dbe7f6;
+    }
+
+    .menu {
+      padding: 8px;
+      overflow: auto;
+      flex: 1;
+    }
+
+    .menu-group {
+      color: #7e8ea6;
+      font-size: 11px;
+      padding: 12px 10px 6px;
+    }
+
+    .nav-item {
+      width: 100%;
+      height: 36px;
+      border: 0;
+      color: #c8d4e5;
+      background: transparent;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 10px;
+      border-radius: 6px;
+      text-align: left;
+      margin-bottom: 4px;
+    }
+
+    .nav-item:hover,
+    .nav-item.active {
+      color: #fff;
+      background: rgba(22,119,255,.22);
+    }
+
+    .nav-icon {
+      width: 20px;
+      text-align: center;
+      flex: none;
+      font-size: 14px;
+    }
+
+    .menu-sub {
+      margin: -2px 0 4px 30px;
+      color: #93a4bb;
+      font-size: 12px;
+      display: grid;
+      gap: 4px;
+    }
+
+    .workspace {
+      min-width: 0;
+      height: 100vh;
+      display: grid;
+      grid-template-rows: var(--header) var(--tabs) minmax(0, 1fr);
+    }
+
+    .header {
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      min-width: 0;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .crumb {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .scenario {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: #f1f5f9;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 3px;
+      min-width: 0;
+    }
+
+    .scenario button {
+      height: 26px;
+      border: 0;
+      padding: 0 10px;
+      background: transparent;
+      color: var(--muted);
+    }
+
+    .scenario button.active {
+      background: #fff;
+      color: var(--primary);
+      box-shadow: 0 1px 3px rgba(15,23,42,.12);
+    }
+
+    .header-right {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      white-space: nowrap;
+    }
+
+    .workspace-tabs {
+      height: var(--tabs);
+      display: flex;
+      align-items: flex-end;
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding-left: 12px;
+    }
+
+    .work-tab {
+      height: 32px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 112px;
+      max-width: 188px;
+      border: 1px solid var(--line);
+      border-bottom: 0;
+      background: #f8fafc;
+      border-radius: 7px 7px 0 0;
+      margin-right: 4px;
+      padding: 0 9px;
+      color: var(--muted);
+      cursor: pointer;
+      flex: none;
+    }
+
+    .work-tab.active {
+      background: var(--bg);
+      color: var(--primary);
+      font-weight: 600;
+      position: relative;
+    }
+
+    .work-tab.active::after {
+      content: "";
+      position: absolute;
+      left: 10px;
+      right: 10px;
+      bottom: 0;
+      height: 2px;
+      background: var(--primary);
+      border-radius: 2px;
+    }
+
+    .work-tab span:first-child {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      min-width: 0;
+    }
+
+    .close {
+      color: var(--weak);
+      font-weight: 700;
+      margin-left: auto;
+    }
+
+    .content {
+      overflow: auto;
+      padding: 14px;
+      min-width: 0;
+    }
+
+    .page {
+      display: none;
+      min-width: 1080px;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    .page-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 28px;
+      font-weight: 650;
+    }
+
+    h2 {
+      margin: 0 0 10px;
+      font-size: 15px;
+      line-height: 22px;
+      font-weight: 650;
+    }
+
+    h3 {
+      margin: 0 0 8px;
+      font-size: 13px;
+      line-height: 20px;
+      font-weight: 650;
+    }
+
+    .subline {
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .tagline {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      height: 22px;
+      border-radius: 5px;
+      padding: 0 7px;
+      font-size: 12px;
+      color: var(--muted);
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      white-space: nowrap;
+    }
+
+    .tag.blue { color: #0b63ce; background: var(--primary-soft); border-color: #bae0ff; }
+    .tag.green { color: #15803d; background: var(--green-soft); border-color: #bbf7d0; }
+    .tag.orange { color: #a16207; background: var(--orange-soft); border-color: #fed7aa; }
+    .tag.red { color: #b91c1c; background: var(--red-soft); border-color: #fecaca; }
+    .tag.violet { color: #5747b7; background: var(--violet-soft); border-color: #ddd6fe; }
+    .tag.teal { color: #0f766e; background: var(--teal-soft); border-color: #99f6e4; }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: 0 1px 2px rgba(15, 23, 42, .03);
+      margin-bottom: 12px;
+    }
+
+    .card-head {
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      border-bottom: 1px solid var(--line);
+      gap: 12px;
+    }
+
+    .card-body {
+      padding: 12px;
+    }
+
+    .filters {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(190px, 1fr)) auto;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .field {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      height: var(--control);
+    }
+
+    .field b {
+      flex: none;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+    }
+
+    .filter-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .toolbar-left,
+    .toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .toolbar-right {
+      margin-left: auto;
+    }
+
+    .tabs-inline {
+      display: inline-flex;
+      align-items: center;
+      height: 30px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 2px;
+      background: #f8fafc;
+    }
+
+    .tabs-inline button {
+      border: 0;
+      height: 24px;
+      padding: 0 10px;
+      background: transparent;
+      color: var(--muted);
+    }
+
+    .tabs-inline button.active {
+      background: #fff;
+      color: var(--primary);
+      box-shadow: 0 1px 3px rgba(15,23,42,.12);
+    }
+
+    .table-wrap {
+      overflow: auto;
+      max-height: 540px;
+      position: relative;
+      background: #fff;
+      border-radius: 0 0 var(--radius) var(--radius);
+    }
+
+    table {
+      border-collapse: separate;
+      border-spacing: 0;
+      width: max-content;
+      min-width: 100%;
+      font-size: 12px;
+    }
+
+    th, td {
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      padding: 7px 8px;
+      height: 36px;
+      white-space: nowrap;
+      vertical-align: middle;
+      background: #fff;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      background: #f1f5f9;
+      color: #334155;
+      font-weight: 650;
+      text-align: left;
+    }
+
+    thead tr.group th {
+      top: 0;
+      height: 28px;
+      padding: 4px 8px;
+      color: #475569;
+      background: #e9eff7;
+      text-align: center;
+    }
+
+    thead tr.columns th {
+      top: 0;
+    }
+
+    .forecast-table thead tr.columns th {
+      top: 28px;
+    }
+
+    tbody tr:hover td {
+      background: #f8fbff;
+    }
+
+    .sticky-1 { position: sticky; left: 0; z-index: 4; }
+    .sticky-2 { position: sticky; left: 72px; z-index: 4; }
+    .sticky-3 { position: sticky; left: 152px; z-index: 4; }
+    .sticky-4 { position: sticky; left: 298px; z-index: 4; }
+    .sticky-5 { position: sticky; left: 412px; z-index: 4; }
+    .sticky-6 { position: sticky; left: 532px; z-index: 4; }
+    th.sticky-1, th.sticky-2, th.sticky-3, th.sticky-4, th.sticky-5, th.sticky-6 { z-index: 8; background: #e9eff7; }
+    td.sticky-1, td.sticky-2, td.sticky-3, td.sticky-4, td.sticky-5, td.sticky-6 { background: #fff; }
+    tbody tr:hover td.sticky-1,
+    tbody tr:hover td.sticky-2,
+    tbody tr:hover td.sticky-3,
+    tbody tr:hover td.sticky-4,
+    tbody tr:hover td.sticky-5,
+    tbody tr:hover td.sticky-6 { background: #f8fbff; }
+
+    .w-site { min-width: 72px; }
+    .w-owner { min-width: 80px; }
+    .w-account { min-width: 146px; }
+    .w-asin { min-width: 114px; }
+    .w-sku { min-width: 120px; }
+    .w-wide { min-width: 220px; max-width: 260px; }
+    .w-num { min-width: 92px; text-align: right; }
+    .w-med { min-width: 130px; }
+
+    .id-link {
+      color: var(--primary);
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .copy-action {
+      display: none;
+      width: 18px;
+      height: 18px;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      color: var(--muted);
+      background: #fff;
+      font-size: 11px;
+    }
+
+    tr:hover .copy-action,
+    .identifier:hover .copy-action {
+      display: inline-flex;
+    }
+
+    .source {
+      display: inline-flex;
+      align-items: center;
+      height: 18px;
+      padding: 0 5px;
+      border-radius: 4px;
+      background: #eef2ff;
+      color: #4f46e5;
+      font-size: 11px;
+      margin-left: 4px;
+    }
+
+    .source.auto { background: #ecfeff; color: #0f766e; }
+    .source.manual { background: #fff7ed; color: #c2410c; }
+    .source.warn { background: #fff1f0; color: #b91c1c; }
+
+    .cell-input {
+      width: 76px;
+      height: 28px;
+      text-align: right;
+      padding: 0 6px;
+    }
+
+    .cell-select {
+      width: 116px;
+      height: 28px;
+      padding: 0 6px;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 10px;
+      min-height: 74px;
+    }
+
+    .metric label {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    .metric strong {
+      display: block;
+      font-size: 22px;
+      line-height: 28px;
+    }
+
+    .metric small {
+      color: var(--muted);
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(360px, .8fr);
+      gap: 12px;
+      align-items: start;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .kv {
+      display: grid;
+      grid-template-columns: 118px minmax(0, 1fr);
+      gap: 8px 10px;
+      align-items: center;
+      font-size: 12px;
+    }
+
+    .kv label {
+      color: var(--muted);
+    }
+
+    .timeline {
+      display: grid;
+      gap: 8px;
+    }
+
+    .event {
+      border-left: 3px solid var(--line-strong);
+      padding-left: 10px;
+    }
+
+    .event strong {
+      display: block;
+      font-size: 12px;
+    }
+
+    .event span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .formula {
+      display: grid;
+      gap: 8px;
+    }
+
+    .formula-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #fff;
+    }
+
+    .formula-row .num {
+      font-weight: 700;
+      font-size: 15px;
+    }
+
+    .diff {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .diff-box {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 9px;
+      background: #fff;
+    }
+
+    .diff-box strong {
+      display: block;
+      font-size: 18px;
+      line-height: 24px;
+    }
+
+    .diff-box span {
+      color: var(--muted);
+    }
+
+    .drawer-mask {
+      position: fixed;
+      inset: 0;
+      background: rgba(15,23,42,.22);
+      z-index: 30;
+      display: none;
+    }
+
+    .drawer-mask.open {
+      display: block;
+    }
+
+    .drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 520px;
+      max-width: calc(100vw - 40px);
+      height: 100vh;
+      background: #fff;
+      box-shadow: var(--shadow);
+      z-index: 31;
+      transform: translateX(104%);
+      transition: transform .18s ease;
+      display: grid;
+      grid-template-rows: 54px minmax(0, 1fr) 54px;
+    }
+
+    .drawer.open {
+      transform: translateX(0);
+    }
+
+    .drawer-head,
+    .drawer-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .drawer-foot {
+      border-bottom: 0;
+      border-top: 1px solid var(--line);
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .drawer-body {
+      overflow: auto;
+      padding: 14px;
+      background: var(--bg);
+    }
+
+    .toast {
+      position: fixed;
+      right: 20px;
+      top: 68px;
+      background: #111827;
+      color: #fff;
+      border-radius: 7px;
+      padding: 9px 12px;
+      box-shadow: var(--shadow);
+      z-index: 40;
+      transform: translateY(-14px);
+      opacity: 0;
+      pointer-events: none;
+      transition: .18s ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .progress {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .step {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      padding: 9px;
+      min-height: 66px;
+    }
+
+    .step.active {
+      border-color: #91caff;
+      background: var(--primary-soft);
+    }
+
+    .step.done {
+      border-color: #bbf7d0;
+      background: var(--green-soft);
+    }
+
+    .mini-bars {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+      align-items: end;
+      height: 110px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .bar {
+      background: #91caff;
+      border-radius: 4px 4px 0 0;
+      min-height: 12px;
+      position: relative;
+    }
+
+    .bar span {
+      position: absolute;
+      bottom: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .sheet-note {
+      padding: 8px 12px;
+      background: #fffbe6;
+      border-bottom: 1px solid #ffe58f;
+      color: #8a5b00;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .row-expand {
+      display: inline-flex;
+      width: 18px;
+      height: 18px;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      margin-right: 4px;
+      cursor: pointer;
+      color: var(--muted);
+    }
+
+    tr.child-row td {
+      background: #fbfdff;
+      color: #475569;
+    }
+
+    tr.child-row.hidden {
+      display: none;
+    }
+
+    .status-dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      margin-right: 5px;
+      background: var(--weak);
+    }
+
+    .status-dot.green { background: var(--green); }
+    .status-dot.orange { background: var(--orange); }
+    .status-dot.red { background: var(--red); }
+    .status-dot.blue { background: var(--primary); }
+
+    .log-row {
+      display: grid;
+      grid-template-columns: 150px 110px minmax(0, 1fr) 120px 120px;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--line);
+      align-items: start;
+    }
+
+    .log-row:last-child {
+      border-bottom: 0;
+    }
+
+    .small-muted {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .source-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .source-item {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #fff;
+      padding: 9px;
+    }
+
+    .source-item strong {
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    .source-item p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 900px) {
+      body { overflow: auto; }
+      .app {
+        grid-template-columns: 1fr;
+        height: auto;
+        min-height: 100vh;
+      }
+      .sidebar {
+        height: auto;
+        display: block;
+      }
+      .menu {
+        display: flex;
+        gap: 6px;
+        overflow-x: auto;
+        padding: 8px;
+      }
+      .menu-group, .menu-sub, .side-tools { display: none; }
+      .nav-item {
+        flex: none;
+        width: auto;
+        padding: 0 10px;
+        background: rgba(255,255,255,.06);
+      }
+      .workspace {
+        height: auto;
+        min-height: calc(100vh - 56px);
+      }
+      .header {
+        align-items: flex-start;
+        height: auto;
+        min-height: var(--header);
+        flex-direction: column;
+        padding: 10px 12px;
+      }
+      .header-left, .header-right {
+        width: 100%;
+        overflow-x: auto;
+      }
+      .content {
+        overflow: auto;
+        padding: 10px;
+      }
+      .page {
+        min-width: 1040px;
+      }
+      .filters {
+        grid-template-columns: repeat(4, minmax(150px, 1fr)) auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="mark">P</div>
+        <div class="brand-title">
+          <strong>PMC 计划管理</strong>
+          <span>FBA Excel 线上化 V0.1</span>
+        </div>
+      </div>
+      <div class="side-tools">
+        <button class="icon" id="collapseBtn" title="折叠主导航">☰</button>
+        <span class="small-muted">Amazon FBA 一期</span>
+      </div>
+      <nav class="menu">
+        <div class="menu-group">主流程</div>
+        <button class="nav-item active" data-page="p01"><span class="nav-icon">01</span><span class="menu-label">销量预测提报</span></button>
+        <button class="nav-item" data-page="p02"><span class="nav-icon">02</span><span class="menu-label">销量预测详情</span></button>
+        <button class="nav-item" data-page="p03"><span class="nav-icon">03</span><span class="menu-label">PMC 备货审核</span></button>
+        <div class="menu-sub">待审核 / 计划结果 / 已确认</div>
+        <button class="nav-item" data-page="p04"><span class="nav-icon">04</span><span class="menu-label">备货计划详情</span></button>
+        <button class="nav-item" data-page="p05"><span class="nav-icon">05</span><span class="menu-label">过货计划</span></button>
+        <button class="nav-item" data-page="p06"><span class="nav-icon">06</span><span class="menu-label">采购需求</span></button>
+        <div class="menu-group">治理</div>
+        <button class="nav-item" data-page="p07"><span class="nav-icon">07</span><span class="menu-label">计划基础设置</span></button>
+        <button class="nav-item" data-page="p08"><span class="nav-icon">08</span><span class="menu-label">计划操作日志</span></button>
+      </nav>
+    </aside>
+
+    <main class="workspace">
+      <header class="header">
+        <div class="header-left">
+          <div class="crumb">PMC计划管理 <span>/</span> <strong id="currentPageName">销量预测提报</strong></div>
+          <div class="scenario" id="scenarioTabs">
+            <button class="active" data-scenario="Amazon FBA">Amazon FBA</button>
+            <button data-scenario="多平台">多平台</button>
+            <button data-scenario="新品首单">新品首单</button>
+            <button data-scenario="翻单">翻单</button>
+          </div>
+        </div>
+        <div class="header-right">
+          <span class="tag blue">第一阶段: Amazon FBA</span>
+          <span class="tag orange">多平台规则待确认</span>
+          <button class="icon" title="刷新" data-toast="已刷新当前原型数据">↻</button>
+          <button class="icon" title="帮助" data-drawer="source">?</button>
+        </div>
+      </header>
+
+      <div class="workspace-tabs" id="workspaceTabs">
+        <div class="work-tab active" data-page="p01"><span>销量预测提报</span><span class="close">×</span></div>
+        <div class="work-tab" data-page="p03"><span>PMC待审核</span><span class="close">×</span></div>
+        <div class="work-tab" data-page="p05"><span>过货计划</span><span class="close">×</span></div>
+        <div class="work-tab" data-page="p06"><span>采购需求</span><span class="close">×</span></div>
+        <div class="work-tab" data-page="p08"><span>操作日志</span><span class="close">×</span></div>
+      </div>
+
+      <section class="content">
+        <div class="page active" id="p01">
+          <div class="page-head">
+            <div>
+              <h1>销量预测提报</h1>
+              <div class="subline">把 `FBA基础信息&预测` 的销售工作表线上化，销售只维护预测、活动和备注，系统展示商品、销量、库存与异常参考。</div>
+            </div>
+            <div class="tagline">
+              <span class="tag blue">来源: FBA基础信息&预测 行8</span>
+              <span class="tag green">横向预测表</span>
+              <span class="tag orange">#REF! 显示为源数据异常</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head">
+              <h2>筛选区</h2>
+              <div class="tagline">
+                <span class="tag">计划场景统一入口</span>
+                <span class="tag">站点/销售市场不等于库存国家</span>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="filters">
+                <div class="field"><b>计划场景</b><select><option>Amazon FBA</option><option>多平台 - 规则待确认</option><option>新品首单 - IPD</option><option>翻单 - PMC</option></select></div>
+                <div class="field"><b>预测周期</b><input value="2026/09/07~2027/06/30"></div>
+                <div class="field"><b>平台</b><select><option>Amazon</option></select></div>
+                <div class="field"><b>站点/销售市场</b><select><option>全部</option><option>US</option><option>JP</option><option>UK</option></select></div>
+                <div class="field"><b>店铺/账号</b><select><option>全部</option><option>AMZ-BRABIC-US</option><option>CtriLady-JP</option></select></div>
+                <div class="field"><b>商品负责人</b><select><option>全部</option><option>赵丽华</option><option>张敏</option></select></div>
+                <div class="field"><b>商品状态</b><select><option>全部</option><option>正常</option><option>清货</option></select></div>
+                <div class="field"><b>商品标签</b><select><option>全部</option><option>爆款</option><option>畅款-备货</option><option>平款</option></select></div>
+                <div class="filter-actions"><button class="primary" data-toast="已按当前条件查询">查询</button><button data-toast="筛选条件已重置">重置</button></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="toolbar">
+              <div class="toolbar-left">
+                <button class="primary" data-toast="销售预测草稿已保存">保存草稿</button>
+                <button data-toast="已提交 2 条预测到 PMC 待审核">提交预测</button>
+                <button data-drawer="source">查看字段来源</button>
+                <button data-drawer="anomaly">异常校验</button>
+              </div>
+              <div class="toolbar-right">
+                <div class="tabs-inline" id="forecastTabs">
+                  <button class="active" data-mode="week">周度预测</button>
+                  <button data-mode="month">月度预测</button>
+                </div>
+                <button class="icon" title="下载当前视图" data-toast="已生成当前视图下载任务">↓</button>
+                <button class="icon" title="列配置" data-drawer="columns">☷</button>
+                <button class="icon" title="刷新数据" data-toast="已刷新数仓/WMS/SCM参考数据">↻</button>
+                <button class="icon" title="更多">⋯</button>
+              </div>
+            </div>
+            <div class="sheet-note">
+              <span>Excel 原字段已按业务动作归并：商品基础信息、历史销售、库存参考、销售预测、未来预测、活动、滞销/异常。</span>
+              <button class="text" data-drawer="source">证据说明</button>
+            </div>
+            <div class="table-wrap">
+              <table class="forecast-table">
+                <thead>
+                  <tr class="group">
+                    <th colspan="6">商品基础信息</th>
+                    <th colspan="5">历史销售</th>
+                    <th colspan="6">库存参考</th>
+                    <th colspan="6">销售预测</th>
+                    <th colspan="8" class="week-cols">未来周度预测</th>
+                    <th colspan="6" class="month-cols hidden">未来月度预测</th>
+                    <th colspan="4">活动/异常</th>
+                  </tr>
+                  <tr class="columns">
+                    <th class="sticky-1 w-site">站点</th>
+                    <th class="sticky-2 w-owner">负责人</th>
+                    <th class="sticky-3 w-account">账号/店铺</th>
+                    <th class="sticky-4 w-asin">子ASIN</th>
+                    <th class="sticky-5 w-sku">SKU</th>
+                    <th class="sticky-6 w-sku">销售SKU</th>
+                    <th class="w-num">近7日均</th>
+                    <th class="w-num">近15日均</th>
+                    <th class="w-num">近30日均</th>
+                    <th class="w-num">加权日均</th>
+                    <th class="w-num">FBA水位</th>
+                    <th class="w-num">南沙库存</th>
+                    <th class="w-num">采购在途</th>
+                    <th class="w-num">FBA在库</th>
+                    <th class="w-num">FBA在途</th>
+                    <th class="w-num">跟卖在库</th>
+                    <th class="w-num">在库DOI</th>
+                    <th class="w-num">系统预测</th>
+                    <th class="w-num">销售预判</th>
+                    <th class="w-med">预测系数</th>
+                    <th class="w-med">活动类型</th>
+                    <th class="w-med">活动时间</th>
+                    <th class="w-wide">销售备注</th>
+                    <th class="w-num week-cols">W37</th>
+                    <th class="w-num week-cols">W38</th>
+                    <th class="w-num week-cols">W39</th>
+                    <th class="w-num week-cols">W40</th>
+                    <th class="w-num week-cols">W41</th>
+                    <th class="w-num week-cols">W42</th>
+                    <th class="w-num week-cols">W43</th>
+                    <th class="w-num week-cols">W44</th>
+                    <th class="w-num month-cols hidden">2026/09</th>
+                    <th class="w-num month-cols hidden">2026/10</th>
+                    <th class="w-num month-cols hidden">2026/11</th>
+                    <th class="w-num month-cols hidden">2026/12</th>
+                    <th class="w-num month-cols hidden">2027/01</th>
+                    <th class="w-num month-cols hidden">2027/02</th>
+                    <th class="w-med">滞销</th>
+                    <th class="w-med">过货标签</th>
+                    <th class="w-med">校验</th>
+                    <th class="w-med">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="sticky-1">US</td>
+                    <td class="sticky-2">赵丽华</td>
+                    <td class="sticky-3">AMZ-BRABIC-US</td>
+                    <td class="sticky-4 identifier"><a class="id-link" data-open-detail>B07HQDXGS3<span class="copy-action" title="复制">⧉</span></a></td>
+                    <td class="sticky-5">AD6032B00S-B91</td>
+                    <td class="sticky-6">BRABIC-AD603298100S-B91</td>
+                    <td class="w-num">48 <span class="source auto">数仓</span></td>
+                    <td class="w-num">44</td>
+                    <td class="w-num">39</td>
+                    <td class="w-num">42</td>
+                    <td class="w-num">27天</td>
+                    <td class="w-num">1,300 <span class="source auto">WMS</span></td>
+                    <td class="w-num">50 <span class="source">SCM</span></td>
+                    <td class="w-num">500</td>
+                    <td class="w-num">300</td>
+                    <td class="w-num">80</td>
+                    <td class="w-num">20天</td>
+                    <td class="w-num">42</td>
+                    <td class="w-num"><input class="cell-input" value="55"></td>
+                    <td><select class="cell-select"><option>活动加权 1.3</option><option>常规 1.0</option></select></td>
+                    <td><select class="cell-select"><option>Prime Day</option><option>会员日</option><option>无</option></select></td>
+                    <td>2026/10/10-10/15</td>
+                    <td><input value="会员日预计放量" style="width: 190px"></td>
+                    <td class="w-num week-cols"><input class="cell-input" value="350"></td>
+                    <td class="w-num week-cols"><input class="cell-input" value="420"></td>
+                    <td class="w-num week-cols"><input class="cell-input" value="450"></td>
+                    <td class="w-num week-cols"><input class="cell-input" value="600"></td>
+                    <td class="w-num week-cols"><input class="cell-input" value="620"></td>
+                    <td class="w-num week-cols"><input class="cell-input" value="540"></td>
+                    <td class="w-num week-cols"><input class="cell-input" value="500"></td>
+                    <td class="w-num week-cols"><input class="cell-input" value="480"></td>
+                    <td class="w-num month-cols hidden"><input class="cell-input" value="1,680"></td>
+                    <td class="w-num month-cols hidden"><input class="cell-input" value="2,260"></td>
+                    <td class="w-num month-cols hidden"><input class="cell-input" value="1,930"></td>
+                    <td class="w-num month-cols hidden"><input class="cell-input" value="1,720"></td>
+                    <td class="w-num month-cols hidden"><input class="cell-input" value="1,650"></td>
+                    <td class="w-num month-cols hidden"><input class="cell-input" value="1,520"></td>
+                    <td><span class="tag green">无滞销</span></td>
+                    <td><span class="tag blue">正常过货</span></td>
+                    <td><span class="tag green">可提交</span></td>
+                    <td><button class="text" data-open-detail>详情</button></td>
+                  </tr>
+                  <tr>
+                    <td class="sticky-1">JP</td>
+                    <td class="sticky-2">赵丽华</td>
+                    <td class="sticky-3">CtriLady-JP</td>
+                    <td class="sticky-4 identifier"><a class="id-link" data-open-detail>B0CJP84N1Q<span class="copy-action" title="复制">⧉</span></a></td>
+                    <td class="sticky-5">AD6032B00S-B91</td>
+                    <td class="sticky-6">CTL-AD603298100S-B91</td>
+                    <td class="w-num">19 <span class="source auto">数仓</span></td>
+                    <td class="w-num">17</td>
+                    <td class="w-num">15</td>
+                    <td class="w-num">18</td>
+                    <td class="w-num">22天</td>
+                    <td class="w-num">共享</td>
+                    <td class="w-num">50</td>
+                    <td class="w-num">160</td>
+                    <td class="w-num">60</td>
+                    <td class="w-num">0</td>
+                    <td class="w-num">12天</td>
+                    <td class="w-num">18</td>
+                    <td class="w-num"><input class="cell-input" value="24"></td>
+                    <td><select class="cell-select"><option>新品爬坡 1.2</option><option>常规 1.0</option></select></td>
+                    <td><select class="cell-select"><option>会员日</option><option>无</option></select></td>
+                    <td>2026/09/28-10/05</td>
+                    <td><input value="日本站跟卖补量" style="width: 190px"></td>
+                    <td class="w-num week-cols"><input class="cell-input" value="150"></td>
+                    <td class="w-num week-cols"><input class="cell-input" value="180"></td>
+                    <td class="w-num week-cols"><input class="cell-input" value="210"></td>
+                    <td class="w-num week-cols"><input class="cell-input" value="260"></td>
+                    <td class="w-num week-cols"><input class="cell-input" value="260"></td>
+                    <td class="w-num week-cols"><input class="cell-input" value="230"></td>
+                    <td class="w-num week-cols"><input class="cell-input" value="220"></td>
+                    <td class="w-num week-cols"><input class="cell-input" value="200"></td>
+                    <td class="w-num month-cols hidden"><input class="cell-input" value="690"></td>
+                    <td class="w-num month-cols hidden"><input class="cell-input" value="950"></td>
+                    <td class="w-num month-cols hidden"><input class="cell-input" value="880"></td>
+                    <td class="w-num month-cols hidden"><input class="cell-input" value="820"></td>
+                    <td class="w-num month-cols hidden"><input class="cell-input" value="760"></td>
+                    <td class="w-num month-cols hidden"><input class="cell-input" value="720"></td>
+                    <td><span class="tag orange">91-180天 18</span></td>
+                    <td><span class="tag blue">正常过货</span></td>
+                    <td><span class="tag orange">共享分配待确认</span></td>
+                    <td><button class="text" data-open-detail>详情</button></td>
+                  </tr>
+                  <tr>
+                    <td class="sticky-1">US</td>
+                    <td class="sticky-2">张敏</td>
+                    <td class="sticky-3">AMZ-BRABIC-US</td>
+                    <td class="sticky-4 identifier"><a class="id-link" data-open-detail>B0DREFERR<span class="copy-action" title="复制">⧉</span></a></td>
+                    <td class="sticky-5">AD8891B00M-N22</td>
+                    <td class="sticky-6">BRABIC-AD889100M-N22</td>
+                    <td class="w-num"><span class="tag red">#REF!</span></td>
+                    <td class="w-num"><span class="tag red">#REF!</span></td>
+                    <td class="w-num"><span class="tag red">#REF!</span></td>
+                    <td class="w-num">待接入</td>
+                    <td class="w-num">待计算</td>
+                    <td class="w-num"><span class="tag red">缺失</span></td>
+                    <td class="w-num">0</td>
+                    <td class="w-num">0</td>
+                    <td class="w-num">0</td>
+                    <td class="w-num">0</td>
+                    <td class="w-num">0天</td>
+                    <td class="w-num">待计算</td>
+                    <td class="w-num"><input class="cell-input" value="12"></td>
+                    <td><select class="cell-select"><option>人工预估</option></select></td>
+                    <td><select class="cell-select"><option>无</option></select></td>
+                    <td>-</td>
+                    <td><input value="源数据引用异常，先人工填报" style="width: 190px"></td>
+                    <td class="w-num week-cols"><input class="cell-input" value="84"></td>
+                    <td class="w-num week-cols"><input class="cell-input" value="84"></td>
+                    <td class="w-num week-cols"><input class="cell-input" value="90"></td>
+                    <td class="w-num week-cols"><input class="cell-input" value="96"></td>
+                    <td class="w-num week-cols"><input class="cell-input" value="96"></td>
+                    <td class="w-num week-cols"><input class="cell-input" value="90"></td>
+                    <td class="w-num week-cols"><input class="cell-input" value="84"></td>
+                    <td class="w-num week-cols"><input class="cell-input" value="84"></td>
+                    <td class="w-num month-cols hidden"><input class="cell-input" value="360"></td>
+                    <td class="w-num month-cols hidden"><input class="cell-input" value="390"></td>
+                    <td class="w-num month-cols hidden"><input class="cell-input" value="360"></td>
+                    <td class="w-num month-cols hidden"><input class="cell-input" value="330"></td>
+                    <td class="w-num month-cols hidden"><input class="cell-input" value="300"></td>
+                    <td class="w-num month-cols hidden"><input class="cell-input" value="300"></td>
+                    <td><span class="tag">无</span></td>
+                    <td><span class="tag orange">待判断</span></td>
+                    <td><span class="tag red">源数据异常</span></td>
+                    <td><button class="text" data-drawer="anomaly">处理</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="page" id="p02">
+          <div class="page-head">
+            <div>
+              <h1>销量预测详情</h1>
+              <div class="subline">单个子 ASIN / SKU 的预测依据、库存参考、活动影响和调整记录。</div>
+            </div>
+            <div class="tagline">
+              <span class="tag blue">B07HQDXGS3</span>
+              <span class="tag green">畅款-备货</span>
+              <span class="tag">负责人: 赵丽华</span>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div>
+              <div class="card">
+                <div class="card-head"><h2>商品与渠道关系</h2><button data-drawer="source">字段来源</button></div>
+                <div class="card-body">
+                  <div class="kv">
+                    <label>站点/销售市场</label><div>US <span class="source">商品/渠道主数据</span></div>
+                    <label>账号/店铺</label><div>AMZ-BRABIC-US（品牌袋）</div>
+                    <label>父 ASIN</label><div class="identifier">B07HQGX677 <span class="copy-action">⧉</span></div>
+                    <label>子 ASIN</label><div class="identifier">B07HQDXGS3 <span class="copy-action">⧉</span></div>
+                    <label>SKU</label><div>AD6032B00S-B91</div>
+                    <label>销售 SKU</label><div>BRABIC-AD603298100S-B91-FZYT08</div>
+                    <label>跟卖 SKU</label><div>BRUS-AD603298100S-B91-GFY08</div>
+                    <label>开卖日期</label><div>2018/09/27</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card-head"><h2>历史销量参考</h2><span class="tag blue">数仓/销售数据平台</span></div>
+                <div class="card-body">
+                  <div class="mini-bars">
+                    <div class="bar" style="height:45%"><span>D1</span></div>
+                    <div class="bar" style="height:55%"><span>D2</span></div>
+                    <div class="bar" style="height:48%"><span>D3</span></div>
+                    <div class="bar" style="height:70%"><span>D4</span></div>
+                    <div class="bar" style="height:62%"><span>D5</span></div>
+                    <div class="bar" style="height:66%"><span>D6</span></div>
+                    <div class="bar" style="height:58%"><span>D7</span></div>
+                  </div>
+                  <div class="metric-grid" style="margin-top:24px">
+                    <div class="metric"><label>近 7 天日均</label><strong>48</strong><small>销售预测主要参考</small></div>
+                    <div class="metric"><label>近 15 天日均</label><strong>44</strong><small>趋势参考</small></div>
+                    <div class="metric"><label>近 30 天日均</label><strong>39</strong><small>稳定基线</small></div>
+                    <div class="metric"><label>加权日均</label><strong>42</strong><small>系统预测输入</small></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div class="card">
+                <div class="card-head"><h2>库存与活动</h2><span class="tag orange">销售预测不得脱离供应状态</span></div>
+                <div class="card-body">
+                  <div class="metric-grid" style="grid-template-columns: repeat(2, minmax(0, 1fr));">
+                    <div class="metric"><label>南沙库存</label><strong>1,300</strong><small>WMS / 当前可过货库存</small></div>
+                    <div class="metric"><label>FBA库存</label><strong>500</strong><small>平台库存</small></div>
+                    <div class="metric"><label>FBA在途</label><strong>300</strong><small>头程/货件</small></div>
+                    <div class="metric"><label>采购在途</label><strong>50</strong><small>SCM</small></div>
+                  </div>
+                  <div class="source-item" style="margin-top:10px">
+                    <strong>活动: Prime Day</strong>
+                    <p>2026/10/10 - 2026/10/15；销售将系统预测日均 42 调整为 55，备注为“会员日预计放量”。</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card-head"><h2>预测调整记录</h2><button data-toast="已定位到操作日志">查看完整日志</button></div>
+                <div class="card-body">
+                  <div class="timeline">
+                    <div class="event"><strong>销售提交预测 55 件/日</strong><span>赵丽华 · 2026/09/04 16:20 · 原因: 会员日预计放量</span></div>
+                    <div class="event"><strong>系统预测刷新 42 件/日</strong><span>数仓 · 2026/09/04 08:00 · 近 7/15/30 日参考</span></div>
+                    <div class="event"><strong>活动信息录入</strong><span>运营 · Prime Day · 2026/10/10 - 10/15</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="page" id="p03">
+          <div class="page-head">
+            <div>
+              <h1>PMC 备货计划审核</h1>
+              <div class="subline">销售预测 + 库存 + 在途 + 供应 + 水位 -> 系统建议 -> PMC 调整/审核。</div>
+            </div>
+            <div class="tagline">
+              <span class="tag orange">不是单纯通过/驳回</span>
+              <span class="tag red">核减和保留异议必须记录原因</span>
+            </div>
+          </div>
+
+          <div class="progress">
+            <div class="step done"><strong>销售提交</strong><div class="small-muted">预测 1,500</div></div>
+            <div class="step active"><strong>PMC待审核</strong><div class="small-muted">校准库存与水位</div></div>
+            <div class="step"><strong>销售异议</strong><div class="small-muted">如不接受核减</div></div>
+            <div class="step"><strong>最终确认</strong><div class="small-muted">生成计划结果</div></div>
+            <div class="step"><strong>下游承接</strong><div class="small-muted">采购需求 / 过货计划</div></div>
+          </div>
+
+          <div class="grid-2">
+            <div class="card">
+              <div class="toolbar">
+                <div class="toolbar-left">
+                  <button class="primary" data-toast="已批量通过可确认项">批量通过</button>
+                  <button data-toast="已批量要求销售修改">批量驳回修改</button>
+                  <button data-drawer="source">查看计算口径</button>
+                </div>
+                <div class="toolbar-right">
+                  <button class="icon" title="下载">↓</button>
+                  <button class="icon" title="列配置" data-drawer="columns">☷</button>
+                  <button class="icon" title="刷新">↻</button>
+                  <button class="icon" title="更多">⋯</button>
+                </div>
+              </div>
+              <div class="table-wrap" style="max-height:470px">
+                <table>
+                  <thead>
+                    <tr class="columns">
+                      <th class="w-owner">负责人</th>
+                      <th class="w-site">站点</th>
+                      <th class="w-account">店铺</th>
+                      <th class="w-asin">子ASIN</th>
+                      <th class="w-sku">SKU</th>
+                      <th class="w-med">标签</th>
+                      <th class="w-num">系统预测</th>
+                      <th class="w-num">销售提报</th>
+                      <th class="w-num">FBA库存</th>
+                      <th class="w-num">FBA在途</th>
+                      <th class="w-num">南沙库存</th>
+                      <th class="w-num">目标水位</th>
+                      <th class="w-num">建议过货</th>
+                      <th class="w-num">建议采购</th>
+                      <th class="w-med">状态</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr data-review-row>
+                      <td>赵丽华</td>
+                      <td>US</td>
+                      <td>BRABIC-US</td>
+                      <td><a class="id-link" data-open-detail>B07HQDXGS3<span class="copy-action">⧉</span></a></td>
+                      <td>AD6032B00S-B91</td>
+                      <td><span class="tag green">畅款-备货</span></td>
+                      <td class="w-num">1,100</td>
+                      <td class="w-num">1,500</td>
+                      <td class="w-num">500</td>
+                      <td class="w-num">300</td>
+                      <td class="w-num">1,300</td>
+                      <td class="w-num">1,050</td>
+                      <td class="w-num">550</td>
+                      <td class="w-num">0</td>
+                      <td><span class="tag orange">待PMC审核</span></td>
+                    </tr>
+                    <tr>
+                      <td>张敏</td>
+                      <td>US</td>
+                      <td>BRABIC-US</td>
+                      <td><a class="id-link">B0DREFERR<span class="copy-action">⧉</span></a></td>
+                      <td>AD8891B00M-N22</td>
+                      <td><span class="tag">新品期</span></td>
+                      <td class="w-num">待计算</td>
+                      <td class="w-num">360</td>
+                      <td class="w-num">0</td>
+                      <td class="w-num">0</td>
+                      <td class="w-num">缺失</td>
+                      <td class="w-num">待确认</td>
+                      <td class="w-num">待确认</td>
+                      <td class="w-num">待确认</td>
+                      <td><span class="tag red">源数据异常</span></td>
+                    </tr>
+                    <tr>
+                      <td>赵丽华</td>
+                      <td>JP</td>
+                      <td>CtriLady-JP</td>
+                      <td><a class="id-link">B0CJP84N1Q<span class="copy-action">⧉</span></a></td>
+                      <td>AD6032B00S-B91</td>
+                      <td><span class="tag green">畅款-备货</span></td>
+                      <td class="w-num">700</td>
+                      <td class="w-num">950</td>
+                      <td class="w-num">160</td>
+                      <td class="w-num">60</td>
+                      <td class="w-num">共享</td>
+                      <td class="w-num">待确认</td>
+                      <td class="w-num">按共享分配</td>
+                      <td class="w-num">0</td>
+                      <td><span class="tag orange">共卖规则待确认</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-head"><h2>审核差异视图</h2><span class="tag blue">AD6032B00S-B91</span></div>
+              <div class="card-body">
+                <div class="diff">
+                  <div class="diff-box"><span>销售提报</span><strong>1,500</strong></div>
+                  <div class="diff-box"><span>系统建议</span><strong>1,100</strong></div>
+                  <div class="diff-box"><span>PMC最终</span><strong id="pmcFinalView">1,200</strong></div>
+                </div>
+                <div class="diff">
+                  <div class="diff-box"><span>销售 vs 系统</span><strong style="color:var(--red)">-400</strong></div>
+                  <div class="diff-box"><span>销售 vs PMC</span><strong id="salesVsPmc" style="color:var(--orange)">-300</strong></div>
+                  <div class="diff-box"><span>建议过货</span><strong>550</strong></div>
+                </div>
+                <div class="kv">
+                  <label>PMC调整量</label><input id="pmcFinalInput" value="1200">
+                  <label>调整原因</label><select><option>活动加量</option><option>物流延误</option><option>销售预测不合理</option><option>库存异常</option><option>人工策略调整</option><option>其他</option></select>
+                  <label>说明</label><textarea>销售活动预计放量，但当前 FBA 在库与在途可覆盖约 20 天，先核减到 1200 并保留活动观察。</textarea>
+                </div>
+                <div class="toolbar" style="padding:10px 0 0;border:0">
+                  <div class="toolbar-left">
+                    <button class="primary" data-toast="已记录: 调整后通过，等待计划确认">调整后通过</button>
+                    <button data-toast="已记录: 通过">通过</button>
+                    <button data-toast="已退回销售修改">驳回修改</button>
+                    <button class="danger" data-toast="已创建销售异议复核任务">保留异议</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="page" id="p04">
+          <div class="page-head">
+            <div>
+              <h1>备货计划详情</h1>
+              <div class="subline">解释 PMC 最终计划的计算依据、库存/在途快照、水位规则和计划变化。</div>
+            </div>
+            <div class="tagline">
+              <span class="tag blue">为什么补 1,200</span>
+              <span class="tag orange">其他等级水位待确认</span>
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-head"><h2>计算依据</h2><button data-drawer="source">查看来源</button></div>
+              <div class="card-body formula">
+                <div class="formula-row"><span>销售提报预测量 <span class="source manual">销售填写</span></span><span class="num">1,500</span></div>
+                <div class="formula-row"><span>系统预测参考 <span class="source auto">数仓</span></span><span class="num">1,100</span></div>
+                <div class="formula-row"><span>FBA在库 + FBA在途 <span class="source auto">平台/物流</span></span><span class="num">800</span></div>
+                <div class="formula-row"><span>目标 FBA 库存水位 <span class="source">策略映射</span></span><span class="num">1,050</span></div>
+                <div class="formula-row"><span>系统建议过货</span><span class="num">550</span></div>
+                <div class="formula-row"><span>PMC调整后最终计划 <span class="source manual">PMC调整</span></span><span class="num">1,200</span></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-head"><h2>计划变化记录</h2><span class="tag">操作可追溯</span></div>
+              <div class="card-body">
+                <div class="timeline">
+                  <div class="event"><strong>销售提交</strong><span>赵丽华 · 1,500 · 会员日预计放量</span></div>
+                  <div class="event"><strong>系统计算</strong><span>系统建议 1,100，建议过货 550，采购需求 0</span></div>
+                  <div class="event"><strong>PMC调整</strong><span>PMC · 1,200 · 活动加量，同时低于销售原始提报</span></div>
+                  <div class="event"><strong>等待确认</strong><span>销售可接受核减则进入最终计划；不接受则进入异议复核</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="page" id="p05">
+          <div class="page-head">
+            <div>
+              <h1>过货计划</h1>
+              <div class="subline">采购完成并入南沙后的库存，按 SKU + 店铺/站点 + 目的 FBA 仓形成发运计划。</div>
+            </div>
+            <div class="tagline">
+              <span class="tag blue">南沙 -> FBA</span>
+              <span class="tag orange">共卖分配规则待确认</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="toolbar">
+              <div class="toolbar-left">
+                <button class="primary" data-toast="已生成本次过货计划草稿">生成过货计划</button>
+                <button data-toast="已保存库存分配调整">保存分配</button>
+                <button data-drawer="source">运输时效说明</button>
+              </div>
+              <div class="toolbar-right">
+                <button class="icon" title="下载">↓</button>
+                <button class="icon" title="列配置" data-drawer="columns">☷</button>
+                <button class="icon" title="刷新">↻</button>
+              </div>
+            </div>
+            <div class="table-wrap" style="max-height:520px">
+              <table>
+                <thead>
+                  <tr class="columns">
+                    <th class="w-sku">SKU / 店铺</th>
+                    <th class="w-med">子ASIN</th>
+                    <th class="w-med">目的站点</th>
+                    <th class="w-num">南沙可用</th>
+                    <th class="w-num">FBA库存</th>
+                    <th class="w-num">FBA在途</th>
+                    <th class="w-num">目标水位</th>
+                    <th class="w-num">可售天数</th>
+                    <th class="w-num">建议过货</th>
+                    <th class="w-num">已分配</th>
+                    <th class="w-num">本次过货</th>
+                    <th class="w-med">发货方式</th>
+                    <th class="w-med">发货日期</th>
+                    <th class="w-med">预计到货</th>
+                    <th class="w-med">状态</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><span class="row-expand" data-expand="sku001">−</span><strong>AD6032B00S-B91</strong></td>
+                    <td>多子ASIN</td>
+                    <td>US / JP / UK</td>
+                    <td class="w-num">1,300</td>
+                    <td class="w-num">740</td>
+                    <td class="w-num">360</td>
+                    <td class="w-num">待策略</td>
+                    <td class="w-num">20-27天</td>
+                    <td class="w-num">1,100</td>
+                    <td class="w-num">0</td>
+                    <td class="w-num">1,100</td>
+                    <td><select class="ship-mode"><option value="45">快船</option><option value="70">慢船</option><option value="18">空运</option><option value="7">快递</option></select></td>
+                    <td><input class="ship-date" value="2026-09-10"></td>
+                    <td class="eta">2026-10-25</td>
+                    <td><span class="tag orange">分配待确认</span></td>
+                  </tr>
+                  <tr class="child-row sku001">
+                    <td style="padding-left:32px">BRABIC-US</td>
+                    <td>B07HQDXGS3</td>
+                    <td>US</td>
+                    <td class="w-num">共享</td>
+                    <td class="w-num">500</td>
+                    <td class="w-num">300</td>
+                    <td class="w-num">1,050</td>
+                    <td class="w-num">20天</td>
+                    <td class="w-num">550</td>
+                    <td class="w-num">0</td>
+                    <td class="w-num"><input class="cell-input" value="650"></td>
+                    <td>继承</td>
+                    <td>继承</td>
+                    <td>继承</td>
+                    <td><span class="tag blue">需求占比 59%</span></td>
+                  </tr>
+                  <tr class="child-row sku001">
+                    <td style="padding-left:32px">CtriLady-JP</td>
+                    <td>B0CJP84N1Q</td>
+                    <td>JP</td>
+                    <td class="w-num">共享</td>
+                    <td class="w-num">160</td>
+                    <td class="w-num">60</td>
+                    <td class="w-num">待确认</td>
+                    <td class="w-num">12天</td>
+                    <td class="w-num">350</td>
+                    <td class="w-num">0</td>
+                    <td class="w-num"><input class="cell-input" value="300"></td>
+                    <td>继承</td>
+                    <td>继承</td>
+                    <td>继承</td>
+                    <td><span class="tag blue">需求占比 27%</span></td>
+                  </tr>
+                  <tr class="child-row sku001">
+                    <td style="padding-left:32px">Lancs-UK</td>
+                    <td>B0CUK21A</td>
+                    <td>UK</td>
+                    <td class="w-num">共享</td>
+                    <td class="w-num">80</td>
+                    <td class="w-num">0</td>
+                    <td class="w-num">待确认</td>
+                    <td class="w-num">15天</td>
+                    <td class="w-num">200</td>
+                    <td class="w-num">0</td>
+                    <td class="w-num"><input class="cell-input" value="150"></td>
+                    <td>继承</td>
+                    <td>继承</td>
+                    <td>继承</td>
+                    <td><span class="tag blue">需求占比 14%</span></td>
+                  </tr>
+                  <tr>
+                    <td><span class="row-expand" data-expand="sku002">+</span><strong>AD8891B00M-N22</strong></td>
+                    <td>B0DREFERR</td>
+                    <td>US</td>
+                    <td class="w-num"><span class="tag red">缺失</span></td>
+                    <td class="w-num">0</td>
+                    <td class="w-num">0</td>
+                    <td class="w-num">待确认</td>
+                    <td class="w-num">0天</td>
+                    <td class="w-num">待确认</td>
+                    <td class="w-num">0</td>
+                    <td class="w-num">0</td>
+                    <td><select class="ship-mode"><option value="18">空运</option><option value="45">快船</option></select></td>
+                    <td><input class="ship-date" value="2026-09-12"></td>
+                    <td class="eta">2026-09-30</td>
+                    <td><span class="tag red">源数据异常</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="page" id="p06">
+          <div class="page-head">
+            <div>
+              <h1>采购需求</h1>
+              <div class="subline">PMC 最终计划形成采购需求并下推 SCM；本页不表达正式 PR 或 SCM 内部采购执行。</div>
+            </div>
+            <div class="tagline">
+              <span class="tag orange">正式 PR Owner 待确认</span>
+              <span class="tag blue">PMC -> SCM</span>
+            </div>
+          </div>
+          <div class="card">
+            <div class="toolbar">
+              <div class="toolbar-left">
+                <button class="primary" data-toast="已下推 1 条采购需求到 SCM 待接收">下推 SCM</button>
+                <button data-toast="已重新从最终计划同步采购需求">同步最终计划</button>
+              </div>
+              <div class="toolbar-right">
+                <button class="icon" title="下载">↓</button>
+                <button class="icon" title="刷新">↻</button>
+              </div>
+            </div>
+            <div class="table-wrap" style="max-height:520px">
+              <table>
+                <thead>
+                  <tr class="columns">
+                    <th class="w-sku">SKU</th>
+                    <th class="w-med">SKC</th>
+                    <th class="w-med">供应商</th>
+                    <th class="w-num">采购数量</th>
+                    <th class="w-med">需求仓</th>
+                    <th class="w-med">目标到货</th>
+                    <th class="w-num">生产周期</th>
+                    <th class="w-num">MOQ</th>
+                    <th class="w-med">来源计划</th>
+                    <th class="w-med">SCM状态</th>
+                    <th class="w-wide">差异回写</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>AD6032B00S-B91</td>
+                    <td>AD6032-B91</td>
+                    <td>供应商A</td>
+                    <td class="w-num">0</td>
+                    <td>南沙仓</td>
+                    <td>无需采购</td>
+                    <td class="w-num">25天</td>
+                    <td class="w-num">300</td>
+                    <td>PMC-202609-W37</td>
+                    <td><span class="tag green">仅过货</span></td>
+                    <td>库存已在南沙，本轮不生成采购需求</td>
+                  </tr>
+                  <tr>
+                    <td>AD8891B00M-N22</td>
+                    <td>AD8891-N22</td>
+                    <td>待匹配</td>
+                    <td class="w-num">360</td>
+                    <td>南沙仓</td>
+                    <td>2026/11/20</td>
+                    <td class="w-num">待 SCM</td>
+                    <td class="w-num">待 SCM</td>
+                    <td>PMC-202609-W37</td>
+                    <td><span class="tag orange">待SCM接收</span></td>
+                    <td>若 SCM 因 MOQ 调整至 600，需回写差异和原因</td>
+                  </tr>
+                  <tr>
+                    <td>AD7712B00L-K10</td>
+                    <td>AD7712-K10</td>
+                    <td>供应商B</td>
+                    <td class="w-num">1,000</td>
+                    <td>南沙仓</td>
+                    <td>2026/12/05</td>
+                    <td class="w-num">35天</td>
+                    <td class="w-num">500</td>
+                    <td>PMC-202609-W37</td>
+                    <td><span class="tag blue">SCM已接收</span></td>
+                    <td>采购反馈: 合并 US/UK/DE 需求下单 1,000</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="page" id="p07">
+          <div class="page-head">
+            <div>
+              <h1>计划基础设置</h1>
+              <div class="subline">只维护 PMC 计划真正需要的策略映射，不重建商品主数据、物流主数据或 SCM 主数据。</div>
+            </div>
+            <div class="tagline">
+              <span class="tag blue">商品标签来自商品主数据</span>
+              <span class="tag orange">PMC维护策略映射</span>
+            </div>
+          </div>
+          <div class="grid-3">
+            <div class="card">
+              <div class="card-head"><h2>商品计划标签</h2><button>新增映射</button></div>
+              <div class="card-body source-list">
+                <div class="source-item"><strong>爆款</strong><p>FBA目标水位: 35天。参与备货: 是。参与过货: 是。状态: 当前规则，其他等级待最终确认。</p></div>
+                <div class="source-item"><strong>畅款</strong><p>FBA目标水位: 待确认。参与备货: 是。参与过货: 是。</p></div>
+                <div class="source-item"><strong>平款</strong><p>FBA目标水位: 待确认。是否参与过货需结合清货/滞销规则。</p></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-head"><h2>备货策略</h2><button>编辑</button></div>
+              <div class="card-body kv">
+                <label>策略名称</label><div>Amazon成熟款-爆款</div>
+                <label>目标FBA库存</label><div>35天 <span class="source manual">当前规则</span></div>
+                <label>计算周期</label><div>周</div>
+                <label>预测参考</label><div>近7天 / 近14天 / 近30天</div>
+                <label>允许人工调整</label><div>是，必须记录原因</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-head"><h2>提报窗口</h2><button>新增窗口</button></div>
+              <div class="card-body">
+                <table style="width:100%;min-width:0">
+                  <thead><tr><th>店铺</th><th>周期</th><th>提报日</th><th>截止</th></tr></thead>
+                  <tbody>
+                    <tr><td>US店</td><td>每周</td><td>周一</td><td>18:00</td></tr>
+                    <tr><td>UK店</td><td>每周</td><td>周二</td><td>18:00</td></tr>
+                    <tr><td>JP店</td><td>每周</td><td>周三</td><td>18:00</td></tr>
+                  </tbody>
+                </table>
+                <div class="subline">具体提报日由 PMC 结合仓储工作量分配，需业务确认。</div>
+              </div>
+            </div>
+          </div>
+          <div class="grid-3">
+            <div class="card">
+              <div class="card-head"><h2>运输时效</h2><span class="tag orange">引用物流/WMS</span></div>
+              <div class="card-body">
+                <table style="width:100%;min-width:0">
+                  <thead><tr><th>方式</th><th>标准时效</th><th>缓冲</th><th>来源</th></tr></thead>
+                  <tbody>
+                    <tr><td>快船</td><td>45天</td><td>待确认</td><td>物流</td></tr>
+                    <tr><td>慢船</td><td>70天</td><td>待确认</td><td>物流</td></tr>
+                    <tr><td>空运</td><td>18天</td><td>待确认</td><td>物流</td></tr>
+                    <tr><td>快递</td><td>7天</td><td>待确认</td><td>物流</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-head"><h2>节假日/特殊周期</h2><button>配置</button></div>
+              <div class="card-body source-list">
+                <div class="source-item"><strong>春节</strong><p>提前采购与备货周期需要覆盖工厂停工。具体提前天数待确认。</p></div>
+                <div class="source-item"><strong>Prime Day / 黑五 / 网一 / 会员日</strong><p>作为销售预测调整原因和特殊周期策略输入，不再只放在备注中。</p></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-head"><h2>审批流程</h2><button>查看</button></div>
+              <div class="card-body timeline">
+                <div class="event"><strong>新品首单</strong><span>IPD提报 -> 总办审批 -> 采购。PMC不审核校准。</span></div>
+                <div class="event"><strong>翻单</strong><span>销售/运营提报 -> PMC审核校准 -> 最终计划。</span></div>
+                <div class="event"><strong>异议</strong><span>销售保留原需求 -> 填原因 -> PMC复核 -> 最终计划。</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="page" id="p08">
+          <div class="page-head">
+            <div>
+              <h1>计划操作日志</h1>
+              <div class="subline">记录谁在什么时候提报、修改、审核、核减、保留异议、确认和下推 SCM。</div>
+            </div>
+            <div class="tagline">
+              <span class="tag blue">操作前后值</span>
+              <span class="tag orange">原因必填</span>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head">
+              <h2>日志筛选</h2>
+              <div class="tagline"><input value="AD6032B00S-B91" style="width:170px"><select><option>全部动作</option><option>销售提报</option><option>PMC调整</option><option>SCM回写</option></select><button>查询</button></div>
+            </div>
+            <div class="card-body">
+              <div class="log-row">
+                <strong>2026/09/04 16:20</strong><span class="tag blue">销售提报</span><div>销售预判日均从空值变为 55；周度预测 W37-W44 已填写。</div><span>赵丽华</span><span>会员日预计放量</span>
+              </div>
+              <div class="log-row">
+                <strong>2026/09/04 16:45</strong><span class="tag orange">PMC调整</span><div>最终计划从销售提报 1,500 核减为 1,200。</div><span>PMC</span><span>活动加量，库存仍可覆盖</span>
+              </div>
+              <div class="log-row">
+                <strong>2026/09/04 17:05</strong><span class="tag red">销售异议</span><div>销售选择保留原需求，提交原因后进入 PMC 复核。</div><span>赵丽华</span><span>Prime Day 活动备货</span>
+              </div>
+              <div class="log-row">
+                <strong>2026/09/04 17:20</strong><span class="tag green">最终确认</span><div>最终计划确认 1,500，库存责任记录为销售/运营承担。</div><span>PMC</span><span>复核通过</span>
+              </div>
+              <div class="log-row">
+                <strong>2026/09/04 17:35</strong><span class="tag blue">下推SCM</span><div>采购需求 0，过货计划 1,100，SCM仅接收需采购项。</div><span>系统</span><span>来源 PMC-202609-W37</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="drawer-mask" id="drawerMask"></div>
+  <aside class="drawer" id="drawer">
+    <div class="drawer-head">
+      <h2 id="drawerTitle">字段来源</h2>
+      <button class="icon" id="drawerClose">×</button>
+    </div>
+    <div class="drawer-body" id="drawerBody"></div>
+    <div class="drawer-foot">
+      <button id="drawerClose2">关闭</button>
+    </div>
+  </aside>
+  <div class="toast" id="toast">已完成</div>
+
+  <script>
+    const pageNames = {
+      p01: "销量预测提报",
+      p02: "销量预测详情",
+      p03: "PMC 备货审核",
+      p04: "备货计划详情",
+      p05: "过货计划",
+      p06: "采购需求",
+      p07: "计划基础设置",
+      p08: "计划操作日志"
+    };
+
+    const drawerContent = {
+      source: {
+        title: "字段来源与边界",
+        html: `
+          <div class="source-list">
+            <div class="source-item"><strong>商品基础信息</strong><p>来自商品主数据/渠道主数据：站点、账号、父 ASIN、子 ASIN、SKU、销售 SKU、FNSKU、商品负责人、商品标签。</p></div>
+            <div class="source-item"><strong>历史销量与系统预测</strong><p>来自数仓/销售数据平台。PMC 产品只表达字段、用途和展示，不在原型内实现 ETL 或清洗。</p></div>
+            <div class="source-item"><strong>库存与在途</strong><p>南沙库存、FBA 在库、FBA 在途、采购在途分别来自 WMS、平台/物流、SCM 等系统。PMC 使用计划视图，不拥有库存主数据。</p></div>
+            <div class="source-item"><strong>人工字段</strong><p>销售预判、活动、销售备注、PMC 调整、调整原因和异议原因必须记录操作前后值、人员和时间。</p></div>
+            <div class="source-item"><strong>待确认</strong><p>新品 180 天翻单细则、畅款/平款水位、共卖分配、运输时效更新周期、SCM 回写复核规则仍需业务确认。</p></div>
+          </div>`
+      },
+      anomaly: {
+        title: "异常校验",
+        html: `
+          <div class="source-list">
+            <div class="source-item"><strong>源数据缺失 / 表格引用异常</strong><p>Excel 样例中多处公式计算为 #REF!。线上系统不能静默隐藏，应标记为数据源缺失、映射异常或公式引用异常。</p></div>
+            <div class="source-item"><strong>共卖 SKU 分配待确认</strong><p>同一 SKU 多店铺共卖时，采购统一合并下单，入南沙后按店铺需求拆分。具体分配口径仍需确认。</p></div>
+            <div class="source-item"><strong>水位规则待确认</strong><p>会议确认爆款 35 天，但畅款、平款和其他等级库存水位仍待确认。</p></div>
+          </div>`
+      },
+      columns: {
+        title: "列配置",
+        html: `
+          <div class="source-list">
+            <div class="source-item"><strong>固定左侧字段</strong><p>站点、负责人、账号/店铺、子 ASIN、SKU、销售 SKU。横向滚动时保留业务识别字段。</p></div>
+            <div class="source-item"><strong>默认显示字段组</strong><p>商品基础信息、历史销售、库存参考、销售预测、未来 1-2 月周度预测、活动、滞销、异常。</p></div>
+            <div class="source-item"><strong>不默认全部展示</strong><p>Excel 303 列不一比一搬进单页；货件编号、长周期月份、历史月销量等进入详情、抽屉或字段配置。</p></div>
+          </div>`
+      }
+    };
+
+    function showPage(id) {
+      document.querySelectorAll(".page").forEach(page => page.classList.toggle("active", page.id === id));
+      document.querySelectorAll(".nav-item").forEach(item => item.classList.toggle("active", item.dataset.page === id));
+      document.querySelectorAll(".work-tab").forEach(tab => tab.classList.toggle("active", tab.dataset.page === id));
+      document.getElementById("currentPageName").textContent = pageNames[id] || id;
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("show");
+      window.clearTimeout(showToast.timer);
+      showToast.timer = window.setTimeout(() => toast.classList.remove("show"), 1800);
+    }
+
+    function openDrawer(type) {
+      const data = drawerContent[type] || drawerContent.source;
+      document.getElementById("drawerTitle").textContent = data.title;
+      document.getElementById("drawerBody").innerHTML = data.html;
+      document.getElementById("drawerMask").classList.add("open");
+      document.getElementById("drawer").classList.add("open");
+    }
+
+    function closeDrawer() {
+      document.getElementById("drawerMask").classList.remove("open");
+      document.getElementById("drawer").classList.remove("open");
+    }
+
+    document.querySelectorAll("[data-page]").forEach(el => {
+      el.addEventListener("click", event => {
+        if (event.target.classList.contains("close")) return;
+        showPage(el.dataset.page);
+      });
+    });
+
+    document.querySelectorAll("[data-open-detail]").forEach(el => {
+      el.addEventListener("click", event => {
+        event.preventDefault();
+        showPage("p02");
+        showToast("已打开销量预测详情");
+      });
+    });
+
+    document.querySelectorAll("[data-toast]").forEach(el => {
+      el.addEventListener("click", () => showToast(el.dataset.toast));
+    });
+
+    document.querySelectorAll("[data-drawer]").forEach(el => {
+      el.addEventListener("click", () => openDrawer(el.dataset.drawer));
+    });
+
+    document.getElementById("drawerClose").addEventListener("click", closeDrawer);
+    document.getElementById("drawerClose2").addEventListener("click", closeDrawer);
+    document.getElementById("drawerMask").addEventListener("click", closeDrawer);
+
+    document.getElementById("collapseBtn").addEventListener("click", () => {
+      document.getElementById("app").classList.toggle("collapsed");
+    });
+
+    document.querySelectorAll("#scenarioTabs button").forEach(button => {
+      button.addEventListener("click", () => {
+        document.querySelectorAll("#scenarioTabs button").forEach(item => item.classList.remove("active"));
+        button.classList.add("active");
+        if (button.dataset.scenario === "Amazon FBA") {
+          showToast("当前为 Amazon FBA 一期场景");
+        } else if (button.dataset.scenario === "新品首单") {
+          showToast("新品首单由 IPD 提报并走总办审批，PMC不审核校准");
+        } else {
+          showToast(button.dataset.scenario + " 规则待业务确认，仅保留场景入口");
+        }
+      });
+    });
+
+    document.querySelectorAll("#forecastTabs button").forEach(button => {
+      button.addEventListener("click", () => {
+        document.querySelectorAll("#forecastTabs button").forEach(item => item.classList.remove("active"));
+        button.classList.add("active");
+        const week = button.dataset.mode === "week";
+        document.querySelectorAll(".week-cols").forEach(el => el.classList.toggle("hidden", !week));
+        document.querySelectorAll(".month-cols").forEach(el => el.classList.toggle("hidden", week));
+      });
+    });
+
+    document.querySelectorAll(".copy-action").forEach(el => {
+      el.addEventListener("click", event => {
+        event.stopPropagation();
+        showToast("已复制标识符");
+      });
+    });
+
+    document.querySelectorAll("[data-expand]").forEach(toggle => {
+      toggle.addEventListener("click", () => {
+        const key = toggle.dataset.expand;
+        const rows = document.querySelectorAll("." + key);
+        const hidden = rows[0] && !rows[0].classList.contains("hidden");
+        rows.forEach(row => row.classList.toggle("hidden", hidden));
+        toggle.textContent = hidden ? "+" : "−";
+      });
+    });
+
+    function updateEta(row) {
+      const mode = row.querySelector(".ship-mode");
+      const date = row.querySelector(".ship-date");
+      const eta = row.querySelector(".eta");
+      if (!mode || !date || !eta) return;
+      const base = new Date(date.value + "T00:00:00");
+      if (Number.isNaN(base.getTime())) return;
+      base.setDate(base.getDate() + Number(mode.value));
+      eta.textContent = base.toISOString().slice(0, 10);
+    }
+
+    document.querySelectorAll(".ship-mode, .ship-date").forEach(input => {
+      input.addEventListener("change", () => {
+        updateEta(input.closest("tr"));
+        showToast("预计到货日期已按运输时效重算");
+      });
+    });
+
+    const pmcFinalInput = document.getElementById("pmcFinalInput");
+    if (pmcFinalInput) {
+      pmcFinalInput.addEventListener("input", () => {
+        const value = Number(pmcFinalInput.value.replace(/,/g, "")) || 0;
+        document.getElementById("pmcFinalView").textContent = value.toLocaleString("zh-CN");
+        document.getElementById("salesVsPmc").textContent = String(value - 1500);
+      });
+    }
+  </script>
+</body>
+</html>
