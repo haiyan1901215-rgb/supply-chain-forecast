@@ -76,6 +76,22 @@ const assert = (condition, message) => {
     for (const label of ['人工预测', '活动预测', '最终预测', '历史提报记录']) {
       assert(await page.getByText(label, { exact: true }).count() > 0, `frozen sales surface missing ${label}`);
     }
+    await page.locator('[data-history-entry]').first().click();
+    await page.locator('tr.history-row[data-history-for]').first().waitFor();
+    const historyAlignment = await page.locator('tr.history-row[data-history-for] td.date-col').first().evaluate(cell => {
+      const value = cell.querySelector('.history-value');
+      const finalValue = cell.querySelector('.history-final-value');
+      return {
+        cellTextAlign: getComputedStyle(cell).textAlign,
+        valueTextAlign: value ? getComputedStyle(value).textAlign : '',
+        finalAlignItems: finalValue ? getComputedStyle(finalValue).alignItems : ''
+      };
+    });
+    assert(historyAlignment.cellTextAlign === 'left', `history value cell must align left: ${historyAlignment.cellTextAlign}`);
+    assert(historyAlignment.valueTextAlign === 'left', `history value content must align left: ${historyAlignment.valueTextAlign}`);
+    assert(historyAlignment.finalAlignItems === 'flex-start', `history final source tag must align left: ${historyAlignment.finalAlignItems}`);
+    const actualAlignment = await page.locator('tr.actual-row[data-history-for] td.date-col').first().evaluate(cell => getComputedStyle(cell).textAlign);
+    assert(actualAlignment === 'left', `history actual sales cell must align left: ${actualAlignment}`);
     assert(await page.locator('.date-head').count() > 0, 'frozen sales daily date header missing');
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.screenshot({ path: path.resolve(__dirname, '../../evidence/forecast-plan-sales-frozen.png'), fullPage: true });

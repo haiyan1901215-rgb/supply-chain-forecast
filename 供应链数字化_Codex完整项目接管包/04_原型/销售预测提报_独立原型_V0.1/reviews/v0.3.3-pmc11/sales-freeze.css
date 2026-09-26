@@ -220,7 +220,22 @@
   display:none;
 }
 .app .forecast-table .history-label {text-align:left;}
-.app .forecast-table .history-value {display:inline-block;min-height:16px;}
+.app .forecast-table tr.history-row > td.date-col,
+.app .forecast-table tr.history-component > td.date-col,
+.app .forecast-table tr.actual-row > td.date-col,
+.app .forecast-table tr.deviation-row > td.date-col {
+  text-align:left;
+  padding-left:8px;
+  padding-right:8px;
+}
+.app .forecast-table .history-value {
+  display:inline-flex;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:center;
+  min-height:16px;
+  text-align:left;
+}
 .app .forecast-table .history-value[data-history-preview-host] {
   color:var(--blue);
   cursor:pointer;
@@ -228,10 +243,11 @@
 .app .forecast-table .history-final-value {
   display:inline-flex;
   flex-direction:column;
-  align-items:flex-end;
+  align-items:flex-start;
   justify-content:center;
   gap:1px;
   line-height:16px;
+  text-align:left;
 }
 .app .forecast-table .history-final-value .history-number {
   font-size:12px;

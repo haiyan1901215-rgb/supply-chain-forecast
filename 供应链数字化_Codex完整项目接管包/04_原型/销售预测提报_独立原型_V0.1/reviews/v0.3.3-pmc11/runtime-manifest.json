@@ -34,7 +34,7 @@
     },
     {
       "file": "index.html",
-      "sha256": "a327c574bfa1f7e782bfee99bebbbe677eec9e8f8c4d686d51cd965ba3a9a0b1"
+      "sha256": "7248eee9392359e19e94c98bfac2dcbdece2f6ecd335e92e409e48166888d3e6"
     },
     {
       "file": "parent-asin.css",
@@ -62,7 +62,7 @@
     },
     {
       "file": "sales-freeze.css",
-      "sha256": "20bed6c1a557344cb2be8c5cbc1f26ae37a6f02f80732ff52dc0625d7eaa30d5"
+      "sha256": "16748bb1dcfdc498c93bc7ccf5447ca8bd3a6b14e4ac16f984efbdcd528581b1"
     },
     {
       "file": "sales-freeze.js",
