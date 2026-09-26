@@ -12,8 +12,17 @@
   const all=()=>groups.flatMap(g=>g.children.map(c=>({g,c,id:c.id})));
   const total=(data,field)=>sumValues(Object.values(data||{}).map(d=>field==='activity'?d.activity?.qty:d[field]));
   const legacyForecastAt=forecastAt;
+  const plannedForecastCache=new Map();
+  const plannedAt=(childId,date)=>{
+    const cacheKey=`${currentBatch}|${childId}|${date}`;
+    if(plannedForecastCache.has(cacheKey))return plannedForecastCache.get(cacheKey);
+    const value=window.ForecastBatchContract?.getDailyForecast?.(currentBatch,childId,date)||null;
+    plannedForecastCache.set(cacheKey,value);
+    return value;
+  };
+  window.addEventListener('forecast-batch-change',()=>plannedForecastCache.clear());
   forecastAt=function(c,batch,date){
-    const live=legacyForecastAt(c,batch,date),planned=batch===currentBatch?window.ForecastBatchContract?.getDailyForecast?.(batch,c.id,date):null;
+    const live=legacyForecastAt(c,batch,date),planned=batch===currentBatch?plannedAt(c.id,date):null;
     if(!planned)return live;
     const ai=planned.ruleForecast??planned.ai??live?.ai??0,manual=live?.manual??null,activity=live?.activity?JSON.parse(JSON.stringify(live.activity)):null;
     return {ai,manual,activity,final:resolveForecast(ai,manual,activity?.qty),reason:activity!=null||manual!=null?(live?.reason||planned.reason):planned.reason};

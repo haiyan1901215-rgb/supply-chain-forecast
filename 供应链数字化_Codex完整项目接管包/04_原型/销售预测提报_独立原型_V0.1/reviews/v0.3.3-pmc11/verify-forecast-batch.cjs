@@ -36,6 +36,11 @@ current.parentForecastResults.forEach(parent => {
 
 const contractRow = store.contract.getDailyForecast(current.batchDate, 'US-C000000001', current.forecastStartDate);
 assert(contractRow && contractRow.ruleForecast === current.childForecastResults[0].dailyFinalForecast[current.forecastStartDate] && contractRow.parentRuleForecast != null && contractRow.forecastRuleVersion === current.forecastRuleSnapshot.version, 'contract daily forecast');
+const forecastIndex = store.contract.getForecastIndex(current.batchDate);
+const indexedChild = forecastIndex.children['US|STORE-US|C000000001'];
+const indexedParent = forecastIndex.parents['US|STORE-US|B0PARENT01'];
+assert(indexedChild && indexedChild.total === Object.values(current.childForecastResults[0].dailyFinalForecast).reduce((total, value) => total + value, 0), 'indexed child forecast total');
+assert(indexedParent && indexedParent.total === Object.values(indexedParent.daily).reduce((total, value) => total + value, 0), 'indexed parent forecast total');
 const submissionRows = store.contract.getSubmissionRows(current.id);
 assert(submissionRows.length === current.childForecastResults.length * 182, 'sales-facing daily contract range');
 assert(['batchId', 'batchVersion', 'parentASIN', 'childASIN', 'country', 'site', 'store', 'forecastDate', 'parentRuleForecast', 'systemSplitForecast', 'ruleForecast', 'submissionDeadlineTime', 'relationVersion', 'splitRuleVersion'].every(key => key in submissionRows[0]), 'contract fields');

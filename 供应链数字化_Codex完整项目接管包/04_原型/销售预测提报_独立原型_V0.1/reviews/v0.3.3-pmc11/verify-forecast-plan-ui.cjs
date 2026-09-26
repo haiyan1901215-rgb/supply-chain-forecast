@@ -42,6 +42,12 @@ const assert = (condition, message) => {
     const firstPreview = await page.locator('.fp-panel').filter({ hasText: '本批次子ASIN份额调配' }).locator('.ant-table-wrapper tbody tr').first().locator('td').last().innerText();
     assert(firstPreview.includes(storedTotal.toLocaleString('zh-CN')), `unchanged split preview must use stored daily total: ${firstPreview} / ${storedTotal}`);
 
+    await page.locator('.fp-stepbar').getByText('规则预测', { exact: true }).click();
+    await page.locator('.fp-panel').filter({ hasText: '子ASIN规则预测清单' }).waitFor();
+    const finalForecastCell = await page.locator('.fp-panel').filter({ hasText: '子ASIN规则预测清单' }).locator('.ant-table-wrapper tbody tr').first().locator('td').nth(8).innerText();
+    assert(finalForecastCell.includes(storedTotal.toLocaleString('zh-CN')), `forecast result must use contract total: ${finalForecastCell} / ${storedTotal}`);
+
+    await page.locator('.fp-stepbar').getByText('拆解规则', { exact: true }).click();
     const splitPanel = page.locator('.fp-panel').filter({ hasText: '本批次子ASIN份额调配' });
     const firstShareInput = splitPanel.getByRole('spinbutton').first();
     const initialShare = Number(await firstShareInput.inputValue());
@@ -62,6 +68,10 @@ const assert = (condition, message) => {
 
     await page.locator('.menu button').filter({ hasText: '销售预测' }).click();
     await page.locator('.forecast-table').waitFor();
+    await page.locator(`[data-child-row="${firstChild.childId}"][data-forecast-line="final"]`).waitFor();
+    const salesFinalValue = await page.locator(`[data-child-row="${firstChild.childId}"][data-forecast-line="final"] td.date-col`).first().innerText();
+    const contractDailyValue = currentBefore.childForecastResults.find(row => row.childId === firstChild.childId).dailyFinalForecast[currentBefore.forecastStartDate];
+    assert(salesFinalValue.includes(Number(contractDailyValue).toLocaleString('zh-CN')), `sales daily value must use contract: ${salesFinalValue} / ${contractDailyValue}`);
     assert(await page.getByText(/^(AI预测|规则预测)$/).count() > 0, 'frozen sales surface missing AI/rule forecast line');
     for (const label of ['人工预测', '活动预测', '最终预测', '历史提报记录']) {
       assert(await page.getByText(label, { exact: true }).count() > 0, `frozen sales surface missing ${label}`);

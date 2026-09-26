@@ -15,6 +15,10 @@
   const percent = value => `${(Number(value || 0) / 100).toFixed(2).replace(/\.00$/, '')}%`;
   const signedPercent = value => `${value > 0 ? '+' : ''}${Number(value || 0).toFixed(1)}%`;
   const relationKey = row => [row.country, row.store, row.parentASIN].join('|');
+  const childForecastKey = row => [row.country, row.store, row.childASIN].join('|');
+  const parentForecastKey = row => [row.country, row.store, row.parentASIN].join('|');
+  const contractChild = (index, row) => index?.children?.[childForecastKey(row)] || null;
+  const contractParent = (index, row) => index?.parents?.[parentForecastKey(row)] || null;
   const statusColor = { 草稿: 'default', 评估中: 'processing', 参数调整中: 'processing', 关系确认中: 'warning', 拆解规则确认中: 'warning', 预测计算中: 'processing', 待发布: 'default', 销售填报中: 'processing', 待复盘: 'warning', 已冻结: 'blue', 已完成: 'success' };
   const steps = [
     { key: 'assessment', title: '预测评估', description: '上一批次表现' },
@@ -159,13 +163,14 @@
   function SplitStep({ batch }) {
     const { message } = App.useApp();
     const parentOptions = [...new Set(batch.childForecastResults.map(row => relationKey(row)))];
+    const forecastIndex = contract.getForecastIndex(batch.id);
     const [selectedParent, setSelectedParent] = useState(parentOptions[0]);
     const siblings = batch.childForecastResults.filter(row => relationKey(row) === selectedParent);
     const [shares, setShares] = useState({});
     const [reason, setReason] = useState('');
     const [mode, setMode] = useState('proportional');
     useEffect(() => { if (parentOptions.length && !parentOptions.includes(selectedParent)) setSelectedParent(parentOptions[0]); }, [batch.id, parentOptions.join('|')]);
-    useEffect(() => setShares(Object.fromEntries(siblings.map(row => [row.childASIN, Number((row.finalShare / 100).toFixed(2))]))), [batch.id, selectedParent, siblings.map(row => row.finalShare).join(',')]);
+    useEffect(() => setShares(Object.fromEntries(siblings.map(row => [row.childASIN, Number(((contractChild(forecastIndex, row)?.finalShare ?? row.finalShare) / 100).toFixed(2))]))), [batch.id, selectedParent, forecastIndex?.batchVersion, siblings.map(row => row.finalShare).join(',')]);
     const update = (childASIN, value) => {
       const nextValue = Math.max(0, Math.min(100, Number(value) || 0));
       if (mode === 'manual') return setShares({ ...shares, [childASIN]: nextValue });
@@ -188,23 +193,25 @@
       try { model.adjustShares(batch.id, selectedParent, basisPointShares, reason.trim()); setReason(''); message.success('本批次子ASIN份额已保存'); } catch (error) { message.error(error.message); }
     };
     const parent = batch.parentForecastResults.find(row => row.key === selectedParent);
+    const syncedParent = forecastIndex?.parents?.[selectedParent] || null;
     const previewTotal = row => {
       const inputShare = Number(shares[row.childASIN]) || 0;
-      const savedShare = row.finalShare / 100;
-      if (Math.abs(inputShare - savedShare) < 0.005) return Object.values(row.dailyFinalForecast).reduce((sum, value) => sum + (Number(value) || 0), 0);
-      return Math.round((parent?.total || 0) * inputShare / 100);
+      const synced = contractChild(forecastIndex, row);
+      const savedShare = (synced?.finalShare ?? row.finalShare) / 100;
+      if (Math.abs(inputShare - savedShare) < 0.005) return synced?.total ?? Object.values(row.dailyFinalForecast).reduce((sum, value) => sum + (Number(value) || 0), 0);
+      return Math.round(((syncedParent?.total ?? parent?.total) || 0) * inputShare / 100);
     };
     const shareColumns = [
       { title: '子ASIN', dataIndex: 'childASIN', width: 145 },
       { title: '历史销量', dataIndex: 'historicalSales', align: 'right', render: number },
-      { title: '系统份额', dataIndex: 'systemShare', align: 'right', render: percent },
-      { title: '人工调整', align: 'right', render: (_, row) => { const delta = Number(shares[row.childASIN] || 0) - row.systemShare / 100; return h('span', { className: delta ? 'fp-highlight' : 'fp-muted' }, `${delta > 0 ? '+' : ''}${delta.toFixed(2)}%`); } },
+      { title: '系统份额', align: 'right', render: (_, row) => percent(contractChild(forecastIndex, row)?.systemShare ?? row.systemShare) },
+      { title: '人工调整', align: 'right', render: (_, row) => { const systemShare = contractChild(forecastIndex, row)?.systemShare ?? row.systemShare; const delta = Number(shares[row.childASIN] || 0) - systemShare / 100; return h('span', { className: delta ? 'fp-highlight' : 'fp-muted' }, `${delta > 0 ? '+' : ''}${delta.toFixed(2)}%`); } },
       { title: '最终份额', width: 130, align: 'right', render: (_, row) => h(InputNumber, { min: 0, max: 100, precision: 2, value: shares[row.childASIN], addonAfter: '%', onChange: value => update(row.childASIN, value), disabled: batch.status === '已冻结' || batch.status === '已完成', style: { width: 118 } }) },
       { title: h(Tooltip, { title: '未保存调整按父ASIN总量 × 当前份额估算；保存后按日级拆解并校正取整。' }, h('span', null, '预测合计预览')), align: 'right', render: (_, row) => h('strong', null, `${number(previewTotal(row))} 件`) }
     ];
     const summary = h(Descriptions, { size: 'small', column: 4, items: [
       { key: 'parent', label: '父ASIN', children: parent?.parentASIN },
-      { key: 'total', label: '父ASIN规则预测', children: `${number(parent?.total)} 件` },
+      { key: 'total', label: '父ASIN规则预测', children: `${number(syncedParent?.total ?? parent?.total)} 件` },
       { key: 'current', label: '当前子体数', children: `${siblings.length} 个` },
       { key: 'sum', label: '最终份额合计', children: h(Tag, { color: sharesValid ? 'success' : 'error' }, `${total.toFixed(2)}%`) }
     ] });
@@ -231,7 +238,13 @@
     );
   }
   function ForecastStep({ batch }) {
-    const rows = batch.childForecastResults.map(row => ({ ...row, finalTotal: Object.values(row.dailyFinalForecast).reduce((a, b) => a + (Number(b) || 0), 0), ruleTotal: Object.values(row.dailyRuleForecast).reduce((a, b) => a + (Number(b) || 0), 0) }));
+    const forecastIndex = contract.getForecastIndex(batch.id);
+    const rows = batch.childForecastResults.map(row => {
+      const synced = contractChild(forecastIndex, row);
+      const dailyFinalForecast = synced?.daily || row.dailyFinalForecast;
+      const dailyRuleForecast = synced?.ruleDaily || row.dailyRuleForecast;
+      return { ...row, finalShare: synced?.finalShare ?? row.finalShare, systemShare: synced?.systemShare ?? row.systemShare, dailyFinalForecast, dailyRuleForecast, finalTotal: synced?.total ?? Object.values(dailyFinalForecast).reduce((a, b) => a + (Number(b) || 0), 0), ruleTotal: synced?.ruleTotal ?? Object.values(dailyRuleForecast).reduce((a, b) => a + (Number(b) || 0), 0) };
+    });
     const columns = [
       { title: '父ASIN', dataIndex: 'parentASIN', width: 140 },
       { title: '子ASIN', dataIndex: 'childASIN', width: 145 },
@@ -270,7 +283,8 @@
     return h(React.Fragment, null, h(Alert, { type: 'info', showIcon: true, message: '复盘只产生下一批次调整依据，不会擅自回写参数或关系。' }), h('div', { className: 'fp-panel' }, h('div', { className: 'fp-panel-head' }, h('h2', null, '规则预测与实际销量'), h('span', { className: 'fp-muted' }, `同周期 ${comparisonPeriod} · 按批次快照保留`)), h('div', { className: 'fp-table-wrap' }, h(Table, { size: 'small', rowKey: 'key', pagination: false, dataSource: batch.forecastVsActual, columns, locale: { emptyText: '暂无可比批次数据' } }))), h('div', { className: 'fp-split' }, h('div', { className: 'fp-panel' }, h('div', { className: 'fp-panel-head' }, h('h2', null, '下一批次调整建议')), h('div', { className: 'fp-panel-body' }, h('div', { className: 'fp-logic-line' }, h('span', { className: 'fp-logic-index' }, '01'), h('strong', null, '参数'), h('span', null, Math.abs(batch.assessment.varianceRate) > 15 ? '复核历史/近期权重与趋势周期' : '默认参数暂不调整')), h('div', { className: 'fp-logic-line' }, h('span', { className: 'fp-logic-index' }, '02'), h('strong', null, '关系'), h('span', null, `${batch.relationChanges.length} 条关系变化需要进入下一批次确认`)), h('div', { className: 'fp-logic-line' }, h('span', { className: 'fp-logic-index' }, '03'), h('strong', null, '拆解'), h('span', null, '复核低销量子体份额与人工调配原因')))), h('div', { className: 'fp-panel' }, h('div', { className: 'fp-panel-head' }, h('h2', null, '批次审计轨迹')), h('div', { className: 'fp-panel-body fp-audit' }, batch.auditTimeline.slice().reverse().map(item => h('div', { className: 'fp-audit-item', key: `${item.at}-${item.action}` }, h('strong', null, `${dateText(item.at)} · ${item.action}`), h('span', null, `${item.actor} · ${item.reason}`)))))));
   }
   function ResultsView({ batch }) {
-    const rows = batch.childForecastResults.map(row => ({ ...row, total: Object.values(row.dailyFinalForecast).reduce((a, b) => a + (Number(b) || 0), 0) }));
+    const forecastIndex = contract.getForecastIndex(batch.id);
+    const rows = batch.childForecastResults.map(row => { const synced = contractChild(forecastIndex, row); return { ...row, finalShare: synced?.finalShare ?? row.finalShare, systemShare: synced?.systemShare ?? row.systemShare, total: synced?.total ?? Object.values(row.dailyFinalForecast).reduce((a, b) => a + (Number(b) || 0), 0) }; });
     const openBatch = () => window.dispatchEvent(new CustomEvent('forecast-plan-route', { detail: { view: 'plans', detailId: batch.id, step: 'forecast' } }));
     return h(React.Fragment, null, h(PageHead, { title: '预测结果', subtitle: '查看本批次完成父ASIN预测与子ASIN拆解后的规则预测清单。', actions: [h(Button, { key: 'open', type: 'primary', onClick: openBatch }, '打开当前批次')] }), h('div', { className: 'fp-panel' }, h('div', { className: 'fp-panel-head' }, h('h2', null, `${batch.name} · 子ASIN规则预测`), h(Tag, { color: 'blue' }, batch.splitRuleSnapshot.version)), h('div', { className: 'fp-table-wrap' }, h(Table, { size: 'small', rowKey: 'id', dataSource: rows, columns: [{ title: '父ASIN', dataIndex: 'parentASIN', width: 150 }, { title: '子ASIN', dataIndex: 'childASIN', width: 150 }, { title: '国家 / 店铺', render: (_, row) => `${row.country} · ${row.store}` }, { title: '系统份额', dataIndex: 'systemShare', align: 'right', render: percent }, { title: '最终份额', dataIndex: 'finalShare', align: 'right', render: percent }, { title: '规则预测总量', dataIndex: 'total', align: 'right', render: number }, { title: '关系版本', render: () => batch.relationVersion }, { title: '来源', render: () => h(Tag, null, '规则预测') }] }))));
   }

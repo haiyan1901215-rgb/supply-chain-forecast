@@ -399,13 +399,45 @@
         getBatch: batchId => api.getBatch(batchId),
         getWindow: batchId => api.getWindow(batchId),
         getDailyForecast: (batchId, childId, date) => {
-          const batch = api.getBatch(batchId);
+          // Contract reads are frequent during table rendering. Keep the batch snapshot
+          // immutable to callers without cloning the entire 182-day batch per cell.
+          const raw = getBatchRaw(batchId);
+          const batch = raw ? { ...raw, status: effectiveStatus(raw) } : null;
           const row = batch?.childForecastResults.find(item => item.childId === childId || item.childASIN === childId || item.id === childId);
           if (!row) return null;
           const parent = batch.parentForecastResults.find(item => item.key === relationKey(row));
           const activity = row.dailyActivityForecast[date];
           const ruleForecast = row.dailyFinalForecast[date] ?? null;
-          return { batchId: batch.id, batchVersion: batch.batchVersion, dataCutoffDate: batch.dataCutoffDate, forecastStartDate: batch.forecastStartDate, forecastEndDate: batch.forecastEndDate, submissionStartTime: batch.submissionWindow.submissionStartTime, submissionDeadlineTime: batch.submissionWindow.submissionDeadlineTime, submissionFreezeTime: batch.submissionWindow.submissionFreezeTime, status: batch.status, parentASIN: row.parentASIN, childASIN: row.childASIN, country: row.country, site: row.country, store: row.store, salesOwner: row.salesOwner, tags: row.tags, forecastDate: date, parentRuleForecast: parent?.daily?.[date] ?? null, systemSplitForecast: row.dailyRuleForecast[date] ?? null, ai: ruleForecast, manual: null, activity: null, final: ruleForecast, ruleForecast, forecastSource: '规则预测', forecastRuleVersion: batch.forecastRuleSnapshot.version, splitRuleVersion: batch.splitRuleSnapshot.version, relationVersion: batch.relationVersion, parameterVersion: batch.parameterSnapshot.version, reason: row.manualAdjustment ? 'PMC已完成本批次子ASIN份额调配' : row.dailyReason[date] || '沿用本批次拆解规则' };
+          return { batchId: batch.id, batchVersion: batch.batchVersion, dataCutoffDate: batch.dataCutoffDate, forecastStartDate: batch.forecastStartDate, forecastEndDate: batch.forecastEndDate, submissionStartTime: batch.submissionWindow.submissionStartTime, submissionDeadlineTime: batch.submissionWindow.submissionDeadlineTime, submissionFreezeTime: batch.submissionWindow.submissionFreezeTime, status: batch.status, parentASIN: row.parentASIN, childASIN: row.childASIN, country: row.country, site: row.country, store: row.store, salesOwner: row.salesOwner, tags: [...(row.tags || [])], forecastDate: date, parentRuleForecast: parent?.daily?.[date] ?? null, systemSplitForecast: row.dailyRuleForecast[date] ?? null, ai: ruleForecast, manual: null, activity: null, final: ruleForecast, ruleForecast, forecastSource: '规则预测', forecastRuleVersion: batch.forecastRuleSnapshot.version, splitRuleVersion: batch.splitRuleSnapshot.version, relationVersion: batch.relationVersion, parameterVersion: batch.parameterSnapshot.version, reason: row.manualAdjustment ? 'PMC已完成本批次子ASIN份额调配' : row.dailyReason[date] || '沿用本批次拆解规则' };
+        },
+        getForecastIndex: batchId => {
+          const batch = getBatchRaw(batchId);
+          if (!batch) return null;
+          const children = {};
+          batch.childForecastResults.forEach(row => {
+            const key = rowKey(row);
+            const daily = { ...row.dailyFinalForecast };
+            const ruleDaily = { ...row.dailyRuleForecast };
+            children[key] = {
+              childId: row.childId,
+              childASIN: row.childASIN,
+              parentASIN: row.parentASIN,
+              country: row.country,
+              store: row.store,
+              systemShare: row.systemShare,
+              finalShare: row.finalShare,
+              manualAdjustment: row.manualAdjustment,
+              ruleTotal: sum(Object.values(ruleDaily)),
+              total: sum(Object.values(daily)),
+              ruleDaily,
+              daily
+            };
+          });
+          const parents = {};
+          batch.parentForecastResults.forEach(parent => {
+            parents[parent.key] = { parentASIN: parent.parentASIN, country: parent.country, store: parent.store, total: parent.total, daily: { ...parent.daily } };
+          });
+          return { batchId: batch.id, batchVersion: batch.batchVersion, forecastStartDate: batch.forecastStartDate, forecastEndDate: batch.forecastEndDate, children, parents };
         },
         getSubmissionRows: batchId => {
           const batch = api.getBatch(batchId); if (!batch) return [];

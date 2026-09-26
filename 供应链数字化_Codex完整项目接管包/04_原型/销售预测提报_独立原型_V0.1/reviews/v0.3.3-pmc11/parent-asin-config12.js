@@ -13,6 +13,12 @@
   const copy = PD.clone;
   let requestedRoute = { tab: 'rules', sub: 'split' };
 
+  const sharedForecastIndex = batch => window.ForecastBatchContract?.getForecastIndex?.(batch) || null;
+  const sharedChildForecast = (row, index) => row && index?.children?.[[row.country, row.store, row.child].join('|')] || null;
+  const sharedParentForecast = (row, index) => row && index?.parents?.[[row.country, row.store, row.parent].join('|')] || null;
+  const sharedForecastTotal = (row, index) => sharedChildForecast(row, index)?.total ?? row.qty ?? 0;
+  const sharedShare = (row, index, field) => sharedChildForecast(row, index)?.[field] ?? row[field] ?? 0;
+
   function navigate(route) {
     requestedRoute = { ...requestedRoute, ...route };
     window.dispatchEvent(new CustomEvent('planning-route', { detail: requestedRoute }));
@@ -187,8 +193,10 @@
 
   function AllocationPanel({ version, selected, onSelect }) {
     const { message } = App.useApp(), [mode, setMode] = useState('proportional'), [reason, setReason] = useState(), [note, setNote] = useState(''), [shares, setShares] = useState({});
+    const forecastIndex = sharedForecastIndex(version.batch);
     const editable = version.status === '草稿', siblings = selected ? version.rows.filter(r => relationKey(r) === relationKey(selected)) : [];
-    useEffect(() => setShares(Object.fromEntries(siblings.map(r => [r.id, r.final / 100]))), [selected?.id, version.id]);
+    const sharedParent = sharedParentForecast(selected, forecastIndex);
+    useEffect(() => setShares(Object.fromEntries(siblings.map(r => [r.id, sharedShare(r, forecastIndex, 'finalShare') / 100]))), [selected?.id, version.id, forecastIndex?.batchVersion]);
     if (!selected) return h('aside', { className: 'pc12-context-pane pc12-sticky' }, h(Empty, { image: Empty.PRESENTED_IMAGE_SIMPLE, description: '选择子ASIN查看计算与调配' }));
     const update = (row, value) => {
       value = Math.max(0, Math.min(100, Number(value || 0)));
@@ -207,11 +215,11 @@
       h('div', { className: 'pc12-selected-id' }, h('strong', null, selected.child), h('span', null, selected.parent)),
       h(Descriptions, { size: 'small', column: 2, items: [
         { key: 1, label: '历史份额', children: pct(Math.round(selected.metrics?.historyShare * 100)) }, { key: 2, label: '系统份额', children: pct(selected.system) },
-        { key: 3, label: '命中规则', children: selected.ruleCode || '' }, { key: 4, label: '父体预测', children: `${selected.parentQty || 0}件` }
+        { key: 3, label: '命中规则', children: selected.ruleCode || '' }, { key: 4, label: '本批次父体预测', children: `${Number(sharedParent?.total ?? selected.parentQty ?? 0).toLocaleString('zh-CN')}件` }
       ] }),
       h(Divider, null),
       h('span', { className: 'pc12-label' }, '调配方式'), h(Radio.Group, { value: mode, disabled: !editable, onChange: e => setMode(e.target.value), options: [{ value: 'proportional', label: '按比例压缩其他子体' }, { value: 'manual', label: '手工重新分配' }] }),
-      h('div', { className: 'pc12-share-list' }, siblings.map(r => h('div', { key: r.id, className: r.id === selected.id ? 'active' : '' }, h('button', { onClick: () => onSelect(r) }, r.child), inputNumber({ value: shares[r.id], precision: 2, max: 100, addonAfter: '%', disabled: !editable, onChange: v => update(r, v), 'aria-label': `${r.child}最终份额` }), h('span', null, `≈ ${Math.round((r.parentQty || 0) * (shares[r.id] || 0) / 100)}件`)))),
+      h('div', { className: 'pc12-share-list' }, siblings.map(r => { const contractChild = sharedChildForecast(r, forecastIndex); const preview = !editable && contractChild ? contractChild.total : Math.round((sharedParent?.total ?? r.parentQty ?? 0) * (shares[r.id] || 0) / 100); return h('div', { key: r.id, className: r.id === selected.id ? 'active' : '' }, h('button', { onClick: () => onSelect(r) }, r.child), inputNumber({ value: shares[r.id], precision: 2, max: 100, addonAfter: '%', disabled: !editable, onChange: v => update(r, v), 'aria-label': `${r.child}最终份额` }), h('span', null, `≈ ${Number(preview).toLocaleString('zh-CN')}件`)); })),
       h('div', { className: Math.abs(total - 100) < .005 ? 'pc12-total valid' : 'pc12-total invalid' }, h('span', null, '合计'), h('strong', null, `${total.toFixed(2)}%`)),
       h('span', { className: 'pc12-label' }, '调整原因'), select(['尺码结构变化', '新增/下架子体', '近期销售表现异常', '商品运营策略', '其他'], { value: reason, disabled: !editable, placeholder: '请选择', onChange: setReason, 'aria-label': '调整原因' }),
       h('span', { className: 'pc12-label' }, '备注'), h(Input.TextArea, { rows: 2, maxLength: 200, showCount: true, value: note, disabled: !editable, onChange: e => setNote(e.target.value), 'aria-label': '调配备注' }),
@@ -250,7 +258,7 @@
     const [db] = useStore(), { message, modal } = App.useApp(), version = db.versions.find(v => v.id === id);
     const [queryMode, setQueryMode] = useState('parent'), [query, setQuery] = useState(''), [selected, setSelected] = useState(null), [action, setAction] = useState(false);
     if (!version) return h(Empty, { description: '关系版本不存在' });
-    const editable = version.status === '草稿', groups = PD.parentGroups(version.rows), changes = db.changes.filter(c => c.versionId === version.id);
+    const editable = version.status === '草稿', groups = PD.parentGroups(version.rows), changes = db.changes.filter(c => c.versionId === version.id), forecastIndex = sharedForecastIndex(version.batch);
     const filtered = version.rows.filter(r => !query || (queryMode === 'parent' ? r.parent : r.child).includes(query.trim().toUpperCase()));
     const selectedLive = selected && version.rows.find(r => r.id === selected.id);
     const history = queryMode === 'child' && query.trim() ? store.history(query.trim().toUpperCase()) : [];
@@ -259,10 +267,10 @@
       { title: '子ASIN', dataIndex: 'child', width: 132, fixed: 'left', render: v => h(Button, { type: 'link', className: 'pc12-cell-link' }, v) },
       { title: 'Seller SKU', dataIndex: 'sellerSku', width: 170, ellipsis: true },
       { title: '历史份额', width: 94, align: 'right', render: (_, r) => pct(Math.round((r.metrics?.historyShare || 0) * 100)) },
-      { title: '系统份额', dataIndex: 'system', width: 94, align: 'right', render: pct },
-      { title: '人工调整', width: 94, align: 'right', render: (_, r) => { const d = r.final - r.system; return h('span', { className: d ? 'pc12-adjusted' : 'pc12-muted' }, `${d > 0 ? '+' : ''}${pct(d)}`); } },
-      { title: '最终份额', dataIndex: 'final', width: 96, align: 'right', render: v => h('strong', null, pct(v)) },
-      { title: '最终预测', dataIndex: 'qty', width: 94, align: 'right', render: v => h('strong', null, `${v}件`) },
+      { title: '系统份额', width: 94, align: 'right', render: (_, r) => pct(sharedShare(r, forecastIndex, 'systemShare')) },
+      { title: '人工调整', width: 94, align: 'right', render: (_, r) => { const d = sharedShare(r, forecastIndex, 'finalShare') - sharedShare(r, forecastIndex, 'systemShare'); return h('span', { className: d ? 'pc12-adjusted' : 'pc12-muted' }, `${d > 0 ? '+' : ''}${pct(d)}`); } },
+      { title: '最终份额', width: 96, align: 'right', render: (_, r) => h('strong', null, pct(sharedShare(r, forecastIndex, 'finalShare'))) },
+      { title: '本批次最终预测', width: 112, align: 'right', render: (_, r) => h('strong', { 'data-forecast-source': sharedChildForecast(r, forecastIndex) ? 'forecast-batch-contract' : 'planning-fallback' }, `${Number(sharedForecastTotal(r, forecastIndex)).toLocaleString('zh-CN')}件`) },
       { title: '命中规则', dataIndex: 'ruleCode', width: 112, render: v => h(Tag, null, v || '未命中') },
       { title: '关系状态', dataIndex: 'relationState', width: 112, render: v => h(Tag, { color: v === '平台同步' ? 'default' : 'warning' }, v) }
     ];
@@ -271,7 +279,7 @@
     return h(React.Fragment, null,
       h(Head, { title: `${version.id} · 父子关系版本`, note: '关系版本回答本批次“谁属于谁”；历史销量按国家 + 店铺 + 子ASIN归集到本版本父体预测池。', actions: [h(Button, { key: 'back', icon: h(icons.ArrowLeftOutlined), onClick: onBack }, '返回版本列表'), ...actionButtons] }),
       h('div', { className: 'pc12-summary' }, h(Metric, { label: '关联预测批次', value: formatBatch(version.batch) }), h(Metric, { label: '父ASIN', value: `${groups.length}个` }), h(Metric, { label: '子ASIN', value: `${version.rows.length}个` }), h(Metric, { label: '关系变更', value: `${changes.length}条` }), h(Metric, { label: '人工调配', value: `${changes.filter(c => c.type === '份额调优').length}条` }), h(Metric, { label: '状态', value: h(Status, { value: version.status }) })),
-      h('div', { className: 'pc12-basis' }, h('strong', null, '计算依据'), [['父ASIN预测规则', version.forecastId, 'forecast'], ['子ASIN拆解规则', version.splitId, 'split'], ['父子关系', version.id, 'relation'], ['预测参数', version.paramId, 'params']].map(([label, value, target]) => h(Button, { key: label, className: 'pc12-basis-link', type: 'link', onClick: () => target === 'relation' ? null : navigate({ tab: target === 'params' ? 'params' : 'rules', sub: target, versionId: value }) }, `${label}：${value}`))),
+      h('div', { className: 'pc12-basis' }, h('strong', null, '计算依据'), [['父ASIN预测规则', version.forecastId, 'forecast'], ['子ASIN拆解规则', version.splitId, 'split'], ['父子关系', version.id, 'relation'], ['预测参数', version.paramId, 'params']].map(([label, value, target]) => h(Button, { key: label, className: 'pc12-basis-link', type: 'link', onClick: () => target === 'relation' ? null : navigate({ tab: target === 'params' ? 'params' : 'rules', sub: target, versionId: value }) }, `${label}：${value}`)), forecastIndex ? h(Tag, { color: 'success' }, `日级最终预测 · ${forecastIndex.batchVersion}`) : h(Tag, { color: 'warning' }, '预测合同未连接，显示规则回退值')),
       h('div', { className: 'pc12-filterbar' }, h(Radio.Group, { value: queryMode, onChange: e => { setQueryMode(e.target.value); setQuery(''); }, optionType: 'button', buttonStyle: 'solid', options: [{ label: '按父ASIN', value: 'parent' }, { label: '按子ASIN', value: 'child' }] }), h(Input.Search, { value: query, allowClear: true, placeholder: queryMode === 'parent' ? '输入父ASIN' : '输入子ASIN反查历史父体', onChange: e => setQuery(e.target.value.toUpperCase()), style: { width: 310 } }), h('span', { className: 'pc12-muted' }, `当前显示 ${filtered.length} 条 · 点击子ASIN在右侧查看与调配`)),
       h('div', { className: 'pc12-relation-layout' }, h('section', { className: 'pc12-main-pane' }, h(Table, { className: 'pc12-relation-table', size: 'small', rowKey: 'id', sticky: true, pagination: { pageSize: 20, showSizeChanger: false, showTotal: n => `共 ${n} 条` }, scroll: { x: 1260, y: 480 }, columns, dataSource: filtered, rowClassName: r => r.id === selectedLive?.id ? 'pc12-row-selected' : '', onRow: r => ({ onClick: () => setSelected(r) }) }),
         queryMode === 'child' && query.trim() && h('section', { className: 'pc12-history-block' }, h(SectionTitle, { title: '历史挂靠关系', extra: h('span', { className: 'pc12-muted' }, `${query.trim()} · 当前页面追溯`) }), history.length ? h(Table, { size: 'small', rowKey: r => r.versionId + r.id, pagination: false, dataSource: history, columns: [{ title: '预测批次', dataIndex: 'batch', render: formatBatch }, { title: '关系版本', dataIndex: 'versionId' }, { title: '当时父ASIN', dataIndex: 'parent' }, { title: '当时份额', dataIndex: 'final', align: 'right', render: pct }, { title: '关系状态', dataIndex: 'status', render: v => h(Status, { value: v }) }] }) : h(Empty, { image: Empty.PRESENTED_IMAGE_SIMPLE, description: '未找到已生效/冻结的历史关系' }))),
