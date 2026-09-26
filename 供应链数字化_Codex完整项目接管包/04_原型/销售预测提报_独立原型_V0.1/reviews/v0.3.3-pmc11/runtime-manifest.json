@@ -21,24 +21,48 @@
       "sha256": "e88d7fa7f75e36516298bb3dddaeccbfb2a57eb91cab3c969e596a0247618f78"
     },
     {
+      "file": "forecast-batch-model.js",
+      "sha256": "f75da26c0ba58d13ce827fc7c666e4f8c205f8d19fae90f54fab90ff3c2487a2"
+    },
+    {
+      "file": "forecast-plan-workspace.js",
+      "sha256": "610962aebbeb3680a9c3b98ca4b24e97767c4032280bdcae4c4f123558046b49"
+    },
+    {
+      "file": "forecast-plan.css",
+      "sha256": "6e8be50585c7a468bad4b04d8876b3cf26108742cded627fd005395c00c11460"
+    },
+    {
       "file": "index.html",
-      "sha256": "a848c6fe872f9efbd21192c257aa7010c4be7830072b674a4879d76eb7129b8b"
+      "sha256": "a327c574bfa1f7e782bfee99bebbbe677eec9e8f8c4d686d51cd965ba3a9a0b1"
     },
     {
       "file": "parent-asin.css",
-      "sha256": "23fb046b42ba2cf86dd030774efce0b1e383180a5c33ce9dfa0c6f3f57a742d5"
+      "sha256": "49c12f7c6ae72b7c641dd5de210840e6446b581f0c95e7cf34948bdb2151d00f"
     },
     {
       "file": "parent-asin.js",
-      "sha256": "e45cd5d9c97fcd8c4996bb10b8ad6204dc4ff20816302a3c9a4b3ca2c787e5c1"
+      "sha256": "eed5311a31828853f95801fb9014a24b5d71ad857d37a09701ef0f586c70aaaa"
+    },
+    {
+      "file": "parent-asin-config12.css",
+      "sha256": "9c94ec47289ef3129fd82200c7d29d8ea98f92b59900427c60493ff7915e5521"
+    },
+    {
+      "file": "parent-asin-config12.js",
+      "sha256": "f0949f1b90c5fda6196d6235807290b025c2226b8015bd67f5cb751f1830cc4f"
+    },
+    {
+      "file": "planning-model.js",
+      "sha256": "2717106fc073220cef869afd753888344c312e6bef2595aa03c4da42f8ea6a12"
     },
     {
       "file": "pmc-workflow.js",
-      "sha256": "97aaf1b2ab238998ec3e727ad425d9ec51b0be62d4c7b0fe125bd2d48e2176f0"
+      "sha256": "d7cf3ad379ac5bd1806eef2a5babbf53486e94740880607250e2ca3a82f967a5"
     },
     {
       "file": "sales-freeze.css",
-      "sha256": "d20ee8db8f51228ccd5755ef9036c7773d5182ef6c521e21d4059a1621d404be"
+      "sha256": "20bed6c1a557344cb2be8c5cbc1f26ae37a6f02f80732ff52dc0625d7eaa30d5"
     },
     {
       "file": "sales-freeze.js",
@@ -46,7 +70,7 @@
     },
     {
       "file": "submission-window.js",
-      "sha256": "29aebaaa4c8603692f72fd7d6697d17b230138db5f7b11271f4c34abd1f6a3a3"
+      "sha256": "9fbacb1d92fd3a17d6d92b439cbfda522919c488c7fa832af08dfbb2635d6b68"
     },
     {
       "file": "v019.css",

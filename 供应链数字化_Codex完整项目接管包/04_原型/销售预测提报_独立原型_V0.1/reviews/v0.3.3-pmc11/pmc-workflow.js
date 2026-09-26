@@ -11,6 +11,13 @@
   const colors={draft:'default',pending:'processing',confirmed:'success',returned:'warning'};
   const all=()=>groups.flatMap(g=>g.children.map(c=>({g,c,id:c.id})));
   const total=(data,field)=>sumValues(Object.values(data||{}).map(d=>field==='activity'?d.activity?.qty:d[field]));
+  const legacyForecastAt=forecastAt;
+  forecastAt=function(c,batch,date){
+    const live=legacyForecastAt(c,batch,date),planned=batch===currentBatch?window.ForecastBatchContract?.getDailyForecast?.(batch,c.id,date):null;
+    if(!planned)return live;
+    const ai=planned.ruleForecast??planned.ai??live?.ai??0,manual=live?.manual??null,activity=live?.activity?JSON.parse(JSON.stringify(live.activity)):null;
+    return {ai,manual,activity,final:resolveForecast(ai,manual,activity?.qty),reason:activity!=null||manual!=null?(live?.reason||planned.reason):planned.reason};
+  };
   const snapshot=c=>Object.fromEntries(days.map(date=>[date,JSON.parse(JSON.stringify(forecastAt(c,currentBatch,date)))]));
   const effective=(r,date)=>r.calibration?.[date]??r.sales[date].final;
   const effectiveTotal=r=>days.reduce((s,d)=>s+effective(r,d),0);
