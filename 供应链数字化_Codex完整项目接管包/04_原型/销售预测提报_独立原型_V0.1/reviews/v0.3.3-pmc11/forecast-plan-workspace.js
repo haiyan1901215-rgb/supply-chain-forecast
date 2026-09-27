@@ -292,22 +292,25 @@
         const parent = contractParent(forecastIndex, row) || batch.parentForecastResults.find(item => item.key === parentForecastKey(row));
         const dailyFinalForecast = synced?.daily || row.dailyFinalForecast || {};
         const dailyRuleForecast = synced?.ruleDaily || row.dailyRuleForecast || {};
+        const platform = row.platform || 'Amazon';
+        const businessKey = [platform, row.country, row.store, row.parentASIN, row.childASIN].join('|');
         return {
           ...row,
-          resultKey: `${batch.id}::${row.id}`,
+          resultKey: `${batch.id}::${businessKey}`,
           batchId: batch.id,
           batchName: batch.name,
           batchVersion: batch.batchVersion,
           batchDate: batch.batchDate,
           batchCreatedAt: batch.createdAt,
           batchStatus: batch.status,
+          businessKey,
           forecastStartDate: batch.forecastStartDate,
           forecastEndDate: batch.forecastEndDate,
           relationVersion: batch.relationVersion,
           splitRuleVersion: batch.splitRuleSnapshot.version,
           forecastRuleVersion: batch.forecastRuleSnapshot.version,
           siteStoreKey: `${row.country}|${row.store}`,
-          platform: row.platform || 'Amazon',
+          platform,
           finalShare: synced?.finalShare ?? row.finalShare,
           systemShare: synced?.systemShare ?? row.systemShare,
           parentTotal: parent?.total ?? 0,
@@ -329,21 +332,18 @@
       && (!filters.platform || row.platform === filters.platform));
     const setFilter = (key, value) => setFilters(current => ({ ...current, [key]: value || undefined }));
     const reset = () => setFilters({});
-    const openBatch = row => window.dispatchEvent(new CustomEvent('forecast-plan-route', { detail: { view: 'plans', detailId: row.batchId, step: 'forecast' } }));
+    const openBatch = row => window.dispatchEvent(new CustomEvent('forecast-plan-route', { detail: { view: 'result-detail', detailId: row.batchId, step: 'forecast', tabLabel: `${row.batchDate} 预测结果` } }));
     const openCurrent = () => {
       const current = model.getCurrent();
       const target = rows.find(row => row.batchId === current?.id) || rows[0];
       if (target) openBatch(target);
     };
     const columns = [
-      { title: '预测批次', width: 210, fixed: 'left', render: (_, row) => h('div', null, h(Button, { type: 'link', className: 'fp-link', onClick: () => openBatch(row) }, row.batchName), h('div', { className: 'fp-muted' }, row.batchVersion)) },
+      { title: '业务主键', width: 310, fixed: 'left', render: (_, row) => h('div', null, h('strong', null, `${row.platform} · ${row.country} · ${row.store}`), h('div', { className: 'fp-muted' }, `父ASIN ${row.parentASIN} · 子ASIN ${row.childASIN}`)) },
+      { title: '预测批次', width: 210, render: (_, row) => h('div', null, h(Button, { type: 'link', className: 'fp-link', onClick: () => openBatch(row) }, row.batchName), h('div', { className: 'fp-muted' }, row.batchVersion)) },
       { title: '批次时间', width: 126, render: (_, row) => h('div', null, dayText(row.batchDate), h('div', { className: 'fp-muted' }, dateText(row.batchCreatedAt))) },
       { title: '预测范围', width: 190, render: (_, row) => `${dayText(row.forecastStartDate)} ~ ${dayText(row.forecastEndDate)}` },
-      { title: '平台', dataIndex: 'platform', width: 90 },
-      { title: '站点 / 店铺', width: 140, render: (_, row) => `${row.country} · ${row.store}` },
-      { title: '父ASIN', dataIndex: 'parentASIN', width: 145 },
       { title: '父ASIN预测总量', dataIndex: 'parentTotal', width: 132, align: 'right', render: value => h('strong', null, number(value)) },
-      { title: '子ASIN', dataIndex: 'childASIN', width: 145 },
       { title: '子ASIN预测总量', dataIndex: 'total', width: 132, align: 'right', render: value => h('strong', null, number(value)) },
       { title: '最终份额', dataIndex: 'finalShare', width: 92, align: 'right', render: percent },
       { title: '关系版本', dataIndex: 'relationVersion', width: 142 },
@@ -365,7 +365,7 @@
             h(Form.Item, null, h(Button, { onClick: reset }, '重置'))
           )
         ),
-        h('div', { className: 'fp-table-wrap' }, h(Table, { size: 'small', rowKey: 'resultKey', dataSource: filteredRows, columns, scroll: { x: 1700 }, pagination: { pageSize: 12, showSizeChanger: false }, locale: { emptyText: '未找到匹配的历史批次预测结果，请调整筛选项。' } }))
+        h('div', { className: 'fp-table-wrap' }, h(Table, { size: 'small', rowKey: 'resultKey', dataSource: filteredRows, columns, scroll: { x: 1530 }, pagination: { pageSize: 12, showSizeChanger: false }, locale: { emptyText: '未找到匹配的历史批次预测结果，请调整筛选项。' } }))
       )
     );
   }
@@ -393,11 +393,15 @@
     const [view, setView] = useState(initialView);
     const [detailId, setDetailId] = useState(pendingRoute.detailId);
     const [detailStep, setDetailStep] = useState(pendingRoute.step || 'assessment');
+    const [resultTab, setResultTab] = useState(pendingRoute.view === 'result-detail' && pendingRoute.detailId ? { batchId: pendingRoute.detailId, label: pendingRoute.tabLabel || '批次预测结果' } : null);
     const current = model.getCurrent();
-    useEffect(() => { const fn = event => { const route = event.detail || {}; setView(route.view || 'plans'); setDetailId(route.detailId || null); setDetailStep(route.step || 'assessment'); }; window.addEventListener('forecast-plan-route', fn); return () => window.removeEventListener('forecast-plan-route', fn); }, []);
+    useEffect(() => { const fn = event => { const route = event.detail || {}; if (route.view === 'result-detail' && route.detailId) { setResultTab({ batchId: route.detailId, label: route.tabLabel || model.getBatch(route.detailId)?.name || '批次预测结果' }); setView('result-detail'); setDetailId(route.detailId); setDetailStep(route.step || 'forecast'); return; } setView(route.view || 'plans'); setDetailId(route.detailId || null); setDetailStep(route.step || 'assessment'); }; window.addEventListener('forecast-plan-route', fn); return () => window.removeEventListener('forecast-plan-route', fn); }, []);
     const open = id => { setDetailId(id); setView('plans'); setDetailStep('assessment'); };
-    const body = detailId ? h(PlanDetail, { batchId: detailId, initialStep: detailStep, onBack: () => setDetailId(null) }) : view === 'plans' ? h(BatchList, { onOpen: open }) : view === 'results' ? h(ResultsView) : view === 'submission' ? h(SubmissionView, { batch: current }) : h(ReviewView);
-    return h('div', { className: 'forecast-plan-root' }, h(Tabs, { className: 'fp-nav', size: 'small', tabBarStyle: { margin: 0 }, activeKey: view, onChange: key => { setView(key); setDetailId(null); }, items: [{ key: 'plans', label: '预测计划' }, { key: 'results', label: '预测结果' }, { key: 'submission', label: '销售提报' }, { key: 'review', label: '预测复盘' }] }), body);
+    const closeResultTab = () => { setDetailId(null); setDetailStep('assessment'); setResultTab(null); setView('results'); };
+    const body = view === 'result-detail' && detailId ? h(PlanDetail, { batchId: detailId, initialStep: detailStep, onBack: closeResultTab }) : detailId ? h(PlanDetail, { batchId: detailId, initialStep: detailStep, onBack: () => setDetailId(null) }) : view === 'plans' ? h(BatchList, { onOpen: open }) : view === 'results' ? h(ResultsView) : view === 'submission' ? h(SubmissionView, { batch: current }) : h(ReviewView);
+    const resultBatch = resultTab?.batchId ? model.getBatch(resultTab.batchId) : null;
+    const tabItems = [{ key: 'plans', label: '预测计划' }, { key: 'results', label: '预测结果' }, ...(resultTab ? [{ key: 'result-detail', label: resultBatch?.name || resultTab.label }] : []), { key: 'submission', label: '销售提报' }, { key: 'review', label: '预测复盘' }];
+    return h('div', { className: 'forecast-plan-root' }, h(Tabs, { className: 'fp-nav', size: 'small', tabBarStyle: { margin: 0 }, activeKey: view, onChange: key => { if (key === 'result-detail' && resultTab?.batchId) { setView('result-detail'); setDetailId(resultTab.batchId); setDetailStep('forecast'); return; } setView(key); setDetailId(null); setDetailStep('assessment'); }, items: tabItems }), body);
   }
   function navigate(route) {
     const stepMap = { forecast: 'forecast', split: 'split', relations: 'relations', params: 'parameters' };
