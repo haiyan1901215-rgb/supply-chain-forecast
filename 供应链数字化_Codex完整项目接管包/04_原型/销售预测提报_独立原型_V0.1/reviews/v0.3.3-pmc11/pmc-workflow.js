@@ -5,7 +5,7 @@
   const storageKey=(window.forecastStorageScope||'')+'pmc-review-v1',end='2027-04-20',days=Array.from({length:dayDistance(end,currentBatch)+1},(_,i)=>shiftDay(currentBatch,i));
   let db={schema:1,locked:false,records:{},demands:{}},storageError='';
   try{const saved=JSON.parse(localStorage.getItem(storageKey)||'null');if(saved){if(saved.schema!==1||!saved.records||!saved.demands)throw Error();db=saved;}}catch{storageError='审核数据读取失败，请检查浏览器存储后刷新。当前禁止覆盖已有审核数据。';}
-  let active='sales',refresh=()=>{},dirtyReview=false,guard=action=>action(),workflowDemoStage='auto';
+  let active='sales',refresh=()=>{},dirtyReview=false,guard=action=>action(),workflowDemoStage='auto',planningSystemTab={active:'base',batchId:null};
   const key=c=>currentBatch+'|'+c.id,statusOf=c=>db.records[key(c)]?.status||'draft';
   const statuses={draft:'待销售提报',pending:'待PMC审核',confirmed:'已确认',returned:'销售退回'};
   const colors={draft:'default',pending:'processing',confirmed:'success',returned:'warning'};
@@ -33,7 +33,12 @@
   const demoStatus=stage=>stage==='sales'?'draft':stage;
   const demoRecord=(row,stage)=>{const sales=snapshot(row.c),status=demoStatus(stage);return {status,revision:1,sales,calibration:status==='confirmed'?Object.fromEntries(days.map(date=>[date,sales[date].final])):{},reason:status==='returned'?'请重新确认活动结束后的销量变化。':'',returnReason:status==='returned'?'请重新确认活动结束后的销量变化。':'',logs:[{at:'2026-10-21T10:30:00+08:00',action:statuses[status],reason:status==='returned'?'请重新确认活动结束后的销量变化。':'',by:status==='pending'?'销售运营':status==='confirmed'?'PMC计划员':'系统演示'}]};};
   function setDemoStage(stage){workflowDemoStage=stage;selectView(stage==='sales'?'sales':stage==='auto'?'review':'review');refresh();}
-  function openPlanning(route){window.ParentAsinModule?.navigate(route);selectView('decomposition');}
+  function planningBatchLabel(batchId){const batch=window.ForecastBatchContract?.getBatch?.(batchId);return `${formatKey(batch?.batchDate||currentBatch)} 批次`;}
+  function renderPlanningSystemTabs(){const tabs=$('.workspace-tabs-v028');if(!tabs)return;const hasDetail=!!planningSystemTab.batchId,baseActive=planningSystemTab.active!=='detail';tabs.classList.add('planning-system-tabs');tabs.innerHTML=`<button class="workspace-tab ${baseActive?'active':''}" type="button" data-planning-system-tab="base" role="tab" aria-selected="${baseActive}">计划配置</button>${hasDetail?`<button class="workspace-tab ${!baseActive?'active':''}" type="button" data-planning-system-tab="detail" role="tab" aria-selected="${!baseActive}">${planningBatchLabel(planningSystemTab.batchId)} <span class="tab-close" data-planning-system-close="detail" aria-label="关闭${planningBatchLabel(planningSystemTab.batchId)}">×</span></button>`:''}`;}
+  function showPlanningBaseTab(){planningSystemTab.active='base';window.ParentAsinModule?.openResultsList?.();renderPlanningSystemTabs();}
+  function showPlanningDetailTab(){if(!planningSystemTab.batchId)return showPlanningBaseTab();planningSystemTab.active='detail';window.ParentAsinModule?.openSystemBatchDetail?.(planningSystemTab.batchId,'forecast');renderPlanningSystemTabs();}
+  function openForecastResultBatch(batchId){planningSystemTab={active:'detail',batchId};window.ParentAsinModule?.openSystemBatchDetail?.(batchId,'forecast');selectView('decomposition',{keepPlanningSystemTab:true});}
+  function openPlanning(route){planningSystemTab={active:'base',batchId:null};window.ParentAsinModule?.navigate(route);selectView('decomposition');}
   function transaction(change){if(storageError)throw Error(storageError);const next=JSON.parse(JSON.stringify(db));change(next);localStorage.setItem(storageKey,JSON.stringify(next));db=next;refresh();renderTable();window.dispatchEvent(new Event('forecast-workflow-change'));}
   function editable(c){return (window.ForecastWindow?window.ForecastWindow.isOpen():!db.locked)&&['draft','returned'].includes(statusOf(c));}
   window.canEditForecastRecord=id=>editable(findChild(id));
@@ -111,7 +116,7 @@
       h('div',{className:'pmc-toolbar'},h(Space,null,h(Input.Search,{placeholder:'商品名称 / 父子ASIN','aria-label':'审核查询',allowClear:true,onSearch:setQuery,style:{width:300}}),h(Select,{value:site,onChange:setSite,'aria-label':'审核国家站点',style:{width:150},options:[{value:'all',label:'全部国家 / 站点'},{value:'US',label:'🇺🇸 美国 / US'},{value:'UK',label:'🇬🇧 英国 / UK'}]})),h('span',{className:'pmc-muted'},'汇总口径：整个预测范围 · 件')),
       h(Table,{size:'small',rowKey:'id',dataSource:selected,columns,scroll:{x:1440,y:Math.max(260,viewportHeight-350)},pagination:{showSizeChanger:true,showQuickJumper:true,showTotal:n=>'共 '+n+' 个子ASIN'},locale:{emptyText:effectiveStatus==='pending'?'暂无待审核预测，请先在销售填报中提交':'暂无符合条件的预测'},expandable:{showExpandColumn:false,expandedRowKeys:expanded,expandedRowRender:row=>h(Review,{key:row.id+'|'+row.status,row,demo:row.demo,onChanged:()=>bump(revision+1)})}}));
   }
-  function selectView(view){guard(()=>{active=view;const isSales=view==='sales',isDecomposition=view==='decomposition';$('.content').hidden=!isSales;$('.content').style.display=isSales?'':'none';host.hidden=isSales;bar.hidden=isDecomposition;$('.workspace-tabs-v028').style.display=isSales?'':'none';$('.crumb b').textContent=isDecomposition?'计划配置':view==='plans'?'备货计划':'销售预测';$$('.menu button').forEach((item,index)=>item.classList.toggle('active',(view==='sales'&&index===0)||(view==='plans'&&index===1)||(view==='decomposition'&&index===3)));refresh();if(isSales){syncHorizontalScrollbar();}});}
+  function selectView(view,options={}){guard(()=>{active=view;const isSales=view==='sales',isDecomposition=view==='decomposition';if(isDecomposition&&!options.keepPlanningSystemTab)planningSystemTab={active:'base',batchId:null};$('.content').hidden=!isSales;$('.content').style.display=isSales?'':'none';host.hidden=isSales;bar.hidden=isDecomposition;const systemTabs=$('.workspace-tabs-v028');if(systemTabs){systemTabs.style.display=(isSales||isDecomposition)?'':'none';if(isSales)window.forecastWorkspaceTabsRedraw?.();if(isDecomposition)renderPlanningSystemTabs();}$('.crumb b').textContent=isDecomposition?'计划配置':view==='plans'?'备货计划':'销售预测';$$('.menu button').forEach((item,index)=>item.classList.toggle('active',(view==='sales'&&index===0)||(view==='plans'&&index===1)||(view==='decomposition'&&index===3)));refresh();if(isSales){syncHorizontalScrollbar();}});}
   refresh=()=>{barRoot.render(wrap(h(Bar)));root.render(wrap(h(React.Fragment,null,storageError?h(Alert,{type:'error',message:storageError}):null,h(Workspace,{key:active}))));};
   const menu=$$('.menu button');if(menu[0]){menu[0].lastElementChild.textContent='销售预测';menu[0].addEventListener('click',()=>selectView('sales'));}if(menu[1])menu[1].addEventListener('click',()=>selectView('plans'));if(menu[3])menu[3].addEventListener('click',()=>selectView('decomposition'));
   document.addEventListener('change',e=>{if(e.target.matches('[data-row-check],[data-select-all]'))refresh();});
@@ -119,7 +124,8 @@
   window.addEventListener('beforeunload',e=>{if(dirtyReview){e.preventDefault();e.returnValue='';}});
   window.addEventListener('click',e=>{if(!dirtyReview||!e.target.closest('.pmc-workspace')||e.target.closest('.pmc-review'))return;const control=e.target.closest('button,[role="tab"]');if(control){e.preventDefault();e.stopImmediatePropagation();guard(()=>control.click());}},true);
   submit=()=>{active='sales';refresh();};
-  window.pmcWorkflow={getState:()=>JSON.parse(JSON.stringify(db)),selectView,openPlanning};
+  document.addEventListener('click',e=>{const close=e.target.closest('[data-planning-system-close]');if(close){e.preventDefault();e.stopPropagation();planningSystemTab={active:'base',batchId:null};showPlanningBaseTab();return;}const tab=e.target.closest('[data-planning-system-tab]');if(!tab)return;if(tab.dataset.planningSystemTab==='detail')showPlanningDetailTab();else showPlanningBaseTab();});
+  window.pmcWorkflow={getState:()=>JSON.parse(JSON.stringify(db)),selectView,openPlanning,openForecastResultBatch,showPlanningBaseTab};
   window.addEventListener('forecast-window-change',refresh);
   refresh();if(location.hash==='#pmc')selectView('review');else if(location.hash==='#plans')selectView('plans');
 })();

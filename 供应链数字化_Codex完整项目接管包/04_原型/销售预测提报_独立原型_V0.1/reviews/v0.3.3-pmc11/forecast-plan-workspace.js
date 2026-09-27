@@ -11,6 +11,7 @@
   const clone = value => JSON.parse(JSON.stringify(value));
   const dateText = value => String(value || '').slice(0, 16).replace('T', ' ').replaceAll('-', '/');
   const dayText = value => String(value || '').slice(0, 10).replaceAll('-', '/');
+  const batchText = value => `${dayText(value?.batchDate || value)} 批次`;
   const number = value => Number(value || 0).toLocaleString('zh-CN');
   const percent = value => `${(Number(value || 0) / 100).toFixed(2).replace(/\.00$/, '')}%`;
   const signedPercent = value => `${value > 0 ? '+' : ''}${Number(value || 0).toFixed(1)}%`;
@@ -45,10 +46,10 @@
   function BatchList({ onOpen }) {
     const { message } = App.useApp();
     const [query, setQuery] = useState('');
-    const batches = model.list().filter(batch => !query || [batch.name, batch.id, batch.batchVersion].some(value => String(value).includes(query.trim())));
+    const batches = model.list().filter(batch => !query || [batchText(batch), batch.id, batch.batchVersion].some(value => String(value).includes(query.trim())));
     const create = () => { try { const next = model.createNextBatch(); onOpen(next.id); message.success(`已创建 ${next.batchVersion} 草稿`); } catch (error) { message.error(error.message); } };
     const columns = [
-      { title: '预测批次', dataIndex: 'name', width: 196, render: (value, row) => h(Button, { type: 'link', className: 'fp-link', onClick: () => onOpen(row.id) }, value) },
+      { title: '预测批次', dataIndex: 'name', width: 196, render: (_, row) => h(Button, { type: 'link', className: 'fp-link', onClick: () => onOpen(row.id) }, batchText(row)) },
       { title: '数据截点', dataIndex: 'dataCutoffDate', width: 112, render: dayText },
       { title: '预测周期', width: 190, render: (_, row) => `${dayText(row.forecastStartDate)} ~ ${dayText(row.forecastEndDate)}` },
       { title: '父ASIN', width: 78, align: 'right', render: (_, row) => new Set(row.relationSnapshot.map(item => `${item.country}|${item.store}|${item.parentASIN}`)).size },
@@ -72,7 +73,7 @@
   function PlanHeader({ batch, onBack, onStep }) {
     const status = batch.status;
     return h(React.Fragment, null,
-      h(PageHead, { title: h('div', { className: 'fp-detail-title' }, h(Button, { type: 'text', icon: h(icon.ArrowLeftOutlined), onClick: onBack, 'aria-label': '返回预测计划列表' }), h('strong', null, batch.name), statusTag(status)), subtitle: `${batch.batchVersion} · 数据截点 ${dayText(batch.dataCutoffDate)} · 预测周期 ${dayText(batch.forecastStartDate)} ~ ${dayText(batch.forecastEndDate)}`, actions: [h(DemoControl, { key: 'demo', batch, onChange: onStep })] }),
+      h(PageHead, { title: h('div', { className: 'fp-detail-title' }, h(Button, { type: 'text', icon: h(icon.ArrowLeftOutlined), onClick: onBack, 'aria-label': '返回预测计划列表' }), h('strong', null, batchText(batch)), statusTag(status)), subtitle: `${batch.batchVersion} · 数据截点 ${dayText(batch.dataCutoffDate)} · 预测周期 ${dayText(batch.forecastStartDate)} ~ ${dayText(batch.forecastEndDate)}`, actions: [h(DemoControl, { key: 'demo', batch, onChange: onStep })] }),
       h(MetricStrip, { items: [
         { label: '父ASIN预测池', value: `${new Set(batch.relationSnapshot.map(item => `${item.country}|${item.store}|${item.parentASIN}`)).size} 个` },
         { label: '子ASIN清单', value: `${batch.childForecastResults.length} 个` },
@@ -298,8 +299,6 @@
           ...row,
           resultKey: `${batch.id}::${businessKey}`,
           batchId: batch.id,
-          batchName: batch.name,
-          batchVersion: batch.batchVersion,
           batchDate: batch.batchDate,
           batchCreatedAt: batch.createdAt,
           batchStatus: batch.status,
@@ -320,7 +319,7 @@
       });
     });
     const optionList = (values, labeler = value => value) => [...new Set(values.filter(Boolean))].sort().map(value => ({ value, label: labeler(value) }));
-    const batchOptions = batches.map(batch => ({ value: batch.id, label: `${batch.batchDate} · ${batch.batchVersion}` }));
+    const batchOptions = batches.map(batch => ({ value: batch.id, label: batchText(batch) }));
     const parentOptions = optionList(rows.map(row => row.parentASIN));
     const childOptions = optionList(rows.map(row => row.childASIN));
     const siteStoreOptions = optionList(rows.map(row => row.siteStoreKey), value => value.replace('|', ' · '));
@@ -332,15 +331,22 @@
       && (!filters.platform || row.platform === filters.platform));
     const setFilter = (key, value) => setFilters(current => ({ ...current, [key]: value || undefined }));
     const reset = () => setFilters({});
-    const openBatch = row => window.dispatchEvent(new CustomEvent('forecast-plan-route', { detail: { view: 'result-detail', detailId: row.batchId, step: 'forecast', tabLabel: `${row.batchDate} 预测结果` } }));
+    const openBatch = row => {
+      if (window.pmcWorkflow?.openForecastResultBatch) window.pmcWorkflow.openForecastResultBatch(row.batchId);
+      else window.dispatchEvent(new CustomEvent('forecast-plan-route', { detail: { view: 'system-detail', detailId: row.batchId, step: 'forecast' } }));
+    };
     const openCurrent = () => {
       const current = model.getCurrent();
       const target = rows.find(row => row.batchId === current?.id) || rows[0];
       if (target) openBatch(target);
     };
     const columns = [
-      { title: '业务主键', width: 310, fixed: 'left', render: (_, row) => h('div', null, h('strong', null, `${row.platform} · ${row.country} · ${row.store}`), h('div', { className: 'fp-muted' }, `父ASIN ${row.parentASIN} · 子ASIN ${row.childASIN}`)) },
-      { title: '预测批次', width: 210, render: (_, row) => h('div', null, h(Button, { type: 'link', className: 'fp-link', onClick: () => openBatch(row) }, row.batchName), h('div', { className: 'fp-muted' }, row.batchVersion)) },
+      { title: '平台', dataIndex: 'platform', width: 90, fixed: 'left' },
+      { title: '站点', dataIndex: 'country', width: 80 },
+      { title: '店铺', dataIndex: 'store', width: 120 },
+      { title: '父ASIN', dataIndex: 'parentASIN', width: 145 },
+      { title: '子ASIN', dataIndex: 'childASIN', width: 145 },
+      { title: '预测批次', width: 132, render: (_, row) => h(Button, { type: 'link', className: 'fp-link', onClick: () => openBatch(row) }, batchText(row)) },
       { title: '批次时间', width: 126, render: (_, row) => h('div', null, dayText(row.batchDate), h('div', { className: 'fp-muted' }, dateText(row.batchCreatedAt))) },
       { title: '预测范围', width: 190, render: (_, row) => `${dayText(row.forecastStartDate)} ~ ${dayText(row.forecastEndDate)}` },
       { title: '父ASIN预测总量', dataIndex: 'parentTotal', width: 132, align: 'right', render: value => h('strong', null, number(value)) },
@@ -365,17 +371,17 @@
             h(Form.Item, null, h(Button, { onClick: reset }, '重置'))
           )
         ),
-        h('div', { className: 'fp-table-wrap' }, h(Table, { size: 'small', rowKey: 'resultKey', dataSource: filteredRows, columns, scroll: { x: 1530 }, pagination: { pageSize: 12, showSizeChanger: false }, locale: { emptyText: '未找到匹配的历史批次预测结果，请调整筛选项。' } }))
+        h('div', { className: 'fp-table-wrap' }, h(Table, { size: 'small', rowKey: 'resultKey', dataSource: filteredRows, columns, scroll: { x: 1680 }, pagination: { pageSize: 12, showSizeChanger: false }, locale: { emptyText: '未找到匹配的历史批次预测结果，请调整筛选项。' } }))
       )
     );
   }
   function SubmissionView({ batch }) {
     const count = batch.childForecastResults.length;
-    return h(React.Fragment, null, h(PageHead, { title: '销售提报', subtitle: '销售端消费本批次预测清单；页面结构与日级填报交互保持冻结。', actions: [h(Button, { key: 'go', type: 'primary', onClick: () => window.pmcWorkflow?.selectView('sales') }, '进入销售提报页面')] }), h(MetricStrip, { items: [{ label: '当前批次', value: batch.batchVersion }, { label: '填报子ASIN', value: `${count} 个` }, { label: '填报状态', value: batch.submissionState }, { label: '填报时间', value: dateText(batch.submissionWindow.submissionStartTime) }, { label: '截止并冻结', value: dateText(batch.submissionWindow.submissionFreezeTime) }, { label: '规则来源', value: batch.splitRuleSnapshot.version }] }), h(Alert, { type: 'success', showIcon: true, message: '数据契约已准备：父ASIN、子ASIN、预测日期、规则预测、父子关系版本和拆解规则版本将随本批次清单提供给销售页面。' }), h('div', { className: 'fp-panel' }, h('div', { className: 'fp-panel-head' }, h('h2', null, '销售可见数据范围'), h('span', { className: 'fp-muted' }, '后台生产端 → 销售消费端')), h('div', { className: 'fp-panel-body' }, h('div', { className: 'fp-chain' }, [['父ASIN规则预测', '父ASIN预测池'], ['当前父子关系', batch.relationVersion], ['子ASIN拆解', batch.splitRuleSnapshot.version], ['日级规则预测', `${batch.forecastStartDate} ~ ${batch.forecastEndDate}`], ['销售人工 / 活动', '由冻结销售页填写'], ['最终预测快照', '截止并冻结后形成']].map(([title, value]) => h('div', { className: 'fp-chain-node', key: title }, h('span', null, title), h('strong', null, value)))))));
+    return h(React.Fragment, null, h(PageHead, { title: '销售提报', subtitle: '销售端消费本批次预测清单；页面结构与日级填报交互保持冻结。', actions: [h(Button, { key: 'go', type: 'primary', onClick: () => window.pmcWorkflow?.selectView('sales') }, '进入销售提报页面')] }), h(MetricStrip, { items: [{ label: '当前批次', value: batchText(batch) }, { label: '填报子ASIN', value: `${count} 个` }, { label: '填报状态', value: batch.submissionState }, { label: '填报时间', value: dateText(batch.submissionWindow.submissionStartTime) }, { label: '截止并冻结', value: dateText(batch.submissionWindow.submissionFreezeTime) }, { label: '规则来源', value: batch.splitRuleSnapshot.version }] }), h(Alert, { type: 'success', showIcon: true, message: '数据契约已准备：父ASIN、子ASIN、预测日期、规则预测、父子关系版本和拆解规则版本将随本批次清单提供给销售页面。' }), h('div', { className: 'fp-panel' }, h('div', { className: 'fp-panel-head' }, h('h2', null, '销售可见数据范围'), h('span', { className: 'fp-muted' }, '后台生产端 → 销售消费端')), h('div', { className: 'fp-panel-body' }, h('div', { className: 'fp-chain' }, [['父ASIN规则预测', '父ASIN预测池'], ['当前父子关系', batch.relationVersion], ['子ASIN拆解', batch.splitRuleSnapshot.version], ['日级规则预测', `${batch.forecastStartDate} ~ ${batch.forecastEndDate}`], ['销售人工 / 活动', '由冻结销售页填写'], ['最终预测快照', '截止并冻结后形成']].map(([title, value]) => h('div', { className: 'fp-chain-node', key: title }, h('span', null, title), h('strong', null, value)))))));
   }
   function ReviewView() {
     const batches = model.list();
-    const columns = [{ title: '调整批次', dataIndex: 'name', width: 190 }, { title: '评估来源', render: (_, row) => row.assessment.previousBatchVersion || '待下一批次回流' }, { title: '对比期', render: (_, row) => row.assessment.comparable ? `${dayText(row.assessment.comparisonStartDate)} ~ ${dayText(row.assessment.comparisonEndDate)}` : '—' }, { title: '规则预测', render: (_, row) => row.assessment.comparable ? number(row.assessment.ruleForecastTotal) : '—', align: 'right' }, { title: '实际销量', render: (_, row) => row.assessment.comparable ? number(row.assessment.actualSalesTotal) : '—', align: 'right' }, { title: '整体偏差', render: (_, row) => row.assessment.comparable ? h(Tag, { color: Math.abs(row.assessment.varianceRate) > 15 ? 'warning' : 'default' }, signedPercent(row.assessment.varianceRate)) : h(Tag, null, '待回流'), align: 'right' }, { title: '下一批次依据', render: (_, row) => row.assessment.trend }];
+    const columns = [{ title: '调整批次', dataIndex: 'name', width: 190, render: (_, row) => batchText(row) }, { title: '评估来源', render: (_, row) => row.assessment.previousBatchVersion || '待下一批次回流' }, { title: '对比期', render: (_, row) => row.assessment.comparable ? `${dayText(row.assessment.comparisonStartDate)} ~ ${dayText(row.assessment.comparisonEndDate)}` : '—' }, { title: '规则预测', render: (_, row) => row.assessment.comparable ? number(row.assessment.ruleForecastTotal) : '—', align: 'right' }, { title: '实际销量', render: (_, row) => row.assessment.comparable ? number(row.assessment.actualSalesTotal) : '—', align: 'right' }, { title: '整体偏差', render: (_, row) => row.assessment.comparable ? h(Tag, { color: Math.abs(row.assessment.varianceRate) > 15 ? 'warning' : 'default' }, signedPercent(row.assessment.varianceRate)) : h(Tag, null, '待回流'), align: 'right' }, { title: '下一批次依据', render: (_, row) => row.assessment.trend }];
     return h(React.Fragment, null, h(PageHead, { title: '预测复盘', subtitle: '从规则预测、销售提报与实际销量的偏差中形成下一批次调整依据。' }), h('div', { className: 'fp-panel' }, h('div', { className: 'fp-panel-head' }, h('h2', null, '批次复盘总览')), h('div', { className: 'fp-table-wrap' }, h(Table, { size: 'small', rowKey: 'id', dataSource: batches, columns, pagination: false }))), h(Alert, { style: { marginTop: 12 }, type: 'info', showIcon: true, message: '复盘建议需要PMC确认后才会进入下一批次；系统不会自动修改预测参数。' }));
   }
   function PlanDetail({ batchId, onBack, initialStep }) {
@@ -393,15 +399,12 @@
     const [view, setView] = useState(initialView);
     const [detailId, setDetailId] = useState(pendingRoute.detailId);
     const [detailStep, setDetailStep] = useState(pendingRoute.step || 'assessment');
-    const [resultTab, setResultTab] = useState(pendingRoute.view === 'result-detail' && pendingRoute.detailId ? { batchId: pendingRoute.detailId, label: pendingRoute.tabLabel || '批次预测结果' } : null);
     const current = model.getCurrent();
-    useEffect(() => { const fn = event => { const route = event.detail || {}; if (route.view === 'result-detail' && route.detailId) { setResultTab({ batchId: route.detailId, label: route.tabLabel || model.getBatch(route.detailId)?.name || '批次预测结果' }); setView('result-detail'); setDetailId(route.detailId); setDetailStep(route.step || 'forecast'); return; } setView(route.view || 'plans'); setDetailId(route.detailId || null); setDetailStep(route.step || 'assessment'); }; window.addEventListener('forecast-plan-route', fn); return () => window.removeEventListener('forecast-plan-route', fn); }, []);
+    useEffect(() => { const fn = event => { const route = event.detail || {}; setView(route.view || 'plans'); setDetailId(route.detailId || null); setDetailStep(route.step || 'assessment'); }; window.addEventListener('forecast-plan-route', fn); return () => window.removeEventListener('forecast-plan-route', fn); }, []);
     const open = id => { setDetailId(id); setView('plans'); setDetailStep('assessment'); };
-    const closeResultTab = () => { setDetailId(null); setDetailStep('assessment'); setResultTab(null); setView('results'); };
-    const body = view === 'result-detail' && detailId ? h(PlanDetail, { batchId: detailId, initialStep: detailStep, onBack: closeResultTab }) : detailId ? h(PlanDetail, { batchId: detailId, initialStep: detailStep, onBack: () => setDetailId(null) }) : view === 'plans' ? h(BatchList, { onOpen: open }) : view === 'results' ? h(ResultsView) : view === 'submission' ? h(SubmissionView, { batch: current }) : h(ReviewView);
-    const resultBatch = resultTab?.batchId ? model.getBatch(resultTab.batchId) : null;
-    const tabItems = [{ key: 'plans', label: '预测计划' }, { key: 'results', label: '预测结果' }, ...(resultTab ? [{ key: 'result-detail', label: resultBatch?.name || resultTab.label }] : []), { key: 'submission', label: '销售提报' }, { key: 'review', label: '预测复盘' }];
-    return h('div', { className: 'forecast-plan-root' }, h(Tabs, { className: 'fp-nav', size: 'small', tabBarStyle: { margin: 0 }, activeKey: view, onChange: key => { if (key === 'result-detail' && resultTab?.batchId) { setView('result-detail'); setDetailId(resultTab.batchId); setDetailStep('forecast'); return; } setView(key); setDetailId(null); setDetailStep('assessment'); }, items: tabItems }), body);
+    if (view === 'system-detail' && detailId) return h('div', { className: 'forecast-plan-root' }, h(PlanDetail, { batchId: detailId, initialStep: detailStep, onBack: () => window.pmcWorkflow?.showPlanningBaseTab?.() }));
+    const body = detailId ? h(PlanDetail, { batchId: detailId, initialStep: detailStep, onBack: () => setDetailId(null) }) : view === 'plans' ? h(BatchList, { onOpen: open }) : view === 'results' ? h(ResultsView) : view === 'submission' ? h(SubmissionView, { batch: current }) : h(ReviewView);
+    return h('div', { className: 'forecast-plan-root' }, h(Tabs, { className: 'fp-nav', size: 'small', tabBarStyle: { margin: 0 }, activeKey: view, onChange: key => { setView(key); setDetailId(null); setDetailStep('assessment'); }, items: [{ key: 'plans', label: '预测计划' }, { key: 'results', label: '预测结果' }, { key: 'submission', label: '销售提报' }, { key: 'review', label: '预测复盘' }] }), body);
   }
   function navigate(route) {
     const stepMap = { forecast: 'forecast', split: 'split', relations: 'relations', params: 'parameters' };
@@ -411,6 +414,14 @@
   window.ParentAsinModule = {
     ParentAsinWorkspace: ForecastPlanWorkspace,
     navigate,
+    openResultsList() {
+      pendingRoute = { view: 'results', detailId: null, step: 'assessment' };
+      window.dispatchEvent(new CustomEvent('forecast-plan-route', { detail: pendingRoute }));
+    },
+    openSystemBatchDetail(batchId, step = 'forecast') {
+      pendingRoute = { view: 'system-detail', detailId: batchId || model.getCurrent().id, step };
+      window.dispatchEvent(new CustomEvent('forecast-plan-route', { detail: pendingRoute }));
+    },
     getCurrentBasis() {
       const batch = contract.getCurrent();
       return { batch: batch.batchDate, forecast: batch.forecastRuleSnapshot.version, split: batch.splitRuleSnapshot.version, relation: batch.relationVersion, params: batch.parameterSnapshot.version, status: batch.status };
