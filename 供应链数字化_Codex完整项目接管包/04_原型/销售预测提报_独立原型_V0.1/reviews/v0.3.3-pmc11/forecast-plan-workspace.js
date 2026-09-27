@@ -282,11 +282,92 @@
     const columns = [{ title: '父ASIN', dataIndex: 'parentASIN', width: 150 }, { title: '对比期规则预测', dataIndex: 'total', align: 'right', render: number }, { title: '对比期实际销量', dataIndex: 'actualSales', align: 'right', render: number }, { title: '偏差', dataIndex: 'variance', align: 'right', render: value => `${value > 0 ? '+' : ''}${number(value)}` }, { title: '偏差率', dataIndex: 'varianceRate', align: 'right', render: value => h(Tag, { color: Math.abs(value) > 15 ? 'warning' : 'default' }, signedPercent(value)) }];
     return h(React.Fragment, null, h(Alert, { type: 'info', showIcon: true, message: '复盘只产生下一批次调整依据，不会擅自回写参数或关系。' }), h('div', { className: 'fp-panel' }, h('div', { className: 'fp-panel-head' }, h('h2', null, '规则预测与实际销量'), h('span', { className: 'fp-muted' }, `同周期 ${comparisonPeriod} · 按批次快照保留`)), h('div', { className: 'fp-table-wrap' }, h(Table, { size: 'small', rowKey: 'key', pagination: false, dataSource: batch.forecastVsActual, columns, locale: { emptyText: '暂无可比批次数据' } }))), h('div', { className: 'fp-split' }, h('div', { className: 'fp-panel' }, h('div', { className: 'fp-panel-head' }, h('h2', null, '下一批次调整建议')), h('div', { className: 'fp-panel-body' }, h('div', { className: 'fp-logic-line' }, h('span', { className: 'fp-logic-index' }, '01'), h('strong', null, '参数'), h('span', null, Math.abs(batch.assessment.varianceRate) > 15 ? '复核历史/近期权重与趋势周期' : '默认参数暂不调整')), h('div', { className: 'fp-logic-line' }, h('span', { className: 'fp-logic-index' }, '02'), h('strong', null, '关系'), h('span', null, `${batch.relationChanges.length} 条关系变化需要进入下一批次确认`)), h('div', { className: 'fp-logic-line' }, h('span', { className: 'fp-logic-index' }, '03'), h('strong', null, '拆解'), h('span', null, '复核低销量子体份额与人工调配原因')))), h('div', { className: 'fp-panel' }, h('div', { className: 'fp-panel-head' }, h('h2', null, '批次审计轨迹')), h('div', { className: 'fp-panel-body fp-audit' }, batch.auditTimeline.slice().reverse().map(item => h('div', { className: 'fp-audit-item', key: `${item.at}-${item.action}` }, h('strong', null, `${dateText(item.at)} · ${item.action}`), h('span', null, `${item.actor} · ${item.reason}`)))))));
   }
-  function ResultsView({ batch }) {
-    const forecastIndex = contract.getForecastIndex(batch.id);
-    const rows = batch.childForecastResults.map(row => { const synced = contractChild(forecastIndex, row); return { ...row, finalShare: synced?.finalShare ?? row.finalShare, systemShare: synced?.systemShare ?? row.systemShare, total: synced?.total ?? Object.values(row.dailyFinalForecast).reduce((a, b) => a + (Number(b) || 0), 0) }; });
-    const openBatch = () => window.dispatchEvent(new CustomEvent('forecast-plan-route', { detail: { view: 'plans', detailId: batch.id, step: 'forecast' } }));
-    return h(React.Fragment, null, h(PageHead, { title: '预测结果', subtitle: '查看本批次完成父ASIN预测与子ASIN拆解后的规则预测清单。', actions: [h(Button, { key: 'open', type: 'primary', onClick: openBatch }, '打开当前批次')] }), h('div', { className: 'fp-panel' }, h('div', { className: 'fp-panel-head' }, h('h2', null, `${batch.name} · 子ASIN规则预测`), h(Tag, { color: 'blue' }, batch.splitRuleSnapshot.version)), h('div', { className: 'fp-table-wrap' }, h(Table, { size: 'small', rowKey: 'id', dataSource: rows, columns: [{ title: '父ASIN', dataIndex: 'parentASIN', width: 150 }, { title: '子ASIN', dataIndex: 'childASIN', width: 150 }, { title: '国家 / 店铺', render: (_, row) => `${row.country} · ${row.store}` }, { title: '系统份额', dataIndex: 'systemShare', align: 'right', render: percent }, { title: '最终份额', dataIndex: 'finalShare', align: 'right', render: percent }, { title: '规则预测总量', dataIndex: 'total', align: 'right', render: number }, { title: '关系版本', render: () => batch.relationVersion }, { title: '来源', render: () => h(Tag, null, '规则预测') }] }))));
+  function ResultsView() {
+    const [filters, setFilters] = useState({});
+    const batches = model.list();
+    const rows = batches.flatMap(batch => {
+      const forecastIndex = contract.getForecastIndex(batch.id);
+      return batch.childForecastResults.map(row => {
+        const synced = contractChild(forecastIndex, row);
+        const parent = contractParent(forecastIndex, row) || batch.parentForecastResults.find(item => item.key === parentForecastKey(row));
+        const dailyFinalForecast = synced?.daily || row.dailyFinalForecast || {};
+        const dailyRuleForecast = synced?.ruleDaily || row.dailyRuleForecast || {};
+        return {
+          ...row,
+          resultKey: `${batch.id}::${row.id}`,
+          batchId: batch.id,
+          batchName: batch.name,
+          batchVersion: batch.batchVersion,
+          batchDate: batch.batchDate,
+          batchCreatedAt: batch.createdAt,
+          batchStatus: batch.status,
+          forecastStartDate: batch.forecastStartDate,
+          forecastEndDate: batch.forecastEndDate,
+          relationVersion: batch.relationVersion,
+          splitRuleVersion: batch.splitRuleSnapshot.version,
+          forecastRuleVersion: batch.forecastRuleSnapshot.version,
+          siteStoreKey: `${row.country}|${row.store}`,
+          platform: row.platform || 'Amazon',
+          finalShare: synced?.finalShare ?? row.finalShare,
+          systemShare: synced?.systemShare ?? row.systemShare,
+          parentTotal: parent?.total ?? 0,
+          ruleTotal: synced?.ruleTotal ?? Object.values(dailyRuleForecast).reduce((a, b) => a + (Number(b) || 0), 0),
+          total: synced?.total ?? Object.values(dailyFinalForecast).reduce((a, b) => a + (Number(b) || 0), 0)
+        };
+      });
+    });
+    const optionList = (values, labeler = value => value) => [...new Set(values.filter(Boolean))].sort().map(value => ({ value, label: labeler(value) }));
+    const batchOptions = batches.map(batch => ({ value: batch.id, label: `${batch.batchDate} · ${batch.batchVersion}` }));
+    const parentOptions = optionList(rows.map(row => row.parentASIN));
+    const childOptions = optionList(rows.map(row => row.childASIN));
+    const siteStoreOptions = optionList(rows.map(row => row.siteStoreKey), value => value.replace('|', ' · '));
+    const platformOptions = optionList(rows.map(row => row.platform));
+    const filteredRows = rows.filter(row => (!filters.batchId || row.batchId === filters.batchId)
+      && (!filters.parentASIN || row.parentASIN === filters.parentASIN)
+      && (!filters.childASIN || row.childASIN === filters.childASIN)
+      && (!filters.siteStore || row.siteStoreKey === filters.siteStore)
+      && (!filters.platform || row.platform === filters.platform));
+    const setFilter = (key, value) => setFilters(current => ({ ...current, [key]: value || undefined }));
+    const reset = () => setFilters({});
+    const openBatch = row => window.dispatchEvent(new CustomEvent('forecast-plan-route', { detail: { view: 'plans', detailId: row.batchId, step: 'forecast' } }));
+    const openCurrent = () => {
+      const current = model.getCurrent();
+      const target = rows.find(row => row.batchId === current?.id) || rows[0];
+      if (target) openBatch(target);
+    };
+    const columns = [
+      { title: '预测批次', width: 210, fixed: 'left', render: (_, row) => h('div', null, h(Button, { type: 'link', className: 'fp-link', onClick: () => openBatch(row) }, row.batchName), h('div', { className: 'fp-muted' }, row.batchVersion)) },
+      { title: '批次时间', width: 126, render: (_, row) => h('div', null, dayText(row.batchDate), h('div', { className: 'fp-muted' }, dateText(row.batchCreatedAt))) },
+      { title: '预测范围', width: 190, render: (_, row) => `${dayText(row.forecastStartDate)} ~ ${dayText(row.forecastEndDate)}` },
+      { title: '平台', dataIndex: 'platform', width: 90 },
+      { title: '站点 / 店铺', width: 140, render: (_, row) => `${row.country} · ${row.store}` },
+      { title: '父ASIN', dataIndex: 'parentASIN', width: 145 },
+      { title: '父ASIN预测总量', dataIndex: 'parentTotal', width: 132, align: 'right', render: value => h('strong', null, number(value)) },
+      { title: '子ASIN', dataIndex: 'childASIN', width: 145 },
+      { title: '子ASIN预测总量', dataIndex: 'total', width: 132, align: 'right', render: value => h('strong', null, number(value)) },
+      { title: '最终份额', dataIndex: 'finalShare', width: 92, align: 'right', render: percent },
+      { title: '关系版本', dataIndex: 'relationVersion', width: 142 },
+      { title: '状态', dataIndex: 'batchStatus', width: 112, render: statusTag },
+      { title: '来源', width: 96, render: () => h(Tag, null, '规则预测') },
+      { title: '操作', width: 92, fixed: 'right', render: (_, row) => h(Button, { type: 'link', onClick: () => openBatch(row) }, '打开批次') }
+    ];
+    return h(React.Fragment, null,
+      h(PageHead, { title: '预测结果', subtitle: '一个列表汇总全部预测批次，可按批次、父ASIN、子ASIN、站点店铺和平台筛选历史预测结果。', actions: [h(Button, { key: 'open', type: 'primary', onClick: openCurrent }, '打开当前批次')] }),
+      h('div', { className: 'fp-panel' },
+        h('div', { className: 'fp-panel-head' }, h('h2', null, '预测结果列表'), h(Tag, { color: 'blue' }, `${filteredRows.length}/${rows.length} 条 · ${batches.length} 个批次`)),
+        h('div', { className: 'fp-panel-body', style: { paddingBottom: 4 } },
+          h(Form, { layout: 'inline', size: 'small', style: { rowGap: 8 } },
+            h(Form.Item, { label: '预测批次' }, h(Select, { allowClear: true, showSearch: true, optionFilterProp: 'label', placeholder: '全部批次', value: filters.batchId, options: batchOptions, onChange: value => setFilter('batchId', value), style: { width: 210 } })),
+            h(Form.Item, { label: '父ASIN' }, h(Select, { allowClear: true, showSearch: true, optionFilterProp: 'label', placeholder: '全部父ASIN', value: filters.parentASIN, options: parentOptions, onChange: value => setFilter('parentASIN', value), style: { width: 150 } })),
+            h(Form.Item, { label: '子ASIN' }, h(Select, { allowClear: true, showSearch: true, optionFilterProp: 'label', placeholder: '全部子ASIN', value: filters.childASIN, options: childOptions, onChange: value => setFilter('childASIN', value), style: { width: 150 } })),
+            h(Form.Item, { label: '站点店铺' }, h(Select, { allowClear: true, showSearch: true, optionFilterProp: 'label', placeholder: '全部站点店铺', value: filters.siteStore, options: siteStoreOptions, onChange: value => setFilter('siteStore', value), style: { width: 150 } })),
+            h(Form.Item, { label: '平台' }, h(Select, { allowClear: true, placeholder: '全部平台', value: filters.platform, options: platformOptions, onChange: value => setFilter('platform', value), style: { width: 120 } })),
+            h(Form.Item, null, h(Button, { onClick: reset }, '重置'))
+          )
+        ),
+        h('div', { className: 'fp-table-wrap' }, h(Table, { size: 'small', rowKey: 'resultKey', dataSource: filteredRows, columns, scroll: { x: 1700 }, pagination: { pageSize: 12, showSizeChanger: false }, locale: { emptyText: '未找到匹配的历史批次预测结果，请调整筛选项。' } }))
+      )
+    );
   }
   function SubmissionView({ batch }) {
     const count = batch.childForecastResults.length;
@@ -315,7 +396,7 @@
     const current = model.getCurrent();
     useEffect(() => { const fn = event => { const route = event.detail || {}; setView(route.view || 'plans'); setDetailId(route.detailId || null); setDetailStep(route.step || 'assessment'); }; window.addEventListener('forecast-plan-route', fn); return () => window.removeEventListener('forecast-plan-route', fn); }, []);
     const open = id => { setDetailId(id); setView('plans'); setDetailStep('assessment'); };
-    const body = detailId ? h(PlanDetail, { batchId: detailId, initialStep: detailStep, onBack: () => setDetailId(null) }) : view === 'plans' ? h(BatchList, { onOpen: open }) : view === 'results' ? h(ResultsView, { batch: current }) : view === 'submission' ? h(SubmissionView, { batch: current }) : h(ReviewView);
+    const body = detailId ? h(PlanDetail, { batchId: detailId, initialStep: detailStep, onBack: () => setDetailId(null) }) : view === 'plans' ? h(BatchList, { onOpen: open }) : view === 'results' ? h(ResultsView) : view === 'submission' ? h(SubmissionView, { batch: current }) : h(ReviewView);
     return h('div', { className: 'forecast-plan-root' }, h(Tabs, { className: 'fp-nav', size: 'small', tabBarStyle: { margin: 0 }, activeKey: view, onChange: key => { setView(key); setDetailId(null); }, items: [{ key: 'plans', label: '预测计划' }, { key: 'results', label: '预测结果' }, { key: 'submission', label: '销售提报' }, { key: 'review', label: '预测复盘' }] }), body);
   }
   function navigate(route) {
