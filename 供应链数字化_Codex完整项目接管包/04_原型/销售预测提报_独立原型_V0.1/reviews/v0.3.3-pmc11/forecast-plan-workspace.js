@@ -4,7 +4,7 @@
   const { useEffect, useMemo, useRef, useState } = React;
   const { Alert, App, Button, Checkbox, Descriptions, Divider, Drawer, Empty, Form, Input, InputNumber, Pagination, Popover, Progress, Segmented, Select, Space, Steps, Table, Tabs, Tag, Tooltip, Upload } = antd;
   const icon = window.icons || {};
-  const model = window.ForecastBatchModel.createStore();
+  const model = window.ForecastBatchModel.createStore({}, null);
   const contract = model.contract;
   window.ForecastBatchContract = contract;
   let pendingRoute = { view: 'plans', detailId: null, step: 'assessment' };
@@ -141,14 +141,10 @@
       }, h(PlanTable, { rowKey: 'id', dataSource: batches, columns, scroll: { y: 'max(120px, calc(100vh - 300px))' }, onRow: row => ({ className: 'fp-batch-row', onDoubleClick: () => onOpen(row.id) }) }))
     );
   }
-  function DemoControl({ batch, onChange }) {
-    const options = [{ value: 'auto', label: '按实际状态' }, ...steps.map(step => ({ value: step.key, label: `演示：${step.title}` }))];
-    return h(Space, { size: 6 }, h('span', { className: 'fp-demo-label' }, '流程演示状态'), h(Select, { size: 'small', value: model.getDemoStage(), options, onChange: value => { model.setDemoStage(value); if (value !== 'auto') onChange(value); }, style: { width: 148 }, 'aria-label': '流程演示状态' }), h(Tooltip, { title: '仅切换当前界面展示的流程节点，不切换角色账号，不创建或回滚版本' }, h('span', { className: 'fp-muted' }, 'ⓘ')));
-  }
-  function PlanHeader({ batch, onBack, onStep }) {
+  function PlanHeader({ batch, onBack }) {
     const status = batch.status;
     return h(React.Fragment, null,
-      h(PageHead, { title: h('div', { className: 'fp-detail-title' }, h(Button, { type: 'text', icon: h(icon.ArrowLeftOutlined), onClick: onBack, 'aria-label': '返回预测计划列表' }), h('strong', null, batchText(batch)), statusTag(status)), subtitle: `${batch.batchVersion} · 数据截点 ${dayText(batch.dataCutoffDate)} · 预测周期 ${dayText(batch.forecastStartDate)} ~ ${dayText(batch.forecastEndDate)}`, actions: [h(DemoControl, { key: 'demo', batch, onChange: onStep })] }),
+      h(PageHead, { title: h('div', { className: 'fp-detail-title' }, h(Button, { type: 'text', icon: h(icon.ArrowLeftOutlined), onClick: onBack, 'aria-label': '返回预测计划列表' }), h('strong', null, batchText(batch)), statusTag(status)), subtitle: `${batch.batchVersion} · 数据截点 ${dayText(batch.dataCutoffDate)} · 预测周期 ${dayText(batch.forecastStartDate)} ~ ${dayText(batch.forecastEndDate)}` }),
       h(MetricStrip, { items: [
         { label: '父ASIN预测池', value: `${new Set(batch.relationSnapshot.map(item => `${item.country}|${item.store}|${item.parentASIN}`)).size} 个` },
         { label: '子ASIN清单', value: `${batch.childForecastResults.length} 个` },
@@ -176,6 +172,7 @@
     return h('div', { className: 'fp-stepbar' }, h(Steps, { current, size: 'small', responsive: true, items, onChange: index => onChange(steps[index].key) }));
   }
   function AssessmentStep({ batch, onStep }) {
+    const { message } = App.useApp();
     const variance = batch.assessment.varianceRate;
     const comparisonPeriod = batch.assessment.comparable ? `${dayText(batch.assessment.comparisonStartDate)} ~ ${dayText(batch.assessment.comparisonEndDate)}（${batch.assessment.comparisonDays}天）` : '等待下一批次实际销量回流';
     const columns = [
@@ -192,7 +189,7 @@
       h(PlanListPanel, {
         title: '父ASIN预测与实际同周期对比',
         meta: h('span', { className: 'fp-muted' }, comparisonPeriod),
-        toolbar: h(Button, { type: 'primary', onClick: () => onStep('parameters') }, '进入参数调整')
+        toolbar: h(Button, { type: 'primary', onClick: () => { try { model.confirmAssessment(batch.id); message.success('预测评估已确认，进入参数调整'); } catch (error) { message.error(error.message); } } }, '确认评估并进入参数调整')
       }, h(PlanTable, { rowKey: 'key', dataSource: batch.forecastVsActual, columns, locale: { emptyText: '暂无可比批次数据' } })),
       h('div', { className: 'fp-panel' }, h('div', { className: 'fp-panel-head' }, h('h2', null, '评估结论'), h('span', { className: 'fp-muted' }, '作为本批次调整依据留存')), h('div', { className: 'fp-panel-body' }, h('div', { className: 'fp-logic-line' }, h('span', { className: 'fp-logic-index' }, '01'), h('strong', null, '读取来源'), h('span', null, '上一批次规则预测 + 销售提报 + 实际销量 + 当前父子关系')), h('div', { className: 'fp-logic-line' }, h('span', { className: 'fp-logic-index' }, '02'), h('strong', null, '系统建议'), h('span', null, Math.abs(variance) > 15 ? '优先复核近期趋势、低销量子体和关系变更影响' : '整体偏差在可接受范围内，可优先确认关系并沿用参数')), h('div', { className: 'fp-logic-line' }, h('span', { className: 'fp-logic-index' }, '03'), h('strong', null, 'PMC动作'), h('span', null, '确认后进入本批次参数、关系和拆解调配；每次调整需填写原因'))))
     );
@@ -695,10 +692,12 @@
     const revision = useStoreRevision();
     const batch = model.getBatch(batchId);
     const [step, setStep] = useState(initialStep || batch?.currentStep || 'assessment');
-    useEffect(() => { if (initialStep) setStep(initialStep); }, [batchId, initialStep]);
+    const workflowStepRef = useRef(batch?.currentStep);
+    useEffect(() => { workflowStepRef.current = batch?.currentStep; setStep(initialStep || batch?.currentStep || 'assessment'); }, [batchId, initialStep]);
+    useEffect(() => { if (workflowStepRef.current !== batch?.currentStep) { workflowStepRef.current = batch?.currentStep; setStep(batch?.currentStep || 'assessment'); } }, [batch?.currentStep]);
     if (!batch) return h(Empty, { description: '预测批次不存在' });
     const content = { assessment: h(AssessmentStep, { batch, onStep: setStep }), parameters: h(ParameterStep, { batch }), relations: h(RelationStep, { batch }), split: h(SplitStep, { batch }), forecast: h(ForecastStep, { batch, onStep: setStep }), submission: h(WindowStep, { batch }), review: h(ReviewStep, { batch }) }[step];
-    return h(React.Fragment, null, h(PlanHeader, { batch, onBack, onStep: setStep }), h(WorkflowSteps, { active: step, batch, onChange: setStep }), content);
+    return h(React.Fragment, null, h(PlanHeader, { batch, onBack }), h(WorkflowSteps, { active: step, batch, onChange: setStep }), content);
   }
   function ForecastPlanWorkspace() {
     useStoreRevision();
@@ -707,7 +706,7 @@
     const [detailId, setDetailId] = useState(pendingRoute.detailId);
     const [detailStep, setDetailStep] = useState(pendingRoute.step || 'assessment');
     useEffect(() => { const fn = event => { const route = event.detail || {}; setView(route.view || 'plans'); setDetailId(route.detailId || null); setDetailStep(route.step || 'assessment'); }; window.addEventListener('forecast-plan-route', fn); return () => window.removeEventListener('forecast-plan-route', fn); }, []);
-    const open = id => { setDetailId(id); setView('plans'); setDetailStep('assessment'); };
+    const open = id => { setDetailId(id); setView('plans'); setDetailStep(model.getBatch(id)?.currentStep || 'assessment'); };
     if (view === 'system-detail' && detailId) return h('div', { className: 'forecast-plan-root' }, h(PlanDetail, { batchId: detailId, initialStep: detailStep, onBack: () => window.pmcWorkflow?.showPlanningBaseTab?.() }));
     const activeView = view === 'results' ? 'results' : 'plans';
     const body = detailId ? h(PlanDetail, { batchId: detailId, initialStep: detailStep, onBack: () => setDetailId(null) }) : activeView === 'results' ? h(ResultsView) : h(BatchList, { onOpen: open });

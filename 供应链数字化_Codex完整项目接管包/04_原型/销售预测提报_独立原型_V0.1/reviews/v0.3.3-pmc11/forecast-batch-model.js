@@ -438,15 +438,13 @@
     }, services);
     const current = createBatch({
       id: 'FB-20261021-01', batchVersion: 'V20261021-01', name: '2026-10-21 第1批预测', batchDate: currentDate,
-      dataCutoffDate: '2026-10-20', status: '销售填报中', currentStep: 'submission', submissionState: '填报中', previousBatchId: previous.id, workflowState: '填报进行中', relationConfirmed: true, splitConfirmed: true, resultGenerated: true, resultVersion: 'RESULT-20261021-V01', resultGeneratedAt: '2026-10-21T10:50:00+08:00',
+      dataCutoffDate: '2026-10-20', status: '评估中', currentStep: 'assessment', submissionState: '待发布', previousBatchId: previous.id, workflowState: '评估中', relationConfirmed: false, splitConfirmed: false, resultGenerated: false,
       relationVersion: 'REL-20261021-V02', forecastRuleVersion: 'FORECAST-20261021-V01', splitRuleVersion: 'SPLIT-20261021-V01', parameterVersion: 'PARAM-20261021-V01',
       relations: currentRelations,
       relationChanges: currentRelationChanges,
       auditTimeline: [
         { at: '2026-10-21T09:00:00+08:00', action: '创建预测批次', actor: 'PMC计划员', reason: '读取上一批次预测、实际与关系快照' },
-        { at: '2026-10-21T09:20:00+08:00', action: '完成预测评估', actor: 'PMC计划员', reason: '识别低销量子体与父体趋势变化' },
-        { at: '2026-10-21T10:30:00+08:00', action: '确认本批次关系', actor: 'PMC计划员', reason: supportsDemoMove ? 'B0GRG7J9MN 从 B0GRGFFVVN 调整至 B0H4QG3TLS，历史销量按当前关系重新归集' : '确认本批次父子关系' },
-        { at: '2026-10-21T11:00:00+08:00', action: '发布销售填报窗口', actor: 'PMC计划员', reason: '规则预测完成后交给销售填报' }
+        { at: '2026-10-21T09:05:00+08:00', action: '识别评估异常', actor: '系统', reason: supportsDemoMove ? '检测到父子关系变化，等待PMC评估确认' : '检测上一批次预测与实际偏差' }
       ]
     }, services, previous);
     current.relationSnapshot = current.relationSnapshot.map(relation => ({ ...relation, previousParentASIN: previous.relationSnapshot.find(old => old.childASIN === relation.childASIN && old.country === relation.country)?.parentASIN || relation.parentASIN }));
@@ -469,13 +467,11 @@
       state = null;
     }
     if (!validState(state)) state = seed(services);
-    let demoStage = 'auto';
     const listeners = new Set();
     const save = () => { try { storage?.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (error) { /* demo continues in memory */ } listeners.forEach(listener => listener(getState())); if (root.dispatchEvent && typeof Event !== 'undefined') root.dispatchEvent(new Event('forecast-batch-change')); };
     const getBatchRaw = batchId => { const value = batchId || state.currentBatchId; return state.batches.find(batch => batch.id === value || batch.batchDate === value || batch.batchVersion === value); };
     const getActiveResult = batch => batch?.resultSnapshots?.find(snapshot => snapshot.version === batch.activeResultVersion) || null;
-    const effectiveStatus = batch => demoStage === 'auto' || batch.id !== state.currentBatchId ? batch.status : ({ assessment: '评估中', parameters: '参数调整中', relations: '关系确认中', split: '拆解规则确认中', forecast: '预测计算中', submission: '销售填报中', review: '待复盘' }[demoStage] || batch.status);
-    const getState = () => ({ revision: state.revision, currentBatchId: state.currentBatchId, demoStage });
+    const getState = () => ({ revision: state.revision, currentBatchId: state.currentBatchId });
     const write = (batchId, mutator) => {
       const batch = getBatchRaw(batchId);
       if (!batch) throw Error('预测批次不存在');
@@ -519,13 +515,11 @@
     const api = {
       key: STORAGE_KEY,
       getState,
-      getCurrent: () => { const raw = getBatchRaw(); if (!raw) return null; const batch = clone(raw); batch.status = effectiveStatus(batch); batch.demoStage = demoStage; return batch; },
-      getBatch: batchId => { const raw = getBatchRaw(batchId); if (!raw) return null; const batch = clone(raw); batch.status = effectiveStatus(batch); batch.demoStage = demoStage; return batch; },
+      getCurrent: () => { const raw = getBatchRaw(); return raw ? clone(raw) : null; },
+      getBatch: batchId => { const raw = getBatchRaw(batchId); return raw ? clone(raw) : null; },
       getWindow: batchId => { const batch = api.getBatch(batchId); if (!batch) return null; return { ...clone(batch.submissionWindow), batchId: batch.id, batchVersion: batch.batchVersion, status: batch.status, submissionStartTime: batch.submissionWindow.submissionStartTime, submissionDeadlineTime: batch.submissionWindow.submissionDeadlineTime, submissionFreezeTime: batch.submissionWindow.submissionFreezeTime }; },
       getSnapshot: batchId => api.getBatch(batchId),
-      list: () => state.batches.slice().sort((a, b) => b.batchDate.localeCompare(a.batchDate)).map(batch => ({ ...clone(batch), status: effectiveStatus(batch) })),
-      setDemoStage: stage => { demoStage = stage || 'auto'; listeners.forEach(listener => listener(getState())); root.dispatchEvent?.(new Event('forecast-batch-demo-change')); },
-      getDemoStage: () => demoStage,
+      list: () => state.batches.slice().sort((a, b) => b.batchDate.localeCompare(a.batchDate)).map(clone),
       createNextBatch: input => {
         const previous = getBatchRaw();
         const nextDate = input?.batchDate || shiftDate(previous.batchDate, 7);
@@ -538,7 +532,8 @@
         next.auditTimeline[0].reason = '继承上一批次快照，等待PMC重新评估与确认';
         state.batches.push(next); state.currentBatchId = next.id; state.revision += 1; save(); return clone(next);
       },
-      updateParameters: (batchId, changes, reason) => write(batchId, batch => { const before = clone(batch.parameterSnapshot); batch.parameterSnapshot = { ...batch.parameterSnapshot, ...changes, version: nextVersion(batch.parameterSnapshot.version) }; batch.status = '参数已确认'; batch.workflowState = '参数已确认'; batch.currentStep = 'parameters'; invalidateResult(batch, '参数已确认'); batch.adjustmentLog.unshift({ at: new Date().toISOString(), type: '预测参数', before, after: clone(batch.parameterSnapshot), reason, actor: 'PMC计划员' }); batch.auditTimeline.push({ at: new Date().toISOString(), action: '调整预测参数', actor: 'PMC计划员', reason }); }),
+      confirmAssessment: batchId => write(batchId, batch => { batch.status = '参数调整中'; batch.workflowState = '评估已完成'; batch.currentStep = 'parameters'; batch.auditTimeline.push({ at: new Date().toISOString(), action: '完成预测评估', actor: 'PMC计划员', reason: '确认上一批次偏差与本批次关系异常，进入参数确认' }); }),
+      updateParameters: (batchId, changes, reason) => write(batchId, batch => { const before = clone(batch.parameterSnapshot); batch.parameterSnapshot = { ...batch.parameterSnapshot, ...changes, version: nextVersion(batch.parameterSnapshot.version) }; batch.status = '参数已确认'; batch.workflowState = '参数已确认'; batch.currentStep = 'relations'; invalidateResult(batch, '参数已确认'); batch.adjustmentLog.unshift({ at: new Date().toISOString(), type: '预测参数', before, after: clone(batch.parameterSnapshot), reason, actor: 'PMC计划员' }); batch.auditTimeline.push({ at: new Date().toISOString(), action: '调整预测参数', actor: 'PMC计划员', reason }); }),
       inheritPreviousRelations: batchId => write(batchId, batch => {
         const previous = getBatchRaw(batch.previousBatchId);
         if (!previous) throw Error('没有可沿用的上一关系版本');
@@ -553,7 +548,7 @@
         batch.splitConfirmed = false;
         batch.status = '关系已确认';
         batch.workflowState = '关系已确认';
-        batch.currentStep = 'relations';
+        batch.currentStep = 'split';
         invalidateResult(batch, '关系已确认');
         batch.auditTimeline.push({ at: new Date().toISOString(), action: '沿用上一关系版本', actor: 'PMC计划员', reason: `复制 ${relations.length} 条有效关系` });
       }),
@@ -593,12 +588,12 @@
         finalizeRelationMutation(batch, reason);
       }),
       adjustRelation: (batchId, childId, targetParent, reason) => write(batchId, batch => { if (!moveRelation(batch, childId, targetParent, reason)) throw Error('新旧父ASIN不能相同'); finalizeRelationMutation(batch, reason); }),
-      confirmRelations: batchId => write(batchId, batch => { if (batch.relationSnapshot.some(row => !row.parentASIN)) throw Error('仍有子ASIN未关联父ASIN'); batch.relationConfirmed = true; batch.status = '关系已确认'; batch.workflowState = '关系已确认'; batch.currentStep = 'relations'; batch.auditTimeline.push({ at: new Date().toISOString(), action: '确认本批次父子关系', actor: 'PMC计划员', reason: `${batch.relationSnapshot.length} 条关系已确认，按当前关系重新归集历史销量` }); }),
+      confirmRelations: batchId => write(batchId, batch => { if (batch.relationSnapshot.some(row => !row.parentASIN)) throw Error('仍有子ASIN未关联父ASIN'); batch.relationConfirmed = true; batch.status = '关系已确认'; batch.workflowState = '关系已确认'; batch.currentStep = 'split'; batch.auditTimeline.push({ at: new Date().toISOString(), action: '确认本批次父子关系', actor: 'PMC计划员', reason: `${batch.relationSnapshot.length} 条关系已确认，按当前关系重新归集历史销量` }); }),
       saveSplitRule: (batchId, rule) => write(batchId, batch => { const next = { ...rule, id: rule.id || `SPLIT-TPL-${Date.now()}` }; const index = batch.splitRuleTemplates.findIndex(item => item.id === next.id); if (index >= 0) batch.splitRuleTemplates[index] = next; else batch.splitRuleTemplates.push(next); batch.splitRuleSnapshot.version = nextVersion(batch.splitRuleSnapshot.version); batch.splitConfirmed = false; batch.status = '拆解规则确认中'; batch.currentStep = 'split'; invalidateResult(batch, '拆解待确认'); batch.auditTimeline.push({ at: new Date().toISOString(), action: '更新子体拆解规则', actor: 'PMC计划员', reason: next.name }); }),
-      adjustShares: (batchId, key, shares, reason) => write(batchId, batch => { if (!batch.relationConfirmed) throw Error('请先确认本批次父子关系'); const siblings = batch.childForecastResults.filter(row => relationKey(row) === key); if (!siblings.length) throw Error('父ASIN预测池不存在'); const total = sum(siblings.map(row => normalizeRatio(shares[row.childASIN] ?? shares[row.childId]))); if (total !== 10000) throw Error('当前父ASIN下子ASIN最终份额必须合计100%'); const before = siblings.map(row => ({ childASIN: row.childASIN, finalShare: row.finalShare })); siblings.forEach(row => { row.finalShare = normalizeRatio(shares[row.childASIN] ?? shares[row.childId]); row.manualReason = row.finalShare !== row.systemShare ? reason : null; }); recalculateSplit(batch); batch.splitConfirmed = true; batch.status = '拆解已确认'; batch.workflowState = '拆解已确认'; batch.currentStep = 'split'; invalidateResult(batch, '拆解已确认'); batch.adjustmentLog.unshift({ at: new Date().toISOString(), type: '子ASIN份额', before, after: siblings.map(row => ({ childASIN: row.childASIN, finalShare: row.finalShare })), reason, actor: 'PMC计划员' }); batch.auditTimeline.push({ at: new Date().toISOString(), action: '完成子ASIN人工调配', actor: 'PMC计划员', reason }); }),
-      confirmSplit: batchId => write(batchId, batch => { if (!batch.relationConfirmed) throw Error('请先确认本批次父子关系'); const validation = resultValidation({ ...batch, splitConfirmed: true }); const blocking = validation.items.filter(item => !item.passed && item.label !== '本批次子体拆解已确认'); if (blocking.length) throw Error(`拆解校验未通过：${blocking[0].label}`); batch.splitConfirmed = true; batch.status = '拆解已确认'; batch.workflowState = '拆解已确认'; batch.currentStep = 'split'; invalidateResult(batch, '拆解已确认'); batch.auditTimeline.push({ at: new Date().toISOString(), action: '确认本批次子体拆解', actor: 'PMC计划员', reason: '全部父ASIN份额及预测量已平衡' }); }),
+      adjustShares: (batchId, key, shares, reason) => write(batchId, batch => { if (!batch.relationConfirmed) throw Error('请先确认本批次父子关系'); const siblings = batch.childForecastResults.filter(row => relationKey(row) === key); if (!siblings.length) throw Error('父ASIN预测池不存在'); const total = sum(siblings.map(row => normalizeRatio(shares[row.childASIN] ?? shares[row.childId]))); if (total !== 10000) throw Error('当前父ASIN下子ASIN最终份额必须合计100%'); const before = siblings.map(row => ({ childASIN: row.childASIN, finalShare: row.finalShare })); siblings.forEach(row => { row.finalShare = normalizeRatio(shares[row.childASIN] ?? shares[row.childId]); row.manualReason = row.finalShare !== row.systemShare ? reason : null; }); recalculateSplit(batch); batch.splitConfirmed = true; batch.status = '拆解已确认'; batch.workflowState = '拆解已确认'; batch.currentStep = 'forecast'; invalidateResult(batch, '拆解已确认'); batch.adjustmentLog.unshift({ at: new Date().toISOString(), type: '子ASIN份额', before, after: siblings.map(row => ({ childASIN: row.childASIN, finalShare: row.finalShare })), reason, actor: 'PMC计划员' }); batch.auditTimeline.push({ at: new Date().toISOString(), action: '完成子ASIN人工调配', actor: 'PMC计划员', reason }); }),
+      confirmSplit: batchId => write(batchId, batch => { if (!batch.relationConfirmed) throw Error('请先确认本批次父子关系'); const validation = resultValidation({ ...batch, splitConfirmed: true }); const blocking = validation.items.filter(item => !item.passed && item.label !== '本批次子体拆解已确认'); if (blocking.length) throw Error(`拆解校验未通过：${blocking[0].label}`); batch.splitConfirmed = true; batch.status = '拆解已确认'; batch.workflowState = '拆解已确认'; batch.currentStep = 'forecast'; invalidateResult(batch, '拆解已确认'); batch.auditTimeline.push({ at: new Date().toISOString(), action: '确认本批次子体拆解', actor: 'PMC计划员', reason: '全部父ASIN份额及预测量已平衡' }); }),
       validateForecast: batchId => { const batch = getBatchRaw(batchId); return batch ? clone(resultValidation(batch)) : null; },
-      generateForecast: (batchId, reason = '生成本批次规则预测快照') => write(batchId, batch => { const validation = resultValidation(batch); if (!validation.passed) throw Error(`生成前校验未通过：${validation.items.find(item => !item.passed).label}`); recalculateSplit(batch); const prefix = `RESULT-${batch.batchDate.replaceAll('-', '')}-V`; const version = `${prefix}${String(batch.resultSnapshots.length + 1).padStart(2, '0')}`; const generatedAt = new Date().toISOString(); batch.resultSnapshots.push(makeResultSnapshot(batch, version, generatedAt)); batch.activeResultVersion = version; batch.resultState = '已生成'; batch.status = '规则预测已生成'; batch.workflowState = '规则预测已生成'; batch.currentStep = 'forecast'; batch.auditTimeline.push({ at: generatedAt, action: '生成规则预测快照', actor: 'PMC计划员', reason: `${reason} · ${version}` }); }),
+      generateForecast: (batchId, reason = '生成本批次规则预测快照') => write(batchId, batch => { const validation = resultValidation(batch); if (!validation.passed) throw Error(`生成前校验未通过：${validation.items.find(item => !item.passed).label}`); recalculateSplit(batch); const prefix = `RESULT-${batch.batchDate.replaceAll('-', '')}-V`; const version = `${prefix}${String(batch.resultSnapshots.length + 1).padStart(2, '0')}`; const generatedAt = new Date().toISOString(); batch.resultSnapshots.push(makeResultSnapshot(batch, version, generatedAt)); batch.activeResultVersion = version; batch.resultState = '已生成'; batch.status = '规则预测已生成'; batch.workflowState = '规则预测已生成'; batch.currentStep = 'submission'; batch.auditTimeline.push({ at: generatedAt, action: '生成规则预测快照', actor: 'PMC计划员', reason: `${reason} · ${version}` }); }),
       recalculate: (batchId, reason = '规则参数已确认，重新生成父/子ASIN规则预测') => api.generateForecast(batchId, reason),
       publishWindow: (batchId, window, reason = '规则预测完成，发布销售填报窗口') => write(batchId, batch => { if (batch.resultState !== '已生成' || !batch.activeResultVersion) throw Error('请先完成规则预测生成'); const next = { ...batch.submissionWindow, ...window, status: '填报中' }; if (Date.parse(next.submissionStartTime) >= Date.parse(next.submissionDeadlineTime)) throw Error('填报开放时间必须早于截止时间'); if (Date.parse(next.submissionDeadlineTime) > Date.parse(next.submissionFreezeTime)) throw Error('填报截止时间不能晚于冻结时间'); batch.submissionWindow = next; batch.submissionState = '填报中'; batch.status = '销售填报中'; batch.workflowState = '填报进行中'; batch.currentStep = 'submission'; batch.auditTimeline.push({ at: new Date().toISOString(), action: '发布销售填报窗口', actor: 'PMC计划员', reason: `${reason} · ${batch.activeResultVersion}` }); }),
       freeze: (batchId, reason = '到达本批次冻结时间') => write(batchId, batch => { batch.status = '已冻结'; batch.workflowState = '填报已冻结'; batch.submissionState = '已冻结'; batch.submissionWindow.status = '已冻结'; batch.currentStep = 'review'; batch.auditTimeline.push({ at: new Date().toISOString(), action: '冻结销售预测', actor: '系统', reason }); }),
@@ -611,7 +606,7 @@
           // Contract reads are frequent during table rendering. Keep the batch snapshot
           // immutable to callers without cloning the entire 182-day batch per cell.
           const raw = getBatchRaw(batchId);
-          const batch = raw ? { ...raw, status: effectiveStatus(raw) } : null;
+          const batch = raw ? { ...raw } : null;
           const result = getActiveResult(batch);
           if (!result) return null;
           const row = result.rows.find(item => item.childId === childId || item.childASIN === childId || [item.country, item.store, item.childASIN].join('|') === childId);

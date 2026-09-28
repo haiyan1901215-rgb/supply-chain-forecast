@@ -11,12 +11,15 @@
     if(now<Date.parse(config.startsAt))return {key:'waiting',label:'尚未开始',badge:'default',editable:false};
     return {key:'open',label:'填报中',badge:'processing',editable:true};
   }
-  // Presentation-only override: never rewrites timestamps, submission records or lock storage.
-  let mode='open';
-  const demoStates={waiting:{key:'waiting',label:'尚未开始',badge:'default',editable:false},open:{key:'open',label:'填报中',badge:'processing',editable:true},closed:{key:'closed',label:'已截止',badge:'warning',editable:false},frozen:{key:'frozen',label:'已冻结',badge:'default',editable:false}};
-  const current=()=>mode==='auto'?statusAt(Date.now(),window.pmcWorkflow?.getState().locked):demoStates[mode];
-  const setMode=value=>{if(value!=='auto'&&!Object.hasOwn(demoStates,value))return;mode=value;refresh(true);};
-  const windowApi={statusAt,current,isOpen:()=>current().editable,getMode:()=>mode,setMode};
+  const states={waiting:{key:'waiting',label:'待发布',badge:'default',editable:false},open:{key:'open',label:'填报中',badge:'processing',editable:true},closed:{key:'closed',label:'已截止',badge:'warning',editable:false},frozen:{key:'frozen',label:'已冻结',badge:'default',editable:false}};
+  const current=()=>{
+    const submissionState=window.ForecastBatchContract?.getCurrent?.()?.submissionState;
+    if(submissionState==='已冻结')return states.frozen;
+    if(submissionState==='已截止')return states.closed;
+    if(submissionState==='填报中')return states.open;
+    return states.waiting;
+  };
+  const windowApi={statusAt,current,isOpen:()=>current().editable};
   Object.defineProperty(windowApi,'config',{enumerable:true,get:resolveConfig});
   window.ForecastWindow=windowApi;
   const priorCanEdit=canEdit;
@@ -29,8 +32,5 @@
   }
   window.addEventListener('forecast-workflow-change',refresh);
   window.addEventListener('forecast-batch-change',()=>refresh(true));
-  document.addEventListener('visibilitychange',refresh);
-  window.addEventListener('focus',refresh);
-  setInterval(refresh,1000);
   refresh(true);
 })();

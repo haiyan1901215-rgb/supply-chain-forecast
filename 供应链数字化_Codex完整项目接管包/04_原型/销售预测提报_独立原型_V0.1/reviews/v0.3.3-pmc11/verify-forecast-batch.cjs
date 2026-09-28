@@ -20,7 +20,8 @@ assert(current.splitRuleSnapshot.version === 'SPLIT-20261021-V01', 'split rule s
 assert(current.relationVersion === 'REL-20261021-V02', 'relation snapshot version');
 assert(current.childForecastResults.length === 3, 'child forecast result count');
 assert(current.schema === 4, 'batch schema version');
-assert(current.resultSnapshots.length === 1 && current.activeResultVersion === 'RESULT-20261021-V01', 'seed result snapshot version');
+assert(current.status === '评估中' && current.currentStep === 'assessment', 'seed starts at assessment');
+assert(current.resultSnapshots.length === 0 && current.activeResultVersion === null && current.submissionState === '待发布', 'seed result waits for operation-driven generation');
 assert(current.assessment.comparisonStartDate === '2026-10-07' && current.assessment.comparisonEndDate === '2026-10-20' && current.assessment.comparisonDays === 14, 'assessment uses the same comparison period');
 assert(current.assessment.ruleForecastTotal === 364 && current.assessment.actualSalesTotal === 322, 'assessment compares same-period forecast and actual totals');
 assert(current.assessment.varianceRate === -11.5, 'assessment variance rate');
@@ -35,34 +36,32 @@ current.parentForecastResults.forEach(parent => {
   assert(children.reduce((total, row) => total + row.dailyFinalForecast[current.forecastStartDate], 0) === parent.daily[current.forecastStartDate], 'final split conserves parent daily forecast');
 });
 
-const contractRow = store.contract.getDailyForecast(current.batchDate, 'US-C000000001', current.forecastStartDate);
-assert(contractRow && contractRow.ruleForecast === current.childForecastResults[0].dailyFinalForecast[current.forecastStartDate] && contractRow.parentRuleForecast != null && contractRow.forecastRuleVersion === current.forecastRuleSnapshot.version, 'contract daily forecast');
-const forecastIndex = store.contract.getForecastIndex(current.batchDate);
-const indexedChild = forecastIndex.children['US|STORE-US|C000000001'];
-const indexedParent = forecastIndex.parents['US|STORE-US|B0PARENT01'];
-assert(indexedChild && indexedChild.total === Object.values(current.childForecastResults[0].dailyFinalForecast).reduce((total, value) => total + value, 0), 'indexed child forecast total');
-assert(indexedParent && indexedParent.total === Object.values(indexedParent.daily).reduce((total, value) => total + value, 0), 'indexed parent forecast total');
-const submissionRows = store.contract.getSubmissionRows(current.id);
-assert(submissionRows.length === current.childForecastResults.length * 182, 'sales-facing daily contract range');
-assert(['batchId', 'batchVersion', 'resultVersion', 'parentASIN', 'childASIN', 'country', 'site', 'store', 'forecastDate', 'parentRuleForecast', 'systemSplitForecast', 'ruleForecast', 'submissionDeadlineTime', 'relationVersion', 'splitRuleVersion'].every(key => key in submissionRows[0]), 'contract fields');
+assert(store.contract.getDailyForecast(current.batchDate, 'US-C000000001', current.forecastStartDate) === null, 'ungenerated seed is not exposed to sales contract');
+assert(store.contract.getForecastIndex(current.batchDate) === null, 'ungenerated seed has no forecast index');
+assert(store.contract.getSubmissionRows(current.id).length === 0, 'ungenerated seed has no sales-facing rows');
 
 const next = store.createNextBatch({ batchDate: '2026-10-28', name: '2026-10-28 第1批预测' });
 assert(next.previousBatchId === current.id && next.status === '草稿', 'next batch is draft and linked');
 const parentKey = `${next.relationSnapshot[0].country}|${next.relationSnapshot[0].store}|${next.relationSnapshot[0].parentASIN}`;
+store.confirmAssessment(next.id);
+assert(store.getBatch(next.id).status === '参数调整中' && store.getBatch(next.id).currentStep === 'parameters', 'assessment operation advances to parameters');
 store.updateParameters(next.id, { recentShareWeight: 40, historyShareWeight: 60 }, '测试：近期趋势需要复核');
 const changed = store.getBatch(next.id);
 assert(changed.parameterSnapshot.recentShareWeight === 40 && changed.adjustmentLog.length === 1, 'parameter audit');
+assert(changed.status === '参数已确认' && changed.currentStep === 'relations', 'parameter save advances to relations');
 store.adjustRelation(next.id, next.relationSnapshot[0].childId, 'B0PARENT02', '测试：子ASIN迁移父体');
 const relationChanged = store.getBatch(next.id);
 assert(relationChanged.relationChanges.length === 1 && relationChanged.childForecastResults.find(row => row.childId === next.relationSnapshot[0].childId).parentASIN === 'B0PARENT02', 'relation migration sync');
 assert(relationChanged.relationVersions.length === 2 && relationChanged.relationVersions[0].relations[0].parentASIN !== relationChanged.relationVersions[1].relations[0].parentASIN, 'relation versions preserve before and after snapshots');
 store.confirmRelations(next.id);
+assert(store.getBatch(next.id).status === '关系已确认' && store.getBatch(next.id).currentStep === 'split', 'relation confirmation advances to split');
 const siblings = relationChanged.childForecastResults.filter(row => row.parentASIN === 'B0PARENT02');
 const shares = Object.fromEntries(siblings.map((row, index) => [row.childASIN, index === 0 ? 6000 : 4000]));
 if (siblings.length === 1) shares[siblings[0].childASIN] = 10000;
 const activeKey = `${siblings[0].country}|${siblings[0].store}|${siblings[0].parentASIN}`;
 store.adjustShares(next.id, activeKey, shares, '测试：按近期趋势人工调配');
 const allocated = store.getBatch(next.id);
+assert(allocated.status === '拆解已确认' && allocated.currentStep === 'forecast', 'split save advances to forecast');
 assert(allocated.childForecastResults.filter(row => `${row.country}|${row.store}|${row.parentASIN}` === activeKey).reduce((sum, row) => sum + row.finalShare, 0) === 10000, 'share conservation');
 const allocatedParent = allocated.parentForecastResults.find(row => row.key === activeKey);
 assert(allocated.childForecastResults.filter(row => `${row.country}|${row.store}|${row.parentASIN}` === activeKey).reduce((sum, row) => sum + row.dailyFinalForecast[allocated.forecastStartDate], 0) === allocatedParent.daily[allocated.forecastStartDate], 'adjusted daily forecast conserves parent result');
@@ -72,8 +71,12 @@ try { store.publishWindow(next.id, { submissionStartTime: '2026-10-28T09:00:00+0
 assert(publishBlocked, 'window publish blocked before result generation');
 store.generateForecast(next.id);
 const generatedV1 = store.getBatch(next.id);
+assert(generatedV1.status === '规则预测已生成' && generatedV1.currentStep === 'submission', 'forecast generation advances to submission');
 const v1Daily = generatedV1.resultSnapshots[0].rows.find(row => row.childId === siblings[0].childId).daily[generatedV1.forecastStartDate];
 assert(store.contract.getDailyForecast(next.id, siblings[0].childId, generatedV1.forecastStartDate).ruleForecast === v1Daily, 'sales contract uses generated snapshot');
+const submissionRows = store.contract.getSubmissionRows(next.id);
+assert(submissionRows.length === generatedV1.childForecastResults.length * 182, 'sales-facing daily contract range');
+assert(['batchId', 'batchVersion', 'resultVersion', 'parentASIN', 'childASIN', 'country', 'site', 'store', 'forecastDate', 'parentRuleForecast', 'systemSplitForecast', 'ruleForecast', 'submissionDeadlineTime', 'relationVersion', 'splitRuleVersion'].every(key => key in submissionRows[0]), 'contract fields');
 const v2Shares = Object.fromEntries(generatedV1.childForecastResults.filter(row => `${row.country}|${row.store}|${row.parentASIN}` === activeKey).map(row => [row.childASIN, row.finalShare]));
 const v2Keys = Object.keys(v2Shares);
 if (v2Keys.length > 1) { v2Shares[v2Keys[0]] -= 100; v2Shares[v2Keys.at(-1)] += 100; }
@@ -89,14 +92,16 @@ assert(store.contract.getDailyForecast(next.id, siblings[0].childId, generatedV2
 store.publishWindow(next.id, { submissionStartTime: '2026-10-28T09:00:00+08:00', submissionDeadlineTime: '2026-11-01T18:00:00+08:00', submissionFreezeTime: '2026-11-02T00:00:00+08:00' });
 assert(store.getBatch(next.id).status === '销售填报中', 'window publish state');
 store.freeze(next.id);
-assert(store.getBatch(next.id).status === '已冻结', 'freeze state');
+assert(store.getBatch(next.id).status === '已冻结' && store.getBatch(next.id).currentStep === 'review', 'freeze advances to review');
 let frozenError = false;
 try { store.updateParameters(next.id, { trendWindow: 14 }, '不应写入'); } catch (error) { frozenError = /冻结/.test(error.message); }
 assert(frozenError, 'frozen batch write protection');
 const snapshot = store.contract.getSnapshot(next.id);
 snapshot.name = '外部修改不应回写';
 assert(store.getBatch(next.id).name !== snapshot.name, 'immutable snapshot read');
-store.setDemoStage('split');
-assert(store.getCurrent().status === '拆解规则确认中' && store.getCurrent().id === store.getState().currentBatchId, 'demo stage changes state only');
-store.setDemoStage('auto');
+const transient = model.createStore({ groups, forecastAt, actualAt }, null);
+transient.confirmAssessment(transient.getCurrent().id);
+assert(transient.getCurrent().status === '参数调整中', 'in-memory demo state mutates during session');
+const refreshed = model.createStore({ groups, forecastAt, actualAt }, null);
+assert(refreshed.getCurrent().status === '评估中' && refreshed.getCurrent().currentStep === 'assessment', 'refresh creates initial demo state');
 console.log('forecast batch verification passed');

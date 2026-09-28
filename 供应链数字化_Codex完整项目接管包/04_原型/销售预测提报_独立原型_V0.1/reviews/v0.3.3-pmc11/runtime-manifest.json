@@ -22,11 +22,11 @@
     },
     {
       "file": "forecast-batch-model.js",
-      "sha256": "45510e0aada124d17480de460db8ba538431b3388ef76b53b5b5208e65a3edbe"
+      "sha256": "9de4ce68f6b981cd56d916cb87b88e7d7b32d26771cd189829cf65e9b4d4fad4"
     },
     {
       "file": "forecast-plan-workspace.js",
-      "sha256": "b0160d4710501c5bb356e54393ed1c337c52a453b70c35c0f21fb2e7a72b690d"
+      "sha256": "2b96733ee4342de9b5c9ac1273174b9e0b3488cf35473ded11f030bcbe61c6f3"
     },
     {
       "file": "forecast-plan.css",
@@ -34,7 +34,7 @@
     },
     {
       "file": "index.html",
-      "sha256": "e0029cfd5bb9f2c55371f64df64a23944eb4f485827374b4d4226c1a6ce634ee"
+      "sha256": "cd99d6bb84fa3f0a45e00fae9c3124ce1ffa0c3bfab5365d14a2a133f2364e79"
     },
     {
       "file": "parent-asin.css",
@@ -58,7 +58,7 @@
     },
     {
       "file": "pmc-workflow.js",
-      "sha256": "83207345535076b3b6f1a32af0f6a8c523a2306bf2060e00a223337a28b4fe02"
+      "sha256": "3f3c2b9fa97296596fa5be9728c0cda4331b1ec0d0557e130f3f1010f6a6a824"
     },
     {
       "file": "sales-freeze.css",
@@ -70,7 +70,7 @@
     },
     {
       "file": "submission-window.js",
-      "sha256": "9fbacb1d92fd3a17d6d92b439cbfda522919c488c7fa832af08dfbb2635d6b68"
+      "sha256": "af0f08d93d787c6f5e56b7c3c70b7c7743676e4fc13fdb984492f589bcec3fd1"
     },
     {
       "file": "v019.css",
@@ -209,6 +209,6 @@
       "sha256": "35f4f974f4b2bcd44da73963347f8952e341f83909e4498227d4e26b98f66f0d"
     }
   ],
-  "version": "0.3.4-plan-closure1",
+  "version": "0.3.4-auto-flow1",
   "status": "active"
 }
