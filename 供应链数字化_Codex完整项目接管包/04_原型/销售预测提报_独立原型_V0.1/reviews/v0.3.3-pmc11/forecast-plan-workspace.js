@@ -92,7 +92,7 @@
       h(PlanListPanel, {
         search: h(Input.Search, { allowClear: true, placeholder: '批次名称 / 版本', onSearch: setQuery, style: { width: 260 } }),
         toolbar: h(Button, { type: 'primary', icon: h(icon.PlusOutlined), onClick: create }, '创建下一批次')
-      }, h(PlanTable, { rowKey: 'id', dataSource: batches, columns, scroll: { y: 'max(220px, calc(100vh - 420px))' }, onRow: row => ({ className: 'fp-batch-row', onDoubleClick: () => onOpen(row.id) }) }))
+      }, h(PlanTable, { rowKey: 'id', dataSource: batches, columns, scroll: { y: 'max(120px, calc(100vh - 300px))' }, onRow: row => ({ className: 'fp-batch-row', onDoubleClick: () => onOpen(row.id) }) }))
     );
   }
   function DemoControl({ batch, onChange }) {
@@ -424,7 +424,7 @@
             h(Form.Item, null, h(Button, { onClick: reset }, '重置'))
           ),
         toolbar: h(Button, { type: 'primary', onClick: openCurrent }, '展开当前批次')
-      }, h(PlanTable, { rowKey: 'resultKey', dataSource: filteredRows, columns, scroll: { y: 'max(180px, calc(100vh - 560px))' }, pagination: { pageSize: 12 }, expandable: { expandedRowKeys: expandedResultKey ? [expandedResultKey] : [], expandedRowRender: row => h(ForecastResultDetail, { row }), showExpandColumn: false }, locale: { emptyText: '未找到匹配的历史批次预测结果，请调整筛选项。' } }))
+      }, h(PlanTable, { rowKey: 'resultKey', dataSource: filteredRows, columns, scroll: { y: 'max(120px, calc(100vh - 300px))' }, pagination: { pageSize: 12 }, expandable: { expandedRowKeys: expandedResultKey ? [expandedResultKey] : [], expandedRowRender: row => h(ForecastResultDetail, { row }), showExpandColumn: false }, locale: { emptyText: '未找到匹配的历史批次预测结果，请调整筛选项。' } }))
     );
   }
   function SubmissionView({ batch }) {
