@@ -26,15 +26,15 @@
     },
     {
       "file": "forecast-plan-workspace.js",
-      "sha256": "e6a519311667a899759c747e240ad8c2aa8d193720e6c9a538559e78405de416"
+      "sha256": "16aa8edac8c59ee6c38e4a9e46644bf7641ad4dea69a27b5c819a92cb3ae64bb"
     },
     {
       "file": "forecast-plan.css",
-      "sha256": "9f843423094b840042a71d4a550797e4b02e178c31e9c7fe2cc0e5909eecd7c4"
+      "sha256": "ad5e462b200178b168d57cd9c366c8bfd86294a44088f46a95800fc00cf23c7e"
     },
     {
       "file": "index.html",
-      "sha256": "658ef7c04ed386d6f7d94a99daecc7366c811cfee67dc89ca3ebce3723c1d244"
+      "sha256": "641aac1a6a20c1fb25bae1d6f05b7c73acd228e92267a15b0b17897d82a9a0ba"
     },
     {
       "file": "parent-asin.css",

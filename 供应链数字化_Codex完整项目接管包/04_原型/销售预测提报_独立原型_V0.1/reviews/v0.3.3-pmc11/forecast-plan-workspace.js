@@ -43,6 +43,33 @@
   function PageHead({ title, subtitle, actions }) {
     return h('div', { className: 'fp-page-head' }, h('div', null, h('div', { className: 'fp-eyebrow' }, '销售预测 / 预测计划'), h('h1', null, title), subtitle && h('div', { className: 'fp-subtitle' }, subtitle)), actions && h('div', { className: 'fp-head-actions' }, actions));
   }
+  const sumColumnWidths = columns => (columns || []).reduce((total, column) => {
+    if (column.children) return total + sumColumnWidths(column.children);
+    const width = Number.parseInt(column.width, 10);
+    return total + (Number.isFinite(width) ? width : 120);
+  }, 0);
+  const normalizePlanColumns = columns => (columns || []).map(column => {
+    const next = { ...column, align: 'left' };
+    if (column.children) next.children = normalizePlanColumns(column.children);
+    return next;
+  });
+  const planPagination = pagination => {
+    const base = { size: 'small', pageSize: 12, showSizeChanger: true, showQuickJumper: true, hideOnSinglePage: false, showTotal: total => `共 ${total} 条` };
+    if (pagination === false || pagination == null) return base;
+    return { ...base, ...pagination, showTotal: pagination.showTotal || base.showTotal };
+  };
+  const planScroll = (columns, scroll) => ({ x: Math.max(960, sumColumnWidths(columns)), ...(scroll || {}) });
+  function PlanTable({ columns = [], className, pagination, scroll, ...props }) {
+    return h(Table, { size: 'small', sticky: true, ...props, className: ['fp-plan-table', className].filter(Boolean).join(' '), columns: normalizePlanColumns(columns), scroll: planScroll(columns, scroll), pagination: planPagination(pagination) });
+  }
+  function PlanListPanel({ title, meta, search, toolbar, children }) {
+    return h('div', { className: 'fp-panel fp-list-panel' },
+      (title || meta) && h('div', { className: 'fp-panel-head' }, h('h2', null, title), meta),
+      search && h('div', { className: 'fp-list-search' }, search),
+      toolbar && h('div', { className: 'fp-list-toolbar' }, toolbar),
+      h('div', { className: 'fp-table-wrap fp-list-table' }, children)
+    );
+  }
   function BatchList({ onOpen }) {
     const { message } = App.useApp();
     const [query, setQuery] = useState('');
@@ -61,9 +88,14 @@
       { title: '操作', width: 80, fixed: 'right', render: (_, row) => h(Button, { type: 'link', onClick: () => onOpen(row.id) }, '查看') }
     ];
     return h(React.Fragment, null,
-      h(PageHead, { title: '预测计划', subtitle: '以预测批次为主对象，串联评估、参数、关系、拆解、规则预测、销售填报与复盘。', actions: [h(Input.Search, { key: 'search', allowClear: true, placeholder: '批次名称 / 版本', onSearch: setQuery, style: { width: 220 } }), h(Button, { key: 'create', type: 'primary', icon: h(icon.PlusOutlined), onClick: create }, '创建下一批次')] }),
+      h(PageHead, { title: '预测计划', subtitle: '以预测批次为主对象，串联评估、参数、关系、拆解、规则预测、销售填报与复盘。' }),
       h(Alert, { className: 'fp-status-note', type: 'info', showIcon: true, message: '历史批次是不可变预测快照；新批次继承上一批次作为评估起点，不直接覆盖历史关系或预测结果。' }),
-      h('div', { className: 'fp-panel' }, h('div', { className: 'fp-panel-head' }, h('h2', null, '预测批次列表'), h('span', { className: 'fp-muted' }, `共 ${batches.length} 个批次`)), h('div', { className: 'fp-table-wrap' }, h(Table, { size: 'small', rowKey: 'id', dataSource: batches, columns, pagination: false, onRow: row => ({ className: 'fp-batch-row', onDoubleClick: () => onOpen(row.id) }) })))
+      h(PlanListPanel, {
+        title: '预测批次列表',
+        meta: h('span', { className: 'fp-muted' }, `共 ${batches.length} 个批次`),
+        search: h(Input.Search, { allowClear: true, placeholder: '批次名称 / 版本', onSearch: setQuery, style: { width: 260 } }),
+        toolbar: h(Button, { type: 'primary', icon: h(icon.PlusOutlined), onClick: create }, '创建下一批次')
+      }, h(PlanTable, { rowKey: 'id', dataSource: batches, columns, onRow: row => ({ className: 'fp-batch-row', onDoubleClick: () => onOpen(row.id) }) }))
     );
   }
   function DemoControl({ batch, onChange }) {
@@ -103,7 +135,11 @@
     return h(React.Fragment, null,
       h(Alert, { type: !batch.assessment.comparable ? 'info' : Math.abs(variance) > 15 ? 'warning' : 'success', showIcon: true, message: `上一批次复盘：${batch.assessment.trend}`, description: `对比期 ${comparisonPeriod}。预测与实际使用完全一致的日期范围；系统只提供建议，不会自动修改执行参数。` }),
       h(MetricStrip, { items: [{ label: '对比期规则预测', value: number(batch.assessment.ruleForecastTotal) }, { label: '对比期实际销量', value: number(batch.assessment.actualSalesTotal) }, { label: '同周期偏差', value: batch.assessment.comparable ? signedPercent(variance) : '待回流', tone: batch.assessment.comparable && Math.abs(variance) > 15 ? 'warning' : 'success' }, { label: '异常子ASIN', value: `${batch.assessment.anomalyCount} 个`, tone: batch.assessment.anomalyCount ? 'warning' : 'success' }, { label: '关系变更', value: `${batch.assessment.relationChanges} 条` }, { label: '评估来源批次', value: batch.assessment.previousBatchVersion || '无' }] }),
-      h('div', { className: 'fp-panel' }, h('div', { className: 'fp-panel-head' }, h('div', null, h('h2', null, '父ASIN预测与实际同周期对比'), h('span', { className: 'fp-muted' }, comparisonPeriod)), h(Button, { type: 'primary', onClick: () => onStep('parameters') }, '进入参数调整')), h('div', { className: 'fp-table-wrap' }, h(Table, { size: 'small', rowKey: 'key', pagination: false, dataSource: batch.forecastVsActual, columns, locale: { emptyText: '暂无可比批次数据' } }))),
+      h(PlanListPanel, {
+        title: '父ASIN预测与实际同周期对比',
+        meta: h('span', { className: 'fp-muted' }, comparisonPeriod),
+        toolbar: h(Button, { type: 'primary', onClick: () => onStep('parameters') }, '进入参数调整')
+      }, h(PlanTable, { rowKey: 'key', dataSource: batch.forecastVsActual, columns, locale: { emptyText: '暂无可比批次数据' } })),
       h('div', { className: 'fp-panel' }, h('div', { className: 'fp-panel-head' }, h('h2', null, '评估结论'), h('span', { className: 'fp-muted' }, '作为本批次调整依据留存')), h('div', { className: 'fp-panel-body' }, h('div', { className: 'fp-logic-line' }, h('span', { className: 'fp-logic-index' }, '01'), h('strong', null, '读取来源'), h('span', null, '上一批次规则预测 + 销售提报 + 实际销量 + 当前父子关系')), h('div', { className: 'fp-logic-line' }, h('span', { className: 'fp-logic-index' }, '02'), h('strong', null, '系统建议'), h('span', null, Math.abs(variance) > 15 ? '优先复核近期趋势、低销量子体和关系变更影响' : '整体偏差在可接受范围内，可优先确认关系并沿用参数')), h('div', { className: 'fp-logic-line' }, h('span', { className: 'fp-logic-index' }, '03'), h('strong', null, 'PMC动作'), h('span', null, '确认后进入本批次参数、关系和拆解调配；每次调整需填写原因'))))
     );
   }
@@ -148,8 +184,15 @@
     const parentOptions = [...new Set(batch.relationSnapshot.map(row => row.parentASIN))].map(value => ({ value, label: value }));
     return h(React.Fragment, null,
       h(Alert, { type: 'info', showIcon: true, message: '本批次关系快照决定预测池；历史父ASIN只用于追溯，历史销量按国家 + 店铺 + 子ASIN归集到当前父ASIN预测池。' }),
-      h('div', { className: 'fp-panel' }, h('div', { className: 'fp-panel-head' }, h('h2', null, '本批次父子ASIN关系'), h(Space, null, h(Input.Search, { allowClear: true, placeholder: '父ASIN / 子ASIN / SKU', onSearch: setQuery, style: { width: 230 } }), h(Tag, null, `${rows.length} 条关系`))), h('div', { className: 'fp-table-wrap' }, h(Table, { size: 'small', rowKey: 'childId', dataSource: rows, columns, pagination: { pageSize: 12, showSizeChanger: false }, onRow: row => ({ onClick: () => setSelected(row) }) }))),
-      selected && h('div', { className: 'fp-panel' }, h('div', { className: 'fp-panel-head' }, h('h2', null, `${selected.childASIN} · 历史挂靠关系`), h('span', { className: 'fp-muted' }, `当前父ASIN ${selected.parentASIN}`)), h('div', { className: 'fp-table-wrap' }, h(Table, { size: 'small', rowKey: row => `${row.batch}-${row.version}`, pagination: false, dataSource: history, columns: [{ title: '预测批次', dataIndex: 'batch', render: dayText }, { title: '关系版本', dataIndex: 'version' }, { title: '父ASIN', dataIndex: 'parent' }, { title: '当时份额', dataIndex: 'share', align: 'right', render: percent }, { title: '状态', dataIndex: 'status', render: statusTag }, { title: '规则预测', render: (_, row) => number(Object.values(row.forecast).reduce((a, b) => a + (Number(b) || 0), 0)) }], locale: { emptyText: '暂无历史关系' } }))),
+      h(PlanListPanel, {
+        title: '本批次父子ASIN关系',
+        meta: h(Tag, null, `${rows.length} 条关系`),
+        search: h(Input.Search, { allowClear: true, placeholder: '父ASIN / 子ASIN / SKU', onSearch: setQuery, style: { width: 260 } })
+      }, h(PlanTable, { rowKey: 'childId', dataSource: rows, columns, pagination: { pageSize: 12 }, onRow: row => ({ onClick: () => setSelected(row) }) })),
+      selected && h(PlanListPanel, {
+        title: `${selected.childASIN} · 历史挂靠关系`,
+        meta: h('span', { className: 'fp-muted' }, `当前父ASIN ${selected.parentASIN}`)
+      }, h(PlanTable, { rowKey: row => `${row.batch}-${row.version}`, dataSource: history, columns: [{ title: '预测批次', dataIndex: 'batch', render: dayText }, { title: '关系版本', dataIndex: 'version' }, { title: '父ASIN', dataIndex: 'parent' }, { title: '当时份额', dataIndex: 'share', align: 'right', render: percent }, { title: '状态', dataIndex: 'status', render: statusTag }, { title: '规则预测', render: (_, row) => number(Object.values(row.forecast).reduce((a, b) => a + (Number(b) || 0), 0)) }], locale: { emptyText: '暂无历史关系' } })),
       h(Drawer, { open: drawer, width: 480, title: `调整本批次关系 · ${selected?.childASIN || ''}`, onClose: () => setDrawer(false), destroyOnClose: true, footer: null }, selected && h(RelationForm, { selected, parentOptions, onSubmit: submit, onCancel: () => setDrawer(false), disabled: batch.status === '已冻结' || batch.status === '已完成' }))
     );
   }
@@ -230,7 +273,7 @@
         ),
         h('div', { className: 'fp-panel-body' },
           summary,
-          h('div', { className: 'fp-table-wrap' }, h(Table, { size: 'small', rowKey: 'childASIN', pagination: false, dataSource: siblings, columns: shareColumns })),
+          h('div', { className: 'fp-table-wrap' }, h(PlanTable, {rowKey: 'childASIN', dataSource: siblings, columns: shareColumns })),
           h('div', { className: 'fp-kicker', style: { marginTop: 12 } }, '调整原因（必填）'),
           h(Input.TextArea, { value: reason, onChange: event => setReason(event.target.value), rows: 2, maxLength: 200, showCount: true, placeholder: '例如：XL近期销量异常，按运营策略提高本批次份额。', disabled: batch.status === '已冻结' || batch.status === '已完成' }),
           h('div', { className: 'fp-sticky-actions' }, h(Button, { type: 'primary', onClick: save, disabled: batch.status === '已冻结' || batch.status === '已完成' }, '保存本批次调配'))
@@ -258,13 +301,13 @@
       { title: '最终规则预测', dataIndex: 'finalTotal', align: 'right', render: value => h('strong', null, number(value)) },
       { title: '预测来源', render: () => h(Tag, null, '规则预测') }
     ];
-    const expandedRowRender = row => h(Table, { size: 'small', rowKey: 'date', pagination: { pageSize: 7, showSizeChanger: false }, dataSource: Object.entries(row.dailyFinalForecast).slice(0, 14).map(([date, value]) => ({ date, rule: row.dailyRuleForecast[date], value })), columns: [{ title: '预测日期', dataIndex: 'date', render: dayText }, { title: '规则预测', dataIndex: 'rule', align: 'right', render: number }, { title: '最终规则预测', dataIndex: 'value', align: 'right', render: number }] });
+    const expandedRowRender = row => h(PlanTable, {rowKey: 'date', pagination: { pageSize: 7, showSizeChanger: false }, dataSource: Object.entries(row.dailyFinalForecast).slice(0, 14).map(([date, value]) => ({ date, rule: row.dailyRuleForecast[date], value })), columns: [{ title: '预测日期', dataIndex: 'date', render: dayText }, { title: '规则预测', dataIndex: 'rule', align: 'right', render: number }, { title: '最终规则预测', dataIndex: 'value', align: 'right', render: number }] });
     return h(React.Fragment, null,
       h(Alert, { type: 'success', showIcon: true, message: '规则预测已按“父ASIN预测池 → 当前父子关系 → 拆解规则 → 本批次人工调配”生成；销售提报只消费下方子ASIN日级清单。' }),
-      h('div', { className: 'fp-panel' },
-        h('div', { className: 'fp-panel-head' }, h('h2', null, '子ASIN规则预测清单'), h(Tag, { color: 'blue' }, `${rows.length} 个子ASIN · ${batch.forecastStartDate} ~ ${batch.forecastEndDate}`)),
-        h('div', { className: 'fp-table-wrap' }, h(Table, { size: 'small', rowKey: 'id', dataSource: rows, columns, expandable: { expandedRowRender } }))
-      ),
+      h(PlanListPanel, {
+        title: '子ASIN规则预测清单',
+        meta: h(Tag, { color: 'blue' }, `${rows.length} 个子ASIN · ${batch.forecastStartDate} ~ ${batch.forecastEndDate}`)
+      }, h(PlanTable, { rowKey: 'id', dataSource: rows, columns, expandable: { expandedRowRender } })),
       h('div', { className: 'fp-panel' }, h('div', { className: 'fp-panel-body' }, h('div', { className: 'fp-help' }, '数据契约字段包含 batchId、batchVersion、dataCutoffDate、预测窗口、关系版本、拆解规则版本、父/子ASIN、预测日期、规则预测值与预测来源；销售页面不参与后台计算。')))
     );
   }
@@ -281,7 +324,7 @@
   function ReviewStep({ batch }) {
     const comparisonPeriod = batch.assessment.comparable ? `${dayText(batch.assessment.comparisonStartDate)} ~ ${dayText(batch.assessment.comparisonEndDate)}` : '等待实际回流';
     const columns = [{ title: '父ASIN', dataIndex: 'parentASIN', width: 150 }, { title: '对比期规则预测', dataIndex: 'total', align: 'right', render: number }, { title: '对比期实际销量', dataIndex: 'actualSales', align: 'right', render: number }, { title: '偏差', dataIndex: 'variance', align: 'right', render: value => `${value > 0 ? '+' : ''}${number(value)}` }, { title: '偏差率', dataIndex: 'varianceRate', align: 'right', render: value => h(Tag, { color: Math.abs(value) > 15 ? 'warning' : 'default' }, signedPercent(value)) }];
-    return h(React.Fragment, null, h(Alert, { type: 'info', showIcon: true, message: '复盘只产生下一批次调整依据，不会擅自回写参数或关系。' }), h('div', { className: 'fp-panel' }, h('div', { className: 'fp-panel-head' }, h('h2', null, '规则预测与实际销量'), h('span', { className: 'fp-muted' }, `同周期 ${comparisonPeriod} · 按批次快照保留`)), h('div', { className: 'fp-table-wrap' }, h(Table, { size: 'small', rowKey: 'key', pagination: false, dataSource: batch.forecastVsActual, columns, locale: { emptyText: '暂无可比批次数据' } }))), h('div', { className: 'fp-split' }, h('div', { className: 'fp-panel' }, h('div', { className: 'fp-panel-head' }, h('h2', null, '下一批次调整建议')), h('div', { className: 'fp-panel-body' }, h('div', { className: 'fp-logic-line' }, h('span', { className: 'fp-logic-index' }, '01'), h('strong', null, '参数'), h('span', null, Math.abs(batch.assessment.varianceRate) > 15 ? '复核历史/近期权重与趋势周期' : '默认参数暂不调整')), h('div', { className: 'fp-logic-line' }, h('span', { className: 'fp-logic-index' }, '02'), h('strong', null, '关系'), h('span', null, `${batch.relationChanges.length} 条关系变化需要进入下一批次确认`)), h('div', { className: 'fp-logic-line' }, h('span', { className: 'fp-logic-index' }, '03'), h('strong', null, '拆解'), h('span', null, '复核低销量子体份额与人工调配原因')))), h('div', { className: 'fp-panel' }, h('div', { className: 'fp-panel-head' }, h('h2', null, '批次审计轨迹')), h('div', { className: 'fp-panel-body fp-audit' }, batch.auditTimeline.slice().reverse().map(item => h('div', { className: 'fp-audit-item', key: `${item.at}-${item.action}` }, h('strong', null, `${dateText(item.at)} · ${item.action}`), h('span', null, `${item.actor} · ${item.reason}`)))))));
+    return h(React.Fragment, null, h(Alert, { type: 'info', showIcon: true, message: '复盘只产生下一批次调整依据，不会擅自回写参数或关系。' }), h(PlanListPanel, { title: '规则预测与实际销量', meta: h('span', { className: 'fp-muted' }, `同周期 ${comparisonPeriod} · 按批次快照保留`) }, h(PlanTable, { rowKey: 'key', dataSource: batch.forecastVsActual, columns, locale: { emptyText: '暂无可比批次数据' } })), h('div', { className: 'fp-split' }, h('div', { className: 'fp-panel' }, h('div', { className: 'fp-panel-head' }, h('h2', null, '下一批次调整建议')), h('div', { className: 'fp-panel-body' }, h('div', { className: 'fp-logic-line' }, h('span', { className: 'fp-logic-index' }, '01'), h('strong', null, '参数'), h('span', null, Math.abs(batch.assessment.varianceRate) > 15 ? '复核历史/近期权重与趋势周期' : '默认参数暂不调整')), h('div', { className: 'fp-logic-line' }, h('span', { className: 'fp-logic-index' }, '02'), h('strong', null, '关系'), h('span', null, `${batch.relationChanges.length} 条关系变化需要进入下一批次确认`)), h('div', { className: 'fp-logic-line' }, h('span', { className: 'fp-logic-index' }, '03'), h('strong', null, '拆解'), h('span', null, '复核低销量子体份额与人工调配原因')))), h('div', { className: 'fp-panel' }, h('div', { className: 'fp-panel-head' }, h('h2', null, '批次审计轨迹')), h('div', { className: 'fp-panel-body fp-audit' }, batch.auditTimeline.slice().reverse().map(item => h('div', { className: 'fp-audit-item', key: `${item.at}-${item.action}` }, h('strong', null, `${dateText(item.at)} · ${item.action}`), h('span', null, `${item.actor} · ${item.reason}`)))))));
   }
   function ResultsView() {
     const [filters, setFilters] = useState({});
@@ -354,25 +397,23 @@
       { title: '最终份额', dataIndex: 'finalShare', width: 92, align: 'right', render: percent },
       { title: '关系版本', dataIndex: 'relationVersion', width: 142 },
       { title: '状态', dataIndex: 'batchStatus', width: 112, render: statusTag },
-      { title: '来源', width: 96, render: () => h(Tag, null, '规则预测') },
-      { title: '操作', width: 92, fixed: 'right', render: (_, row) => h(Button, { type: 'link', onClick: () => openBatch(row) }, '打开批次') }
+      { title: '来源', width: 96, render: () => h(Tag, null, '规则预测') }
     ];
     return h(React.Fragment, null,
-      h(PageHead, { title: '预测结果', subtitle: '一个列表汇总全部预测批次，可按批次、父ASIN、子ASIN、站点店铺和平台筛选历史预测结果。', actions: [h(Button, { key: 'open', type: 'primary', onClick: openCurrent }, '打开当前批次')] }),
-      h('div', { className: 'fp-panel' },
-        h('div', { className: 'fp-panel-head' }, h('h2', null, '预测结果列表'), h(Tag, { color: 'blue' }, `${filteredRows.length}/${rows.length} 条 · ${batches.length} 个批次`)),
-        h('div', { className: 'fp-panel-body', style: { paddingBottom: 4 } },
-          h(Form, { layout: 'inline', size: 'small', style: { rowGap: 8 } },
+      h(PageHead, { title: '预测结果', subtitle: '一个列表汇总全部预测批次，可按批次、父ASIN、子ASIN、站点店铺和平台筛选历史预测结果。' }),
+      h(PlanListPanel, {
+        title: '预测结果列表',
+        meta: h(Tag, { color: 'blue' }, `${filteredRows.length}/${rows.length} 条 · ${batches.length} 个批次`),
+        search: h(Form, { layout: 'inline', size: 'small', style: { rowGap: 8 } },
             h(Form.Item, { label: '预测批次' }, h(Select, { allowClear: true, showSearch: true, optionFilterProp: 'label', placeholder: '全部批次', value: filters.batchId, options: batchOptions, onChange: value => setFilter('batchId', value), style: { width: 210 } })),
             h(Form.Item, { label: '父ASIN' }, h(Select, { allowClear: true, showSearch: true, optionFilterProp: 'label', placeholder: '全部父ASIN', value: filters.parentASIN, options: parentOptions, onChange: value => setFilter('parentASIN', value), style: { width: 150 } })),
             h(Form.Item, { label: '子ASIN' }, h(Select, { allowClear: true, showSearch: true, optionFilterProp: 'label', placeholder: '全部子ASIN', value: filters.childASIN, options: childOptions, onChange: value => setFilter('childASIN', value), style: { width: 150 } })),
             h(Form.Item, { label: '站点店铺' }, h(Select, { allowClear: true, showSearch: true, optionFilterProp: 'label', placeholder: '全部站点店铺', value: filters.siteStore, options: siteStoreOptions, onChange: value => setFilter('siteStore', value), style: { width: 150 } })),
             h(Form.Item, { label: '平台' }, h(Select, { allowClear: true, placeholder: '全部平台', value: filters.platform, options: platformOptions, onChange: value => setFilter('platform', value), style: { width: 120 } })),
             h(Form.Item, null, h(Button, { onClick: reset }, '重置'))
-          )
-        ),
-        h('div', { className: 'fp-table-wrap' }, h(Table, { size: 'small', rowKey: 'resultKey', dataSource: filteredRows, columns, scroll: { x: 1680 }, pagination: { pageSize: 12, showSizeChanger: false }, locale: { emptyText: '未找到匹配的历史批次预测结果，请调整筛选项。' } }))
-      )
+          ),
+        toolbar: h(Button, { type: 'primary', onClick: openCurrent }, '打开当前批次')
+      }, h(PlanTable, { rowKey: 'resultKey', dataSource: filteredRows, columns, scroll: { x: 1680 }, pagination: { pageSize: 12 }, locale: { emptyText: '未找到匹配的历史批次预测结果，请调整筛选项。' } }))
     );
   }
   function SubmissionView({ batch }) {
@@ -382,7 +423,7 @@
   function ReviewView() {
     const batches = model.list();
     const columns = [{ title: '调整批次', dataIndex: 'name', width: 190, render: (_, row) => batchText(row) }, { title: '评估来源', render: (_, row) => row.assessment.previousBatchVersion || '待下一批次回流' }, { title: '对比期', render: (_, row) => row.assessment.comparable ? `${dayText(row.assessment.comparisonStartDate)} ~ ${dayText(row.assessment.comparisonEndDate)}` : '—' }, { title: '规则预测', render: (_, row) => row.assessment.comparable ? number(row.assessment.ruleForecastTotal) : '—', align: 'right' }, { title: '实际销量', render: (_, row) => row.assessment.comparable ? number(row.assessment.actualSalesTotal) : '—', align: 'right' }, { title: '整体偏差', render: (_, row) => row.assessment.comparable ? h(Tag, { color: Math.abs(row.assessment.varianceRate) > 15 ? 'warning' : 'default' }, signedPercent(row.assessment.varianceRate)) : h(Tag, null, '待回流'), align: 'right' }, { title: '下一批次依据', render: (_, row) => row.assessment.trend }];
-    return h(React.Fragment, null, h(PageHead, { title: '预测复盘', subtitle: '从规则预测、销售提报与实际销量的偏差中形成下一批次调整依据。' }), h('div', { className: 'fp-panel' }, h('div', { className: 'fp-panel-head' }, h('h2', null, '批次复盘总览')), h('div', { className: 'fp-table-wrap' }, h(Table, { size: 'small', rowKey: 'id', dataSource: batches, columns, pagination: false }))), h(Alert, { style: { marginTop: 12 }, type: 'info', showIcon: true, message: '复盘建议需要PMC确认后才会进入下一批次；系统不会自动修改预测参数。' }));
+    return h(React.Fragment, null, h(PageHead, { title: '预测复盘', subtitle: '从规则预测、销售提报与实际销量的偏差中形成下一批次调整依据。' }), h(PlanListPanel, { title: '批次复盘总览' }, h(PlanTable, { rowKey: 'id', dataSource: batches, columns })), h(Alert, { style: { marginTop: 12 }, type: 'info', showIcon: true, message: '复盘建议需要PMC确认后才会进入下一批次；系统不会自动修改预测参数。' }));
   }
   function PlanDetail({ batchId, onBack, initialStep }) {
     const revision = useStoreRevision();
