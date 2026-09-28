@@ -1,8 +1,8 @@
 /* Forecast-plan workspace: batch-first backend operations. */
 (() => {
   const h = React.createElement;
-  const { useEffect, useMemo, useState } = React;
-  const { Alert, App, Button, Descriptions, Divider, Drawer, Empty, Form, Input, InputNumber, Segmented, Select, Space, Steps, Table, Tabs, Tag, Timeline, Tooltip } = antd;
+  const { useEffect, useMemo, useRef, useState } = React;
+  const { Alert, App, Button, Descriptions, Divider, Drawer, Empty, Form, Input, InputNumber, Pagination, Segmented, Select, Space, Steps, Table, Tabs, Tag, Timeline, Tooltip } = antd;
   const icon = window.icons || {};
   const model = window.ForecastBatchModel.createStore();
   const contract = model.contract;
@@ -53,14 +53,60 @@
     if (column.children) next.children = normalizePlanColumns(column.children);
     return next;
   });
+  const paginationLocale = { items_per_page: '条/页', jump_to: '跳至', jump_to_confirm: '确定', page: '页', prev_page: '上一页', next_page: '下一页', prev_5: '向前5页', next_5: '向后5页', page_size: '每页条数' };
   const planPagination = pagination => {
-    const base = { size: 'small', pageSize: 12, showSizeChanger: true, showQuickJumper: true, hideOnSinglePage: false, showTotal: total => `共 ${total} 条` };
+    const base = { size: 'small', defaultPageSize: 20, pageSizeOptions: [5, 20, 50], showSizeChanger: true, showQuickJumper: false, hideOnSinglePage: false };
     if (pagination === false || pagination == null) return base;
-    return { ...base, ...pagination, showTotal: pagination.showTotal || base.showTotal };
+    return { ...base, ...pagination };
   };
   const planScroll = (columns, scroll) => ({ x: Math.max(960, sumColumnWidths(columns)), y: 420, ...(scroll || {}) });
-  function PlanTable({ columns = [], className, pagination, scroll, ...props }) {
-    return h(Table, { size: 'small', sticky: true, ...props, className: ['fp-plan-table', className].filter(Boolean).join(' '), columns: normalizePlanColumns(columns), scroll: planScroll(columns, scroll), pagination: planPagination(pagination) });
+  function PlanTable({ columns = [], className, dataSource = [], hostRef, pagination, scroll, ...props }) {
+    const paginationConfig = pagination === false ? null : planPagination(pagination);
+    const initialPageSize = Number(paginationConfig?.defaultPageSize ?? paginationConfig?.pageSize ?? 20);
+    const [current, setCurrent] = useState(Number(paginationConfig?.defaultCurrent || 1));
+    const [pageSize, setPageSize] = useState(initialPageSize);
+    const [destination, setDestination] = useState(null);
+    const total = Number(paginationConfig?.total ?? dataSource.length);
+    const maxPage = Math.max(1, Math.ceil(total / pageSize));
+    const safeCurrent = Math.min(current, maxPage);
+    useEffect(() => {
+      if (current > maxPage) setCurrent(maxPage);
+    }, [current, maxPage]);
+    useEffect(() => setDestination(null), [safeCurrent, pageSize, total]);
+    const changePage = (nextPage, nextSize = pageSize) => {
+      const normalizedSize = Number(nextSize || pageSize);
+      const normalizedPage = normalizedSize !== pageSize ? 1 : nextPage;
+      setCurrent(normalizedPage);
+      setPageSize(normalizedSize);
+      paginationConfig?.onChange?.(normalizedPage, normalizedSize);
+    };
+    const jump = () => {
+      if (destination == null) return;
+      changePage(Math.max(1, Math.min(maxPage, Math.trunc(destination))));
+      setDestination(null);
+    };
+    const tablePagination = paginationConfig ? { current: safeCurrent, pageSize, total, position: ['none'] } : false;
+    return h('div', { ref: hostRef, className: 'fp-plan-table-shell' },
+      h(Table, { size: 'small', sticky: true, ...props, dataSource, className: ['fp-plan-table', className].filter(Boolean).join(' '), columns: normalizePlanColumns(columns), scroll: planScroll(columns, scroll), pagination: tablePagination }),
+      paginationConfig && h('div', { className: 'fp-plan-pagination' },
+        h('div', { className: 'forecast-pagination-bar' },
+          h(Pagination, {
+            current: safeCurrent,
+            pageSize,
+            total,
+            size: 'small',
+            locale: paginationLocale,
+            showSizeChanger: paginationConfig.showSizeChanger,
+            showQuickJumper: false,
+            hideOnSinglePage: false,
+            pageSizeOptions: paginationConfig.pageSizeOptions,
+            showTotal: paginationConfig.showTotal || (count => h('span', { className: 'forecast-page-total' }, '共 ', h('b', null, number(count)), ' 条')),
+            onChange: changePage
+          }),
+          h('label', { className: 'forecast-page-jump' }, '跳至', h(InputNumber, { 'aria-label': '跳转页码', min: 1, max: maxPage, precision: 0, controls: false, disabled: !total, value: destination, onChange: setDestination, onPressEnter: jump, onBlur: jump, style: { width: 44 }, size: 'small' }), '页')
+        )
+      )
+    );
   }
   function PlanListPanel({ title, meta, search, toolbar, children }) {
     return h('div', { className: 'fp-list-layout' },
@@ -337,12 +383,14 @@
       { title: '销售提报消费数据', dataIndex: 'finalForecast', width: 170, render: value => h('strong', null, number(value)) }
     ];
     return h('div', { className: 'fp-result-detail' },
-      h('div', { className: 'fp-table-wrap' }, h(PlanTable, { rowKey: 'date', dataSource: dailyRows, columns, scroll: { x: 900, y: 320 }, pagination: { pageSize: 10, pageSizeOptions: [7, 14, 30, 60], showSizeChanger: true }, locale: { emptyText: '暂无日级预测数据' } }))
+      h('div', { className: 'fp-table-wrap' }, h(PlanTable, { rowKey: 'date', dataSource: dailyRows, columns, scroll: { x: 900, y: 320 }, pagination: { defaultPageSize: 10, pageSizeOptions: [7, 10, 14, 30, 60], showSizeChanger: true }, locale: { emptyText: '暂无日级预测数据' } }))
     );
   }
   function ResultsView() {
     const [filters, setFilters] = useState({});
     const [expandedResultKey, setExpandedResultKey] = useState(null);
+    const resultTableHostRef = useRef(null);
+    const resultScrollRef = useRef({ key: null, top: 0, left: 0 });
     const batches = model.list();
     const rows = batches.flatMap(batch => {
       const forecastIndex = contract.getForecastIndex(batch.id);
@@ -393,7 +441,29 @@
       && (!filters.platform || row.platform === filters.platform));
     const setFilter = (key, value) => setFilters(current => ({ ...current, [key]: value || undefined }));
     const reset = () => { setFilters({}); setExpandedResultKey(null); };
-    const toggleDetail = row => setExpandedResultKey(current => current === row.resultKey ? null : row.resultKey);
+    const toggleDetail = row => {
+      const body = resultTableHostRef.current?.querySelector('.ant-table-body');
+      resultScrollRef.current = { key: row.resultKey, top: body?.scrollTop || 0, left: body?.scrollLeft || 0 };
+      setExpandedResultKey(current => current === row.resultKey ? null : row.resultKey);
+    };
+    useEffect(() => {
+      const snapshot = resultScrollRef.current;
+      if (!snapshot.key) return undefined;
+      let secondFrame;
+      const firstFrame = requestAnimationFrame(() => {
+        secondFrame = requestAnimationFrame(() => {
+          const host = resultTableHostRef.current;
+          const body = host?.querySelector('.ant-table-body');
+          if (body) {
+            body.scrollTop = snapshot.top;
+            body.scrollLeft = snapshot.left;
+          }
+          const anchor = [...(host?.querySelectorAll('[data-result-anchor]') || [])].find(node => node.dataset.resultAnchor === snapshot.key);
+          anchor?.focus({ preventScroll: true });
+        });
+      });
+      return () => { cancelAnimationFrame(firstFrame); if (secondFrame) cancelAnimationFrame(secondFrame); };
+    }, [expandedResultKey]);
     const openCurrent = () => {
       const current = model.getCurrent();
       const target = rows.find(row => row.batchId === current?.id) || rows[0];
@@ -405,13 +475,13 @@
       { title: '店铺', dataIndex: 'store', width: 120 },
       { title: '父ASIN', dataIndex: 'parentASIN', width: 145 },
       { title: '子ASIN', dataIndex: 'childASIN', width: 145 },
-      { title: '预测批次', width: 150, render: (_, row) => h(Button, { type: 'link', className: 'fp-link', icon: h(expandedResultKey === row.resultKey ? icon.UpOutlined : icon.DownOutlined), iconPosition: 'end', onClick: () => toggleDetail(row), 'aria-expanded': expandedResultKey === row.resultKey }, batchText(row)) },
+      { title: '预测批次', width: 150, render: (_, row) => h(Button, { type: 'link', className: 'fp-link', icon: h(expandedResultKey === row.resultKey ? icon.UpOutlined : icon.DownOutlined), iconPosition: 'end', onClick: () => toggleDetail(row), 'aria-expanded': expandedResultKey === row.resultKey, 'data-result-anchor': row.resultKey }, batchText(row)) },
       { title: '预测范围', width: 190, render: (_, row) => `${dayText(row.forecastStartDate)} ~ ${dayText(row.forecastEndDate)}` },
       { title: '父ASIN预测总量', dataIndex: 'parentTotal', width: 132, align: 'right', render: value => h('strong', null, number(value)) },
       { title: '子ASIN预测总量', dataIndex: 'total', width: 132, align: 'right', render: value => h('strong', null, number(value)) },
       { title: '最终份额', dataIndex: 'finalShare', width: 92, align: 'right', render: percent },
       { title: '关系版本', dataIndex: 'relationVersion', width: 142 },
-      { title: '状态', dataIndex: 'batchStatus', width: 112, render: statusTag }
+      { title: '状态', dataIndex: 'batchStatus', width: 112, render: value => h(Tag, { className: 'fp-result-status' }, value) }
     ];
     return h(React.Fragment, null,
       h(PlanListPanel, {
@@ -424,7 +494,7 @@
             h(Form.Item, null, h(Button, { onClick: reset }, '重置'))
           ),
         toolbar: h(Button, { type: 'primary', onClick: openCurrent }, '展开当前批次')
-      }, h(PlanTable, { rowKey: 'resultKey', dataSource: filteredRows, columns, scroll: { y: 'max(120px, calc(100vh - 300px))' }, pagination: { pageSize: 12 }, expandable: { expandedRowKeys: expandedResultKey ? [expandedResultKey] : [], expandedRowRender: row => h(ForecastResultDetail, { row }), showExpandColumn: false }, locale: { emptyText: '未找到匹配的历史批次预测结果，请调整筛选项。' } }))
+      }, h(PlanTable, { hostRef: resultTableHostRef, rowKey: 'resultKey', dataSource: filteredRows, columns, scroll: { y: 'max(120px, calc(100vh - 300px))' }, expandable: { expandedRowKeys: expandedResultKey ? [expandedResultKey] : [], expandedRowRender: row => h(ForecastResultDetail, { row }), showExpandColumn: false }, locale: { emptyText: '未找到匹配的历史批次预测结果，请调整筛选项。' } }))
     );
   }
   function SubmissionView({ batch }) {
