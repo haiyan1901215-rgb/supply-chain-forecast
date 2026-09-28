@@ -329,7 +329,6 @@
       return { date, parentForecast: row.parentDailyForecast?.[date] ?? 0, systemForecast, adjustment: Number(finalForecast || 0) - systemForecast, finalForecast };
     });
     const signedNumber = value => `${Number(value || 0) > 0 ? '+' : ''}${number(value)}`;
-    const detailNode = (label, value, note) => h('div', { className: 'fp-chain-node', key: label }, h('span', null, label), h('strong', null, value), note && h('small', null, note));
     const columns = [
       { title: '预测日期', dataIndex: 'date', width: 120, render: dayText },
       { title: '父ASIN预测池', dataIndex: 'parentForecast', width: 150, render: number },
@@ -338,16 +337,7 @@
       { title: '销售提报消费数据', dataIndex: 'finalForecast', width: 170, render: value => h('strong', null, number(value)) }
     ];
     return h('div', { className: 'fp-result-detail' },
-      h('div', { className: 'fp-result-detail-title' }, h('strong', null, `${row.parentASIN} / ${row.childASIN}`), statusTag(row.batchStatus)),
-      h('div', { className: 'fp-chain fp-result-chain' },
-        detailNode('父ASIN预测池', `${row.parentASIN} · ${number(row.parentTotal)} 件`, row.forecastRuleVersion),
-        detailNode('当前父子关系', `${row.parentASIN} → ${row.childASIN}`, row.relationVersion),
-        detailNode('拆解规则', row.splitRuleVersion, `系统份额 ${percent(row.systemShare)}`),
-        detailNode('本批次人工调配', `最终份额 ${percent(row.finalShare)}`, `调配 ${signedPercent(Number(row.manualAdjustment || 0) / 100)}`),
-        detailNode('销售提报消费数据', `${number(row.total)} 件`, `${batchText(row)} · ${row.submissionState}`)
-      ),
-      h('div', { className: 'fp-result-detail-title' }, h('strong', null, '日级清单'), h('span', { className: 'fp-muted' }, `${dayText(row.forecastStartDate)} ~ ${dayText(row.forecastEndDate)} · 共 ${dailyRows.length} 天`)),
-      h('div', { className: 'fp-table-wrap' }, h(PlanTable, { rowKey: 'date', dataSource: dailyRows, columns, scroll: { x: 900, y: 320 }, pagination: { pageSize: 14, pageSizeOptions: [14, 30, 60], showSizeChanger: true }, locale: { emptyText: '暂无日级预测数据' } }))
+      h('div', { className: 'fp-table-wrap' }, h(PlanTable, { rowKey: 'date', dataSource: dailyRows, columns, scroll: { x: 900, y: 320 }, pagination: { pageSize: 10, pageSizeOptions: [7, 14, 30, 60], showSizeChanger: true }, locale: { emptyText: '暂无日级预测数据' } }))
     );
   }
   function ResultsView() {
@@ -415,7 +405,7 @@
       { title: '店铺', dataIndex: 'store', width: 120 },
       { title: '父ASIN', dataIndex: 'parentASIN', width: 145 },
       { title: '子ASIN', dataIndex: 'childASIN', width: 145 },
-      { title: '预测批次', width: 150, render: (_, row) => h(Button, { type: 'link', className: 'fp-link', icon: h(expandedResultKey === row.resultKey ? icon.UpOutlined : icon.DownOutlined), onClick: () => toggleDetail(row), 'aria-expanded': expandedResultKey === row.resultKey }, batchText(row)) },
+      { title: '预测批次', width: 150, render: (_, row) => h(Button, { type: 'link', className: 'fp-link', icon: h(expandedResultKey === row.resultKey ? icon.UpOutlined : icon.DownOutlined), iconPosition: 'end', onClick: () => toggleDetail(row), 'aria-expanded': expandedResultKey === row.resultKey }, batchText(row)) },
       { title: '预测范围', width: 190, render: (_, row) => `${dayText(row.forecastStartDate)} ~ ${dayText(row.forecastEndDate)}` },
       { title: '父ASIN预测总量', dataIndex: 'parentTotal', width: 132, align: 'right', render: value => h('strong', null, number(value)) },
       { title: '子ASIN预测总量', dataIndex: 'total', width: 132, align: 'right', render: value => h('strong', null, number(value)) },

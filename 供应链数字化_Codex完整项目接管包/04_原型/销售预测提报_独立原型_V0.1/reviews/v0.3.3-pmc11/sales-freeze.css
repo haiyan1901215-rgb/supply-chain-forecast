@@ -23,6 +23,8 @@
   font:400 12px/18px Arial,sans-serif;color:var(--muted-2);vertical-align:middle;
 }
 .app .forecast-table .product-identifiers {column-gap:0;}
+.app .forecast-table .product-identifiers > .code-value {display:inline-flex;align-items:center;}
+.app .forecast-table .product-identifiers .biz-code::before {flex:0 0 auto;width:auto;margin:0 5px;}
 .app .forecast-table .store-first-line {
   display:flex;
   align-items:center;

@@ -12,7 +12,7 @@
       line.insertBefore(store,asin);
       store.insertAdjacentHTML('afterend',separator());
     }
-    if(info){if(listing){listing.classList.add('sales-listing');listing.innerHTML=listing.innerHTML.replace(/上架\s*/, '上架时间：');info.append(listing);}if(tags){tags.classList.add('sales-tags');info.append(tags);}}
+    if(info){if(listing){listing.classList.add('sales-listing');listing.textContent=`上架时间：${formatKey(g.listedAt)} · ${num(g.listingDays)} 天`;info.append(listing);}if(tags){tags.classList.add('sales-tags');info.append(tags);}}
     return cell.outerHTML;
   };
   const separator=()=>'<span class="inline-separator" aria-hidden="true">丨</span>';

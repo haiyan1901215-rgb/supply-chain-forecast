@@ -26,15 +26,15 @@
     },
     {
       "file": "forecast-plan-workspace.js",
-      "sha256": "b59fb99e2a5a25056a062862bee95191766f9dd483a26e49469d9e0ca99cddb9"
+      "sha256": "8360526819a8016a759e0fca3fc363dc962a64ad1d25e9eaab1a4c8d0f485b85"
     },
     {
       "file": "forecast-plan.css",
-      "sha256": "b688a7a70e55966620cc7375028af2a14dd71ea47b1a3fced6f9f1baa8ce1343"
+      "sha256": "76138ffc36f7d2105e95931db1e95a8328b06180d03b4591be7df4f2e5bbb4d6"
     },
     {
       "file": "index.html",
-      "sha256": "285bcd0d1138c480a576d6ed14f2d89f530d7eb6aa283efd42cd489fbaaff761"
+      "sha256": "9c779386f05916b9e0f1a6c0a404a3ca2f94dc8fc8ff87309bf3860b07135eb7"
     },
     {
       "file": "parent-asin.css",
@@ -62,11 +62,11 @@
     },
     {
       "file": "sales-freeze.css",
-      "sha256": "16748bb1dcfdc498c93bc7ccf5447ca8bd3a6b14e4ac16f984efbdcd528581b1"
+      "sha256": "51bc149446830bd19e597dfd35122fae0f1ced528a60fd31097703f2fd4285f5"
     },
     {
       "file": "sales-freeze.js",
-      "sha256": "830ce039878f4adde56deff33a28eb945ccded9b2cb67644805566b810f2c5fd"
+      "sha256": "05dd67cace47b408f5d184cfdcb08785ce51678886ac54d044a6a2386f33f6ae"
     },
     {
       "file": "submission-window.js",
