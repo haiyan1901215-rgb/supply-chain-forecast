@@ -34,7 +34,7 @@
     },
     {
       "file": "index.html",
-      "sha256": "641aac1a6a20c1fb25bae1d6f05b7c73acd228e92267a15b0b17897d82a9a0ba"
+      "sha256": "39e43857b7c5ed515d6075ba4e9cb9955be0bd5edec01e230b8135a889f59aa3"
     },
     {
       "file": "parent-asin.css",
@@ -58,7 +58,7 @@
     },
     {
       "file": "pmc-workflow.js",
-      "sha256": "2153acbafb22c5bb1ddce134a7dadf3f92fd5d0d2538346ed2f88844ee9d4c9a"
+      "sha256": "3bf9e47d01785ee6dd07e49067ee1c268f443abe7e3ac91347f9d1d725985872"
     },
     {
       "file": "sales-freeze.css",
@@ -146,7 +146,7 @@
     },
     {
       "file": "v031-workspace.js",
-      "sha256": "14aadce2ec7136327862dbab1a7dc043d52b226e88557c3428ac900dfb340388"
+      "sha256": "87bedff9aa7d5ee3d8ac277be7e39d3adcfd45847876370ebd432f46c1b774d9"
     },
     {
       "file": "v031.css",

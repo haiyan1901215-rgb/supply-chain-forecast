@@ -43,15 +43,15 @@
   function SkuList({sku}){
     const [draft,setDraft]=React.useState(sku),[query,setQuery]=React.useState(sku);
     const data=skuRows().filter(r=>!query||[r.sku,r.businessCode].some(v=>v.includes(query.toUpperCase())));
-    return h('div',{className:'sku-list-surface'},h('div',{className:'sku-list-toolbar'},h('h2',null,'SKU详情列表'),h(Input.Search,{value:draft,onChange:e=>setDraft(e.target.value),onSearch:v=>setQuery(v.trim()),allowClear:true,'aria-label':'搜索SKU或业务识别码',placeholder:'SKU / 业务识别码',style:{width:300}}),h(Typography.Link,{href:'#forecast'},'返回销售预测提报')),
+    return h('div',{className:'sku-list-surface'},h('div',{className:'sku-list-toolbar'},h('h2',null,'SKU详情列表'),h(Input.Search,{value:draft,onChange:e=>setDraft(e.target.value),onSearch:v=>setQuery(v.trim()),allowClear:true,'aria-label':'搜索SKU或业务识别码',placeholder:'SKU / 业务识别码',style:{width:300}}),h(Typography.Link,{href:'#forecast'},'返回销售预测')),
       h(Table,{size:'small',rowKey:'sku',pagination:false,scroll:{x:1080},locale:{emptyText:'没有匹配的SKU'},dataSource:data,columns:[
         {title:'SKU',dataIndex:'sku',width:110},{title:'业务识别码',dataIndex:'businessCode',width:190},{title:'商品名称',dataIndex:'name',width:180},{title:'SPU',dataIndex:'spu',width:100},{title:'SKC',dataIndex:'skc',width:130},{title:'颜色',dataIndex:'color',width:90},{title:'尺码',dataIndex:'size',width:70}],
         expandable:{defaultExpandedRowKeys:skuRows().some(r=>r.sku===sku)?[sku]:[],expandedRowRender:r=>h(Table,{size:'small',rowKey:'id',pagination:false,dataSource:groups.flatMap(g=>g.children.filter(c=>c.sku===r.sku).map(c=>({id:c.id,site:g.market,account:g.account,parent:g.parent,child:c.asin}))),columns:[{title:'国家 / 站点',dataIndex:'site'},{title:'账号 / 店铺',dataIndex:'account'},{title:'父ASIN',dataIndex:'parent'},{title:'子ASIN',dataIndex:'child'}]})}}));
   }
   function drawRoute(){
     tabs.classList.remove('planning-system-tabs');
-    const isSku=active==='sku';document.body.dataset.workspace=active;content.classList.toggle('is-route-hidden',isSku);skuHost.hidden=!isSku;$('.crumb b').textContent=isSku?'SKU详情列表':'销售预测提报';
-    tabsRoot.render(wrap(h(Tabs,{type:'editable-card',size:'small',hideAdd:true,activeKey:active,tabBarStyle:{margin:0},items:[{key:'forecast',label:'销售预测提报',closable:false},...(skuOpen?[{key:'sku',label:'SKU详情列表',closable:true}]:[])],onChange:key=>{location.hash=key==='sku'?'sku='+encodeURIComponent(currentSku):'forecast';},onEdit:(key,action)=>{if(action==='remove'&&key==='sku'){skuOpen=false;location.hash='forecast';if(active==='forecast')drawRoute();}}})));
+    const isSku=active==='sku';document.body.dataset.workspace=active;content.classList.toggle('is-route-hidden',isSku);skuHost.hidden=!isSku;$('.crumb b').textContent=isSku?'SKU详情列表':'销售预测';
+    tabsRoot.render(wrap(h(Tabs,{type:'editable-card',size:'small',hideAdd:true,activeKey:active,tabBarStyle:{margin:0},items:[{key:'forecast',label:'销售预测',closable:false},...(skuOpen?[{key:'sku',label:'SKU详情列表',closable:true}]:[])],onChange:key=>{location.hash=key==='sku'?'sku='+encodeURIComponent(currentSku):'forecast';},onEdit:(key,action)=>{if(action==='remove'&&key==='sku'){skuOpen=false;location.hash='forecast';if(active==='forecast')drawRoute();}}})));
     if(isSku)skuRoot.render(wrap(h(SkuList,{key:currentSku,sku:currentSku})));else requestAnimationFrame(()=>{syncHorizontalScrollbar();positionForecastDivider();returnTarget?.isConnected&&returnTarget.focus({preventScroll:true});});
   }
   function route(){const m=location.hash.match(/^#sku=(.*)$/);if(m){try{currentSku=decodeURIComponent(m[1]);}catch{currentSku='';}active='sku';skuOpen=true;hideCodeTooltip();hideImagePreview();}else active='forecast';drawRoute();}
