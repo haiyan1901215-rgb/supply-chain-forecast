@@ -92,7 +92,7 @@
       h(PlanListPanel, {
         search: h(Input.Search, { allowClear: true, placeholder: '批次名称 / 版本', onSearch: setQuery, style: { width: 260 } }),
         toolbar: h(Button, { type: 'primary', icon: h(icon.PlusOutlined), onClick: create }, '创建下一批次')
-      }, h(PlanTable, { rowKey: 'id', dataSource: batches, columns, onRow: row => ({ className: 'fp-batch-row', onDoubleClick: () => onOpen(row.id) }) }))
+      }, h(PlanTable, { rowKey: 'id', dataSource: batches, columns, scroll: { y: 'max(220px, calc(100vh - 420px))' }, onRow: row => ({ className: 'fp-batch-row', onDoubleClick: () => onOpen(row.id) }) }))
     );
   }
   function DemoControl({ batch, onChange }) {
@@ -424,7 +424,7 @@
             h(Form.Item, null, h(Button, { onClick: reset }, '重置'))
           ),
         toolbar: h(Button, { type: 'primary', onClick: openCurrent }, '展开当前批次')
-      }, h(PlanTable, { rowKey: 'resultKey', dataSource: filteredRows, columns, pagination: { pageSize: 12 }, expandable: { expandedRowKeys: expandedResultKey ? [expandedResultKey] : [], expandedRowRender: row => h(ForecastResultDetail, { row }), showExpandColumn: false }, locale: { emptyText: '未找到匹配的历史批次预测结果，请调整筛选项。' } }))
+      }, h(PlanTable, { rowKey: 'resultKey', dataSource: filteredRows, columns, scroll: { y: 'max(180px, calc(100vh - 560px))' }, pagination: { pageSize: 12 }, expandable: { expandedRowKeys: expandedResultKey ? [expandedResultKey] : [], expandedRowRender: row => h(ForecastResultDetail, { row }), showExpandColumn: false }, locale: { emptyText: '未找到匹配的历史批次预测结果，请调整筛选项。' } }))
     );
   }
   function SubmissionView({ batch }) {
@@ -456,7 +456,7 @@
     if (view === 'system-detail' && detailId) return h('div', { className: 'forecast-plan-root' }, h(PlanDetail, { batchId: detailId, initialStep: detailStep, onBack: () => window.pmcWorkflow?.showPlanningBaseTab?.() }));
     const activeView = view === 'results' ? 'results' : 'plans';
     const body = detailId ? h(PlanDetail, { batchId: detailId, initialStep: detailStep, onBack: () => setDetailId(null) }) : activeView === 'results' ? h(ResultsView) : h(BatchList, { onOpen: open });
-    return h('div', { className: 'forecast-plan-root' }, h(Tabs, { className: 'fp-nav', size: 'small', tabBarStyle: { margin: 0 }, activeKey: activeView, onChange: key => { setView(key); setDetailId(null); setDetailStep('assessment'); }, items: [{ key: 'plans', label: '预测计划' }, { key: 'results', label: '预测结果' }] }), body);
+    return h('div', { className: `forecast-plan-root ${detailId ? '' : 'fp-list-page'}` }, h(Tabs, { className: 'fp-nav', size: 'small', tabBarStyle: { margin: 0 }, activeKey: activeView, onChange: key => { setView(key); setDetailId(null); setDetailStep('assessment'); }, items: [{ key: 'plans', label: '预测计划' }, { key: 'results', label: '预测结果' }] }), body);
   }
   function navigate(route) {
     const stepMap = { forecast: 'forecast', split: 'split', relations: 'relations', params: 'parameters' };
