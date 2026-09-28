@@ -6,7 +6,7 @@
 })(typeof window === 'undefined' ? globalThis : window, function (root) {
   'use strict';
 
-  const STORAGE_KEY = 'pmc-forecast-batch-v3';
+  const STORAGE_KEY = 'pmc-forecast-batch-v4';
   const clone = value => JSON.parse(JSON.stringify(value));
   const sum = values => values.reduce((total, value) => total + (Number(value) || 0), 0);
   const isoDate = value => String(value).slice(0, 10);
@@ -44,6 +44,7 @@
   const relationKey = row => [row.country, row.store, row.parentASIN].join('|');
   const rowKey = row => [row.country, row.store, row.childASIN].join('|');
   const normalizeRatio = value => Math.max(0, Math.min(10000, Math.round(Number(value) || 0)));
+  const nextVersion = value => String(value || '').replace(/V(\d+)$/, (_, number) => `V${String(Number(number) + 1).padStart(number.length, '0')}`);
   const relationFromRow = (row, batchDate) => ({
     childId: row.childId,
     childASIN: row.childASIN,
@@ -95,6 +96,13 @@
     manualAllowed: true,
     effectiveTime: (id.match(/(\d{4})(\d{2})(\d{2})/) || []).slice(1).join('-') || '2026-10-21'
   });
+  const defaultSplitRuleTemplates = () => ([
+    { id: 'SPLIT-TPL-DEFAULT', name: '默认子体拆解', scope: '正常销售子体', conditionText: '商品标签 = 正常销售', historyWindow: 84, recentWindow: 14, historyWeight: 100, recentWeight: 0, status: '启用', priority: 10 },
+    { id: 'SPLIT-TPL-LOW', name: '低销量/不稳定子体', scope: '全部国家与父ASIN', conditionText: '14天 Clean ADU < 2 AND 14天有销量天数 ≤ 10', historyWindow: 84, recentWindow: 14, historyWeight: 70, recentWeight: 30, status: '启用', priority: 100 },
+    { id: 'SPLIT-TPL-SIZE', name: '特殊尺码调配', scope: '商品标签 = 特殊尺码策略', conditionText: '尺码 IN [XS, XL, XXL]', historyWindow: 84, recentWindow: 14, historyWeight: 60, recentWeight: 40, status: '停用', priority: 80 },
+    { id: 'SPLIT-TPL-NEW', name: '新品特殊规则', scope: '商品标签 = 新品', conditionText: '上架天数 ≤ 30', historyWindow: 28, recentWindow: 7, historyWeight: 40, recentWeight: 60, status: '停用', priority: 70 },
+    { id: 'SPLIT-TPL-PARENT', name: '指定父ASIN特殊规则', scope: '指定父ASIN', conditionText: '父ASIN = 指定范围', historyWindow: 84, recentWindow: 14, historyWeight: 70, recentWeight: 30, status: '启用', priority: 60 }
+  ]);
   const defaultForecastRule = id => ({
     version: id,
     name: '父ASIN日级预测标准规则',
@@ -128,17 +136,39 @@
     const rows = relations.map(relation => {
       const legacy = Object.fromEntries(dates.map(date => [date, legacyForecast(relation, batch, date, services)]));
       const historyDays = dateRange(shiftDate(batch, -83), batch);
+      const recentDays = dateRange(shiftDate(batch, -13), batch);
       const historyTotal = sum(historyDays.map(date => Number(legacyForecast(relation, batch, date, services)?.ai) || 0));
       const siblingHistoryTotal = sum((groups[relationKey(relation)] || []).map(sibling => {
         return sum(historyDays.map(date => Number(legacyForecast(sibling, batch, date, services)?.ai) || 0));
       }));
+      const lowSalesDemo = (relation.tags || []).includes('低销');
+      const recentTotal = lowSalesDemo ? 22 : sum(recentDays.map(date => Number(legacyForecast(relation, batch, date, services)?.ai) || 0));
+      const siblingRecentTotal = sum((groups[relationKey(relation)] || []).map(sibling => {
+        if ((sibling.tags || []).includes('低销')) return 22;
+        return sum(recentDays.map(date => Number(legacyForecast(sibling, batch, date, services)?.ai) || 0));
+      }));
+      const historyShare = siblingHistoryTotal ? Math.round(historyTotal / siblingHistoryTotal * 10000) : 0;
+      const recentShare = siblingRecentTotal ? Math.round(recentTotal / siblingRecentTotal * 10000) : historyShare;
+      const recentCleanAdu = Number((recentTotal / 14).toFixed(2));
+      const recentSellingDays = lowSalesDemo ? 8 : recentDays.length;
+      const lowOrUnstable = recentCleanAdu < 2 && recentSellingDays <= 10;
+      const suggestedShare = lowOrUnstable ? Math.round(historyShare * 0.7 + recentShare * 0.3) : historyShare;
       return {
         ...relation,
         id: rowKey(relation),
         historicalSales: historyTotal,
-        systemShare: siblingHistoryTotal ? Math.round(historyTotal / siblingHistoryTotal * 10000) : 0,
+        history84Sales: historyTotal,
+        history84Share: historyShare,
+        recent14CleanSales: recentTotal,
+        recent14Share: recentShare,
+        recentCleanAdu,
+        recentSellingDays,
+        splitJudgement: lowOrUnstable ? '低销量/不稳定' : '正常',
+        matchedSplitRuleId: lowOrUnstable ? 'SPLIT-TPL-LOW' : 'SPLIT-TPL-DEFAULT',
+        systemShare: suggestedShare,
         manualAdjustment: 0,
-        finalShare: siblingHistoryTotal ? Math.round(historyTotal / siblingHistoryTotal * 10000) : 0,
+        finalShare: suggestedShare,
+        manualReason: null,
         dailyBaselineForecast: Object.fromEntries(dates.map(date => [date, Number(legacy[date]?.ai) || 0])),
         dailyRuleForecast: Object.fromEntries(dates.map(date => [date, Number(legacy[date]?.ai) || 0])),
         dailyManualForecast: Object.fromEntries(dates.map(date => [date, legacy[date]?.manual ?? null])),
@@ -149,8 +179,9 @@
     });
     Object.values(groups).forEach(siblings => {
       const ratioTotal = sum(siblings.map(row => row.systemShare));
-      if (ratioTotal && ratioTotal !== 10000) siblings.at(-1).systemShare += 10000 - ratioTotal;
-      siblings.forEach(row => { row.finalShare = row.systemShare; });
+      siblings.forEach(row => { row.systemShare = ratioTotal ? Math.round(row.systemShare / ratioTotal * 10000) : Math.round(10000 / siblings.length); row.finalShare = row.systemShare; });
+      const drift = 10000 - sum(siblings.map(row => row.systemShare));
+      if (siblings.at(-1)) siblings.at(-1).systemShare += drift, siblings.at(-1).finalShare += drift;
     });
     return rows;
   }
@@ -186,6 +217,96 @@
         });
       });
     });
+  }
+  function rebuildPools(batch, resetFinal = true) {
+    const grouped = batch.childForecastResults.reduce((map, row) => { (map[relationKey(row)] ||= []).push(row); return map; }, {});
+    Object.values(grouped).forEach(siblings => {
+      const historyTotal = sum(siblings.map(row => row.historicalSales));
+      const recentTotal = sum(siblings.map(row => row.recent14CleanSales));
+      siblings.forEach(row => {
+        row.history84Share = historyTotal ? Math.round(row.historicalSales / historyTotal * 10000) : Math.round(10000 / siblings.length);
+        row.recent14Share = recentTotal ? Math.round(row.recent14CleanSales / recentTotal * 10000) : row.history84Share;
+        const lowOrUnstable = row.recentCleanAdu < 2 && row.recentSellingDays <= 10;
+        row.splitJudgement = lowOrUnstable ? '低销量/不稳定' : '正常';
+        row.matchedSplitRuleId = lowOrUnstable ? 'SPLIT-TPL-LOW' : 'SPLIT-TPL-DEFAULT';
+        row.systemShare = lowOrUnstable ? Math.round(row.history84Share * 0.7 + row.recent14Share * 0.3) : row.history84Share;
+      });
+      const systemTotal = sum(siblings.map(row => row.systemShare));
+      siblings.forEach(row => { row.systemShare = systemTotal ? Math.round(row.systemShare / systemTotal * 10000) : Math.round(10000 / siblings.length); if (resetFinal) row.finalShare = row.systemShare; });
+      const drift = 10000 - sum(siblings.map(row => row.systemShare));
+      if (siblings.at(-1)) {
+        siblings.at(-1).systemShare += drift;
+        if (resetFinal) siblings.at(-1).finalShare += drift;
+      }
+    });
+    batch.parentForecastResults = parentForecastResults(batch.childForecastResults, batch.forecastStartDate, batch.forecastEndDate);
+    recalculateSplit(batch);
+  }
+  function resultValidation(batch) {
+    const childKeys = batch.relationSnapshot.map(row => `${row.country}|${row.store}|${row.childASIN}`);
+    const duplicateChildren = childKeys.filter((key, index) => childKeys.indexOf(key) !== index).length;
+    const unparentedChildren = batch.relationSnapshot.filter(row => !row.parentASIN).length;
+    const parentMissing = batch.relationSnapshot.filter(row => !batch.parentForecastResults.some(parent => parent.key === relationKey(row))).length;
+    const grouped = batch.childForecastResults.reduce((map, row) => { (map[relationKey(row)] ||= []).push(row); return map; }, {});
+    const shareAnomalies = Object.values(grouped).filter(rows => sum(rows.map(row => row.finalShare)) !== 10000).length;
+    const adjustmentReasonMissing = batch.childForecastResults.filter(row => row.manualAdjustment && !row.manualReason).length;
+    const imbalance = Object.entries(grouped).filter(([key, rows]) => {
+      const parent = batch.parentForecastResults.find(item => item.key === key);
+      return !parent || sum(rows.map(row => sum(Object.values(row.dailyFinalForecast)))) !== parent.total;
+    }).length;
+    const items = [
+      ['父子关系完整', unparentedChildren],
+      ['一个子ASIN多个父ASIN', duplicateChildren],
+      ['无父ASIN子体', unparentedChildren],
+      ['父ASIN预测缺失', parentMissing],
+      ['子体份额合计异常', shareAnomalies],
+      ['人工调整未填写原因', adjustmentReasonMissing],
+      ['拆解结果与父体不平衡', imbalance]
+    ].map(([label, count]) => ({ label, count, passed: count === 0 }));
+    if (!batch.relationConfirmed) items.unshift({ label: '本批次父子关系已确认', count: 1, passed: false });
+    if (!batch.splitConfirmed) items.push({ label: '本批次子体拆解已确认', count: 1, passed: false });
+    return { passed: items.every(item => item.passed), items };
+  }
+  function makeResultSnapshot(batch, version, generatedAt) {
+    return {
+      version,
+      generatedAt,
+      relationVersion: batch.relationVersion,
+      splitRuleVersion: batch.splitRuleSnapshot.version,
+      forecastRuleVersion: batch.forecastRuleSnapshot.version,
+      parameterVersion: batch.parameterSnapshot.version,
+      parentCount: batch.parentForecastResults.length,
+      childCount: batch.childForecastResults.length,
+      parentTotal: sum(batch.parentForecastResults.map(row => row.total)),
+      childTotal: sum(batch.childForecastResults.map(row => sum(Object.values(row.dailyFinalForecast)))),
+      parents: batch.parentForecastResults.map(row => ({ key: row.key, country: row.country, store: row.store, parentASIN: row.parentASIN, total: row.total, daily: clone(row.daily) })),
+      rows: batch.childForecastResults.map(row => ({
+        childId: row.childId,
+        country: row.country,
+        store: row.store,
+        platform: row.platform,
+        parentASIN: row.parentASIN,
+        childASIN: row.childASIN,
+        salesOwner: row.salesOwner,
+        tags: clone(row.tags || []),
+        systemShare: row.systemShare,
+        manualAdjustment: row.manualAdjustment,
+        manualReason: row.manualReason,
+        finalShare: row.finalShare,
+        total: sum(Object.values(row.dailyFinalForecast)),
+        daily: clone(row.dailyFinalForecast),
+        ruleDaily: clone(row.dailyRuleForecast),
+        dailyReason: clone(row.dailyReason || {})
+      }))
+    };
+  }
+  function invalidateResult(batch, workflowState) {
+    batch.resultState = batch.resultSnapshots.length ? '需重新生成' : '待生成';
+    batch.workflowState = workflowState;
+  }
+  function captureRelationVersion(batch, reason) {
+    batch.relationVersion = nextVersion(batch.relationVersion);
+    batch.relationVersions.push({ version: batch.relationVersion, at: new Date().toISOString(), reason, relations: clone(batch.relationSnapshot), removedRelations: clone(batch.removedRelations || []) });
   }
   function actualSnapshot(rows, batch, services) {
     const reader = sourceActual(services);
@@ -254,7 +375,7 @@
     const relations = input.relations || baseRows.map(row => relationFromRow(row, batchDate));
     const rows = buildForecastRows(relations, batchDate, start, end, services, previous);
     const batch = {
-      schema: 3,
+      schema: 4,
       id: input.id,
       batchVersion: input.batchVersion,
       name: input.name,
@@ -272,10 +393,18 @@
       forecastRuleSnapshot: input.forecastRuleSnapshot || defaultForecastRule(input.forecastRuleVersion || `FORECAST-${batchDate.replaceAll('-', '')}-V01`),
       relationVersion: input.relationVersion || `REL-${batchDate.replaceAll('-', '')}-V01`,
       splitRuleSnapshot: input.splitRuleSnapshot || defaultSplitRule(input.splitRuleVersion || `SPLIT-${batchDate.replaceAll('-', '')}-V01`),
+      splitRuleTemplates: input.splitRuleTemplates || defaultSplitRuleTemplates(),
       relationSnapshot: relations.map(relation => ({ ...relation, childRef: undefined })),
+      removedRelations: input.removedRelations || [],
       relationChanges: input.relationChanges || [],
+      relationConfirmed: input.relationConfirmed ?? false,
+      splitConfirmed: input.splitConfirmed ?? false,
       parentForecastResults: parentForecastResults(rows, start, end),
       childForecastResults: rows.map(row => ({ ...row, childRef: undefined })),
+      resultState: input.resultGenerated ? '已生成' : '待生成',
+      activeResultVersion: input.resultVersion || null,
+      resultSnapshots: [],
+      workflowState: input.workflowState || '草稿',
       submissionWindow: input.submissionWindow || defaultWindow(batchDate),
       submissionState: input.submissionState || '待发布',
       actualSales: input.actualSales || actualSnapshot(rows, batchDate, services),
@@ -283,7 +412,9 @@
       adjustmentLog: input.adjustmentLog || [],
       auditTimeline: input.auditTimeline || [{ at: `${batchDate}T09:00:00+08:00`, action: '创建预测批次', actor: 'PMC计划员', reason: '继承上一批次预测与实际表现' }]
     };
-    recalculateSplit(batch);
+    rebuildPools(batch, true);
+    batch.relationVersions = input.relationVersions || [{ version: batch.relationVersion, at: batch.createdAt, reason: '创建本批次关系快照', relations: clone(batch.relationSnapshot), removedRelations: [] }];
+    if (input.resultGenerated) batch.resultSnapshots.push(makeResultSnapshot(batch, input.resultVersion || `RESULT-${batchDate.replaceAll('-', '')}-V01`, input.resultGeneratedAt || batch.updatedAt));
     const comparison = buildForecastComparison(batch, previous);
     batch.assessment = assessment(batch, previous, comparison);
     batch.forecastVsActual = comparison.rows;
@@ -292,35 +423,42 @@
   function seed(services = {}) {
     const previousDate = '2026-10-07';
     const currentDate = '2026-10-21';
-    const previousRelations = rowsFromGroups(sourceGroups(services), previousDate, services).map(row => ({
-      ...relationFromRow(row, previousDate),
-      parentASIN: row.childASIN === 'B0GRG7J9MN' ? 'B0OLDPOOL1' : row.parentASIN,
-      relationState: row.childASIN === 'B0GRG7J9MN' ? '历史父体' : row.relationState
+    const previousRelations = rowsFromGroups(sourceGroups(services), previousDate, services).map(row => relationFromRow(row, previousDate));
+    const supportsDemoMove = previousRelations.some(row => row.parentASIN === 'B0GRGFFVVN' && row.childASIN === 'B0GRG7J9MN') && previousRelations.some(row => row.parentASIN === 'B0H4QG3TLS');
+    const currentRelations = rowsFromGroups(sourceGroups(services), currentDate, services).map(row => ({
+      ...relationFromRow(row, currentDate),
+      ...(supportsDemoMove && row.childASIN === 'B0GRG7J9MN' ? { parentASIN: 'B0H4QG3TLS', relationState: 'PMC本批次确认' } : {})
     }));
+    const currentRelationChanges = supportsDemoMove ? [{ id: 'REL-CHANGE-001', childASIN: 'B0GRG7J9MN', from: 'B0GRGFFVVN', to: 'B0H4QG3TLS', type: '父体变更', beforeShare: 3500, afterShare: 2700, reason: '父体Listing结构调整', actor: 'PMC计划员', at: '2026-10-21T10:30:00+08:00' }] : [];
     const previous = createBatch({
       id: 'FB-20261007-01', batchVersion: 'V20261007-01', name: '2026-10-07 第1批预测', batchDate: previousDate,
-      dataCutoffDate: '2026-10-06', status: '已完成', currentStep: 'review', submissionState: '已冻结',
+      dataCutoffDate: '2026-10-06', status: '已完成', currentStep: 'review', submissionState: '已冻结', workflowState: '已完成', relationConfirmed: true, splitConfirmed: true, resultGenerated: true, resultVersion: 'RESULT-20261007-V01',
       relationVersion: 'REL-20261007-V01', splitRuleVersion: 'SPLIT-20261007-V01', parameterVersion: 'PARAM-20261007-V01',
       relations: previousRelations
     }, services);
     const current = createBatch({
       id: 'FB-20261021-01', batchVersion: 'V20261021-01', name: '2026-10-21 第1批预测', batchDate: currentDate,
-      dataCutoffDate: '2026-10-20', status: '销售填报中', currentStep: 'submission', submissionState: '填报中', previousBatchId: previous.id,
-      relationVersion: 'REL-20261021-V01', forecastRuleVersion: 'FORECAST-20261021-V01', splitRuleVersion: 'SPLIT-20261021-V01', parameterVersion: 'PARAM-20261021-V01',
-      relationChanges: [{ id: 'REL-CHANGE-001', childASIN: 'B0GRG7J9MN', from: 'B0OLDPOOL1', to: 'B0GRGFFVVN', type: '子ASIN更换父ASIN', beforeShare: 3500, afterShare: 2700, reason: '父体Listing结构调整', actor: 'PMC计划员', at: '2026-10-21T10:30:00+08:00' }],
+      dataCutoffDate: '2026-10-20', status: '销售填报中', currentStep: 'submission', submissionState: '填报中', previousBatchId: previous.id, workflowState: '填报进行中', relationConfirmed: true, splitConfirmed: true, resultGenerated: true, resultVersion: 'RESULT-20261021-V01', resultGeneratedAt: '2026-10-21T10:50:00+08:00',
+      relationVersion: 'REL-20261021-V02', forecastRuleVersion: 'FORECAST-20261021-V01', splitRuleVersion: 'SPLIT-20261021-V01', parameterVersion: 'PARAM-20261021-V01',
+      relations: currentRelations,
+      relationChanges: currentRelationChanges,
       auditTimeline: [
         { at: '2026-10-21T09:00:00+08:00', action: '创建预测批次', actor: 'PMC计划员', reason: '读取上一批次预测、实际与关系快照' },
         { at: '2026-10-21T09:20:00+08:00', action: '完成预测评估', actor: 'PMC计划员', reason: '识别低销量子体与父体趋势变化' },
-        { at: '2026-10-21T10:30:00+08:00', action: '确认本批次关系', actor: 'PMC计划员', reason: 'B0GRG7J9MN 归入当前父体预测池' },
+        { at: '2026-10-21T10:30:00+08:00', action: '确认本批次关系', actor: 'PMC计划员', reason: supportsDemoMove ? 'B0GRG7J9MN 从 B0GRGFFVVN 调整至 B0H4QG3TLS，历史销量按当前关系重新归集' : '确认本批次父子关系' },
         { at: '2026-10-21T11:00:00+08:00', action: '发布销售填报窗口', actor: 'PMC计划员', reason: '规则预测完成后交给销售填报' }
       ]
     }, services, previous);
     current.relationSnapshot = current.relationSnapshot.map(relation => ({ ...relation, previousParentASIN: previous.relationSnapshot.find(old => old.childASIN === relation.childASIN && old.country === relation.country)?.parentASIN || relation.parentASIN }));
-    current.relationChanges[0].previousBatchId = previous.id;
-    return { schema: 3, revision: 1, currentBatchId: current.id, batches: [previous, current] };
+    if (current.relationChanges[0]) current.relationChanges[0].previousBatchId = previous.id;
+    if (supportsDemoMove) current.relationVersions = [
+      { version: 'REL-20261021-V01', at: '2026-10-21T09:00:00+08:00', reason: '继承上一批次有效关系', relations: clone(previous.relationSnapshot), removedRelations: [] },
+      { version: current.relationVersion, at: '2026-10-21T10:30:00+08:00', reason: '确认父体变更', relations: clone(current.relationSnapshot), removedRelations: [] }
+    ];
+    return { schema: 4, revision: 1, currentBatchId: current.id, batches: [previous, current] };
   }
   function validState(value) {
-    return value && value.schema === 3 && Array.isArray(value.batches) && value.batches.length > 0 && value.batches.every(batch => batch.id && Array.isArray(batch.childForecastResults) && batch.relationVersion && batch.assessment && 'comparisonDays' in batch.assessment);
+    return value && value.schema === 4 && Array.isArray(value.batches) && value.batches.length > 0 && value.batches.every(batch => batch.id && Array.isArray(batch.childForecastResults) && Array.isArray(batch.resultSnapshots) && Array.isArray(batch.relationVersions) && batch.relationVersion && batch.assessment && 'comparisonDays' in batch.assessment);
   }
   function createStore(services = {}, storage = root.localStorage) {
     let state;
@@ -335,6 +473,7 @@
     const listeners = new Set();
     const save = () => { try { storage?.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (error) { /* demo continues in memory */ } listeners.forEach(listener => listener(getState())); if (root.dispatchEvent && typeof Event !== 'undefined') root.dispatchEvent(new Event('forecast-batch-change')); };
     const getBatchRaw = batchId => { const value = batchId || state.currentBatchId; return state.batches.find(batch => batch.id === value || batch.batchDate === value || batch.batchVersion === value); };
+    const getActiveResult = batch => batch?.resultSnapshots?.find(snapshot => snapshot.version === batch.activeResultVersion) || null;
     const effectiveStatus = batch => demoStage === 'auto' || batch.id !== state.currentBatchId ? batch.status : ({ assessment: '评估中', parameters: '参数调整中', relations: '关系确认中', split: '拆解规则确认中', forecast: '预测计算中', submission: '销售填报中', review: '待复盘' }[demoStage] || batch.status);
     const getState = () => ({ revision: state.revision, currentBatchId: state.currentBatchId, demoStage });
     const write = (batchId, mutator) => {
@@ -346,6 +485,36 @@
       state.revision += 1;
       save();
       return clone(batch);
+    };
+    const sourceRelation = (childId, batchDate) => {
+      const row = rowsFromGroups(sourceGroups(services), batchDate, services).find(item => item.childId === childId || item.childASIN === childId);
+      return row ? relationFromRow(row, batchDate) : null;
+    };
+    const moveRelation = (batch, childId, targetParent, reason) => {
+      const row = batch.relationSnapshot.find(item => item.childId === childId || item.childASIN === childId);
+      const child = batch.childForecastResults.find(item => item.childId === childId || item.childASIN === childId);
+      if (!row || !child) throw Error('子ASIN关系不存在');
+      const before = row.parentASIN;
+      if (before === targetParent) return 0;
+      row.previousParentASIN ||= before;
+      row.parentASIN = targetParent;
+      row.relationState = 'PMC本批次确认';
+      child.previousParentASIN ||= before;
+      child.parentASIN = targetParent;
+      child.relationState = 'PMC本批次确认';
+      child.manualReason = null;
+      batch.relationChanges.unshift({ id: `REL-CHANGE-${Date.now()}-${row.childASIN}`, childASIN: row.childASIN, from: before, to: targetParent, type: '父体变更', beforeShare: child.finalShare, afterShare: 0, reason, actor: 'PMC计划员', at: new Date().toISOString() });
+      return 1;
+    };
+    const finalizeRelationMutation = (batch, reason) => {
+      rebuildPools(batch, true);
+      captureRelationVersion(batch, reason);
+      batch.relationConfirmed = false;
+      batch.splitConfirmed = false;
+      batch.status = '关系确认中';
+      batch.currentStep = 'relations';
+      invalidateResult(batch, '关系待确认');
+      batch.auditTimeline.push({ at: new Date().toISOString(), action: '调整本批次父子关系', actor: 'PMC计划员', reason });
     };
     const api = {
       key: STORAGE_KEY,
@@ -369,30 +538,70 @@
         next.auditTimeline[0].reason = '继承上一批次快照，等待PMC重新评估与确认';
         state.batches.push(next); state.currentBatchId = next.id; state.revision += 1; save(); return clone(next);
       },
-      updateParameters: (batchId, changes, reason) => write(batchId, batch => { const before = clone(batch.parameterSnapshot); batch.parameterSnapshot = { ...batch.parameterSnapshot, ...changes, version: `${batch.parameterSnapshot.version.split('-V')[0]}-V${Number(batch.parameterSnapshot.version.match(/V(\d+)$/)?.[1] || 1) + 1}` }; batch.status = '参数调整中'; batch.currentStep = 'parameters'; batch.adjustmentLog.unshift({ at: new Date().toISOString(), type: '预测参数', before, after: clone(batch.parameterSnapshot), reason, actor: 'PMC计划员' }); batch.auditTimeline.push({ at: new Date().toISOString(), action: '调整预测参数', actor: 'PMC计划员', reason }); }),
-      adjustRelation: (batchId, childId, targetParent, reason) => write(batchId, batch => {
-        const row = batch.relationSnapshot.find(item => item.childId === childId || item.childASIN === childId);
-        const child = batch.childForecastResults.find(item => item.childId === childId || item.childASIN === childId);
-        if (!row || !child) throw Error('子ASIN关系不存在');
-        const before = row.parentASIN, beforeShare = child.finalShare;
-        if (before === targetParent) throw Error('新旧父ASIN不能相同');
-        row.parentASIN = targetParent; row.relationState = 'PMC本批次确认';
-        child.parentASIN = targetParent; child.relationState = 'PMC本批次确认'; child.finalShare = 0; child.systemShare = 0;
-        const groups = batch.childForecastResults.reduce((map, item) => { (map[relationKey(item)] ||= []).push(item); return map; }, {});
-        Object.values(groups).forEach(siblings => {
-          const total = sum(siblings.map(item => item.historicalSales));
-          siblings.forEach(item => { item.systemShare = total ? Math.round(item.historicalSales / total * 10000) : Math.round(10000 / siblings.length); item.finalShare = item.systemShare; });
-          const drift = 10000 - sum(siblings.map(item => item.systemShare)); if (siblings.at(-1)) siblings.at(-1).systemShare += drift, siblings.at(-1).finalShare += drift;
-        });
-        batch.parentForecastResults = parentForecastResults(batch.childForecastResults, batch.forecastStartDate, batch.forecastEndDate);
-        recalculateSplit(batch);
-        batch.relationChanges.unshift({ id: `REL-CHANGE-${Date.now()}`, childASIN: row.childASIN, from: before, to: targetParent, type: '子ASIN更换父ASIN', beforeShare, afterShare: child.finalShare, reason, actor: 'PMC计划员', at: new Date().toISOString() });
-        batch.status = '关系确认中'; batch.currentStep = 'relations';
+      updateParameters: (batchId, changes, reason) => write(batchId, batch => { const before = clone(batch.parameterSnapshot); batch.parameterSnapshot = { ...batch.parameterSnapshot, ...changes, version: nextVersion(batch.parameterSnapshot.version) }; batch.status = '参数已确认'; batch.workflowState = '参数已确认'; batch.currentStep = 'parameters'; invalidateResult(batch, '参数已确认'); batch.adjustmentLog.unshift({ at: new Date().toISOString(), type: '预测参数', before, after: clone(batch.parameterSnapshot), reason, actor: 'PMC计划员' }); batch.auditTimeline.push({ at: new Date().toISOString(), action: '调整预测参数', actor: 'PMC计划员', reason }); }),
+      inheritPreviousRelations: batchId => write(batchId, batch => {
+        const previous = getBatchRaw(batch.previousBatchId);
+        if (!previous) throw Error('没有可沿用的上一关系版本');
+        const relations = previous.relationSnapshot.map(item => ({ ...clone(item), previousParentASIN: item.parentASIN, effectiveFrom: batch.batchDate, childRef: sourceRelation(item.childId, batch.batchDate)?.childRef }));
+        batch.relationSnapshot = relations.map(item => ({ ...item, childRef: undefined }));
+        batch.childForecastResults = buildForecastRows(relations, batch.batchDate, batch.forecastStartDate, batch.forecastEndDate, services).map(item => ({ ...item, childRef: undefined }));
+        batch.removedRelations = [];
+        batch.relationChanges = [];
+        rebuildPools(batch, true);
+        captureRelationVersion(batch, '沿用上一版本有效关系');
+        batch.relationConfirmed = true;
+        batch.splitConfirmed = false;
+        batch.status = '关系已确认';
+        batch.workflowState = '关系已确认';
+        batch.currentStep = 'relations';
+        invalidateResult(batch, '关系已确认');
+        batch.auditTimeline.push({ at: new Date().toISOString(), action: '沿用上一关系版本', actor: 'PMC计划员', reason: `复制 ${relations.length} 条有效关系` });
       }),
-      adjustShares: (batchId, key, shares, reason) => write(batchId, batch => { const siblings = batch.childForecastResults.filter(row => relationKey(row) === key); if (!siblings.length) throw Error('父ASIN预测池不存在'); const total = sum(siblings.map(row => normalizeRatio(shares[row.childASIN] ?? shares[row.childId]))); if (total !== 10000) throw Error('当前父ASIN下子ASIN最终份额必须合计100%'); const before = siblings.map(row => ({ childASIN: row.childASIN, finalShare: row.finalShare })); siblings.forEach(row => { row.finalShare = normalizeRatio(shares[row.childASIN] ?? shares[row.childId]); }); recalculateSplit(batch); batch.status = '拆解规则确认中'; batch.currentStep = 'split'; batch.adjustmentLog.unshift({ at: new Date().toISOString(), type: '子ASIN份额', before, after: siblings.map(row => ({ childASIN: row.childASIN, finalShare: row.finalShare })), reason, actor: 'PMC计划员' }); batch.auditTimeline.push({ at: new Date().toISOString(), action: '完成子ASIN人工调配', actor: 'PMC计划员', reason }); }),
-      recalculate: (batchId, reason = '规则参数已确认，重新生成父/子ASIN规则预测') => write(batchId, batch => { recalculateSplit(batch); batch.status = '预测计算中'; batch.currentStep = 'forecast'; batch.auditTimeline.push({ at: new Date().toISOString(), action: '重新生成规则预测', actor: 'PMC计划员', reason }); }),
-      publishWindow: (batchId, window, reason = '规则预测完成，发布销售填报窗口') => write(batchId, batch => { const next = { ...batch.submissionWindow, ...window, status: '填报中' }; if (Date.parse(next.submissionStartTime) >= Date.parse(next.submissionDeadlineTime)) throw Error('填报开始时间必须早于截止时间'); if (Date.parse(next.submissionDeadlineTime) > Date.parse(next.submissionFreezeTime)) throw Error('填报截止时间不能晚于冻结时间'); batch.submissionWindow = next; batch.submissionState = '填报中'; batch.status = '销售填报中'; batch.currentStep = 'submission'; batch.auditTimeline.push({ at: new Date().toISOString(), action: '发布销售填报窗口', actor: 'PMC计划员', reason }); }),
-      freeze: (batchId, reason = '到达本批次冻结时间') => write(batchId, batch => { batch.status = '已冻结'; batch.submissionState = '已冻结'; batch.submissionWindow.status = '已冻结'; batch.currentStep = 'review'; batch.auditTimeline.push({ at: new Date().toISOString(), action: '冻结销售预测', actor: '系统', reason }); }),
+      upsertRelations: (batchId, payload) => write(batchId, batch => {
+        const reason = payload.reason || '新增父子关系';
+        (payload.childIds || []).forEach(childId => {
+          const existing = batch.relationSnapshot.find(item => item.childId === childId || item.childASIN === childId);
+          if (existing) return moveRelation(batch, childId, payload.parentASIN, reason);
+          const removed = (batch.removedRelations || []).find(item => item.childId === childId || item.childASIN === childId);
+          const relation = removed || sourceRelation(childId, batch.batchDate);
+          if (!relation) throw Error(`未找到子ASIN ${childId}`);
+          const nextRelation = { ...clone(relation), country: payload.country || relation.country, parentASIN: payload.parentASIN, previousParentASIN: removed?.parentASIN || null, relationState: '新增待确认', effectiveFrom: batch.batchDate, effectiveTo: null, childRef: undefined };
+          batch.relationSnapshot.push(nextRelation);
+          const source = sourceRelation(childId, batch.batchDate) || relation;
+          const child = buildForecastRows([{ ...nextRelation, childRef: source.childRef }], batch.batchDate, batch.forecastStartDate, batch.forecastEndDate, services)[0];
+          batch.childForecastResults.push({ ...child, childRef: undefined });
+          batch.removedRelations = (batch.removedRelations || []).filter(item => item.childId !== childId);
+          batch.relationChanges.unshift({ id: `REL-CHANGE-${Date.now()}-${nextRelation.childASIN}`, childASIN: nextRelation.childASIN, from: removed?.parentASIN || null, to: payload.parentASIN, type: removed ? '恢复关系' : '新增关系', reason, actor: 'PMC计划员', at: new Date().toISOString() });
+        });
+        finalizeRelationMutation(batch, reason);
+      }),
+      batchAdjustRelations: (batchId, childIds, targetParent, reason) => write(batchId, batch => {
+        const changed = childIds.reduce((count, childId) => count + moveRelation(batch, childId, targetParent, reason), 0);
+        if (!changed) throw Error('所选子ASIN与目标父ASIN关系相同');
+        finalizeRelationMutation(batch, reason);
+      }),
+      removeRelations: (batchId, childIds, reason) => write(batchId, batch => {
+        const selected = batch.relationSnapshot.filter(item => childIds.includes(item.childId));
+        if (!selected.length) throw Error('请选择需要移除的关系');
+        batch.removedRelations ||= [];
+        selected.forEach(row => {
+          batch.removedRelations.unshift({ ...clone(row), relationState: '已移除', effectiveTo: batch.batchDate, removedReason: reason });
+          batch.relationChanges.unshift({ id: `REL-CHANGE-${Date.now()}-${row.childASIN}`, childASIN: row.childASIN, from: row.parentASIN, to: null, type: '移除关系', reason, actor: 'PMC计划员', at: new Date().toISOString() });
+        });
+        batch.relationSnapshot = batch.relationSnapshot.filter(item => !childIds.includes(item.childId));
+        batch.childForecastResults = batch.childForecastResults.filter(item => !childIds.includes(item.childId));
+        finalizeRelationMutation(batch, reason);
+      }),
+      adjustRelation: (batchId, childId, targetParent, reason) => write(batchId, batch => { if (!moveRelation(batch, childId, targetParent, reason)) throw Error('新旧父ASIN不能相同'); finalizeRelationMutation(batch, reason); }),
+      confirmRelations: batchId => write(batchId, batch => { if (batch.relationSnapshot.some(row => !row.parentASIN)) throw Error('仍有子ASIN未关联父ASIN'); batch.relationConfirmed = true; batch.status = '关系已确认'; batch.workflowState = '关系已确认'; batch.currentStep = 'relations'; batch.auditTimeline.push({ at: new Date().toISOString(), action: '确认本批次父子关系', actor: 'PMC计划员', reason: `${batch.relationSnapshot.length} 条关系已确认，按当前关系重新归集历史销量` }); }),
+      saveSplitRule: (batchId, rule) => write(batchId, batch => { const next = { ...rule, id: rule.id || `SPLIT-TPL-${Date.now()}` }; const index = batch.splitRuleTemplates.findIndex(item => item.id === next.id); if (index >= 0) batch.splitRuleTemplates[index] = next; else batch.splitRuleTemplates.push(next); batch.splitRuleSnapshot.version = nextVersion(batch.splitRuleSnapshot.version); batch.splitConfirmed = false; batch.status = '拆解规则确认中'; batch.currentStep = 'split'; invalidateResult(batch, '拆解待确认'); batch.auditTimeline.push({ at: new Date().toISOString(), action: '更新子体拆解规则', actor: 'PMC计划员', reason: next.name }); }),
+      adjustShares: (batchId, key, shares, reason) => write(batchId, batch => { if (!batch.relationConfirmed) throw Error('请先确认本批次父子关系'); const siblings = batch.childForecastResults.filter(row => relationKey(row) === key); if (!siblings.length) throw Error('父ASIN预测池不存在'); const total = sum(siblings.map(row => normalizeRatio(shares[row.childASIN] ?? shares[row.childId]))); if (total !== 10000) throw Error('当前父ASIN下子ASIN最终份额必须合计100%'); const before = siblings.map(row => ({ childASIN: row.childASIN, finalShare: row.finalShare })); siblings.forEach(row => { row.finalShare = normalizeRatio(shares[row.childASIN] ?? shares[row.childId]); row.manualReason = row.finalShare !== row.systemShare ? reason : null; }); recalculateSplit(batch); batch.splitConfirmed = true; batch.status = '拆解已确认'; batch.workflowState = '拆解已确认'; batch.currentStep = 'split'; invalidateResult(batch, '拆解已确认'); batch.adjustmentLog.unshift({ at: new Date().toISOString(), type: '子ASIN份额', before, after: siblings.map(row => ({ childASIN: row.childASIN, finalShare: row.finalShare })), reason, actor: 'PMC计划员' }); batch.auditTimeline.push({ at: new Date().toISOString(), action: '完成子ASIN人工调配', actor: 'PMC计划员', reason }); }),
+      confirmSplit: batchId => write(batchId, batch => { if (!batch.relationConfirmed) throw Error('请先确认本批次父子关系'); const validation = resultValidation({ ...batch, splitConfirmed: true }); const blocking = validation.items.filter(item => !item.passed && item.label !== '本批次子体拆解已确认'); if (blocking.length) throw Error(`拆解校验未通过：${blocking[0].label}`); batch.splitConfirmed = true; batch.status = '拆解已确认'; batch.workflowState = '拆解已确认'; batch.currentStep = 'split'; invalidateResult(batch, '拆解已确认'); batch.auditTimeline.push({ at: new Date().toISOString(), action: '确认本批次子体拆解', actor: 'PMC计划员', reason: '全部父ASIN份额及预测量已平衡' }); }),
+      validateForecast: batchId => { const batch = getBatchRaw(batchId); return batch ? clone(resultValidation(batch)) : null; },
+      generateForecast: (batchId, reason = '生成本批次规则预测快照') => write(batchId, batch => { const validation = resultValidation(batch); if (!validation.passed) throw Error(`生成前校验未通过：${validation.items.find(item => !item.passed).label}`); recalculateSplit(batch); const prefix = `RESULT-${batch.batchDate.replaceAll('-', '')}-V`; const version = `${prefix}${String(batch.resultSnapshots.length + 1).padStart(2, '0')}`; const generatedAt = new Date().toISOString(); batch.resultSnapshots.push(makeResultSnapshot(batch, version, generatedAt)); batch.activeResultVersion = version; batch.resultState = '已生成'; batch.status = '规则预测已生成'; batch.workflowState = '规则预测已生成'; batch.currentStep = 'forecast'; batch.auditTimeline.push({ at: generatedAt, action: '生成规则预测快照', actor: 'PMC计划员', reason: `${reason} · ${version}` }); }),
+      recalculate: (batchId, reason = '规则参数已确认，重新生成父/子ASIN规则预测') => api.generateForecast(batchId, reason),
+      publishWindow: (batchId, window, reason = '规则预测完成，发布销售填报窗口') => write(batchId, batch => { if (batch.resultState !== '已生成' || !batch.activeResultVersion) throw Error('请先完成规则预测生成'); const next = { ...batch.submissionWindow, ...window, status: '填报中' }; if (Date.parse(next.submissionStartTime) >= Date.parse(next.submissionDeadlineTime)) throw Error('填报开放时间必须早于截止时间'); if (Date.parse(next.submissionDeadlineTime) > Date.parse(next.submissionFreezeTime)) throw Error('填报截止时间不能晚于冻结时间'); batch.submissionWindow = next; batch.submissionState = '填报中'; batch.status = '销售填报中'; batch.workflowState = '填报进行中'; batch.currentStep = 'submission'; batch.auditTimeline.push({ at: new Date().toISOString(), action: '发布销售填报窗口', actor: 'PMC计划员', reason: `${reason} · ${batch.activeResultVersion}` }); }),
+      freeze: (batchId, reason = '到达本批次冻结时间') => write(batchId, batch => { batch.status = '已冻结'; batch.workflowState = '填报已冻结'; batch.submissionState = '已冻结'; batch.submissionWindow.status = '已冻结'; batch.currentStep = 'review'; batch.auditTimeline.push({ at: new Date().toISOString(), action: '冻结销售预测', actor: '系统', reason }); }),
       subscribe: listener => { listeners.add(listener); return () => listeners.delete(listener); },
       contract: {
         getCurrent: () => api.getCurrent(),
@@ -403,21 +612,24 @@
           // immutable to callers without cloning the entire 182-day batch per cell.
           const raw = getBatchRaw(batchId);
           const batch = raw ? { ...raw, status: effectiveStatus(raw) } : null;
-          const row = batch?.childForecastResults.find(item => item.childId === childId || item.childASIN === childId || item.id === childId);
+          const result = getActiveResult(batch);
+          if (!result) return null;
+          const row = result.rows.find(item => item.childId === childId || item.childASIN === childId || [item.country, item.store, item.childASIN].join('|') === childId);
           if (!row) return null;
-          const parent = batch.parentForecastResults.find(item => item.key === relationKey(row));
-          const activity = row.dailyActivityForecast[date];
-          const ruleForecast = row.dailyFinalForecast[date] ?? null;
-          return { batchId: batch.id, batchVersion: batch.batchVersion, dataCutoffDate: batch.dataCutoffDate, forecastStartDate: batch.forecastStartDate, forecastEndDate: batch.forecastEndDate, submissionStartTime: batch.submissionWindow.submissionStartTime, submissionDeadlineTime: batch.submissionWindow.submissionDeadlineTime, submissionFreezeTime: batch.submissionWindow.submissionFreezeTime, status: batch.status, parentASIN: row.parentASIN, childASIN: row.childASIN, country: row.country, site: row.country, store: row.store, salesOwner: row.salesOwner, tags: [...(row.tags || [])], forecastDate: date, parentRuleForecast: parent?.daily?.[date] ?? null, systemSplitForecast: row.dailyRuleForecast[date] ?? null, ai: ruleForecast, manual: null, activity: null, final: ruleForecast, ruleForecast, forecastSource: '规则预测', forecastRuleVersion: batch.forecastRuleSnapshot.version, splitRuleVersion: batch.splitRuleSnapshot.version, relationVersion: batch.relationVersion, parameterVersion: batch.parameterSnapshot.version, reason: row.manualAdjustment ? 'PMC已完成本批次子ASIN份额调配' : row.dailyReason[date] || '沿用本批次拆解规则' };
+          const parent = result.parents.find(item => item.key === relationKey(row));
+          const ruleForecast = row.daily[date] ?? null;
+          return { batchId: batch.id, batchVersion: batch.batchVersion, resultVersion: result.version, dataCutoffDate: batch.dataCutoffDate, forecastStartDate: batch.forecastStartDate, forecastEndDate: batch.forecastEndDate, submissionStartTime: batch.submissionWindow.submissionStartTime, submissionDeadlineTime: batch.submissionWindow.submissionDeadlineTime, submissionFreezeTime: batch.submissionWindow.submissionFreezeTime, status: batch.status, parentASIN: row.parentASIN, childASIN: row.childASIN, country: row.country, site: row.country, store: row.store, salesOwner: row.salesOwner, tags: [...(row.tags || [])], forecastDate: date, parentRuleForecast: parent?.daily?.[date] ?? null, systemSplitForecast: row.ruleDaily[date] ?? null, ai: ruleForecast, manual: null, activity: null, final: ruleForecast, ruleForecast, forecastSource: '规则预测', forecastRuleVersion: result.forecastRuleVersion, splitRuleVersion: result.splitRuleVersion, relationVersion: result.relationVersion, parameterVersion: result.parameterVersion, reason: row.manualAdjustment ? 'PMC已完成本批次子ASIN份额调配' : row.dailyReason?.[date] || '沿用本批次拆解规则' };
         },
         getForecastIndex: batchId => {
           const batch = getBatchRaw(batchId);
           if (!batch) return null;
+          const result = getActiveResult(batch);
+          if (!result) return null;
           const children = {};
-          batch.childForecastResults.forEach(row => {
+          result.rows.forEach(row => {
             const key = rowKey(row);
-            const daily = { ...row.dailyFinalForecast };
-            const ruleDaily = { ...row.dailyRuleForecast };
+            const daily = { ...row.daily };
+            const ruleDaily = { ...row.ruleDaily };
             children[key] = {
               childId: row.childId,
               childASIN: row.childASIN,
@@ -434,16 +646,17 @@
             };
           });
           const parents = {};
-          batch.parentForecastResults.forEach(parent => {
+          result.parents.forEach(parent => {
             parents[parent.key] = { parentASIN: parent.parentASIN, country: parent.country, store: parent.store, total: parent.total, daily: { ...parent.daily } };
           });
-          return { batchId: batch.id, batchVersion: batch.batchVersion, forecastStartDate: batch.forecastStartDate, forecastEndDate: batch.forecastEndDate, children, parents };
+          return { batchId: batch.id, batchVersion: batch.batchVersion, resultVersion: result.version, relationVersion: result.relationVersion, splitRuleVersion: result.splitRuleVersion, forecastRuleVersion: result.forecastRuleVersion, parameterVersion: result.parameterVersion, forecastStartDate: batch.forecastStartDate, forecastEndDate: batch.forecastEndDate, children, parents };
         },
         getSubmissionRows: batchId => {
           const batch = api.getBatch(batchId); if (!batch) return [];
-          return batch.childForecastResults.flatMap(row => {
-            const parent = batch.parentForecastResults.find(item => item.key === relationKey(row));
-            return dateRange(batch.forecastStartDate, batch.forecastEndDate).map(date => ({ batchId: batch.id, batchVersion: batch.batchVersion, dataCutoffDate: batch.dataCutoffDate, forecastStartDate: batch.forecastStartDate, forecastEndDate: batch.forecastEndDate, submissionStartTime: batch.submissionWindow.submissionStartTime, submissionDeadlineTime: batch.submissionWindow.submissionDeadlineTime, submissionFreezeTime: batch.submissionWindow.submissionFreezeTime, status: batch.status, parentASIN: row.parentASIN, childASIN: row.childASIN, childId: row.childId, country: row.country, site: row.country, store: row.store, salesOwner: row.salesOwner, tags: row.tags, forecastDate: date, parentRuleForecast: parent?.daily?.[date] ?? null, systemSplitForecast: row.dailyRuleForecast[date] ?? null, ruleForecast: row.dailyFinalForecast[date] ?? null, forecastSource: '规则预测', forecastRuleVersion: batch.forecastRuleSnapshot.version, splitRuleVersion: batch.splitRuleSnapshot.version, relationVersion: batch.relationVersion, parameterVersion: batch.parameterSnapshot.version }));
+          const result = getActiveResult(getBatchRaw(batchId)); if (!result) return [];
+          return result.rows.flatMap(row => {
+            const parent = result.parents.find(item => item.key === relationKey(row));
+            return dateRange(batch.forecastStartDate, batch.forecastEndDate).map(date => ({ batchId: batch.id, batchVersion: batch.batchVersion, resultVersion: result.version, dataCutoffDate: batch.dataCutoffDate, forecastStartDate: batch.forecastStartDate, forecastEndDate: batch.forecastEndDate, submissionStartTime: batch.submissionWindow.submissionStartTime, submissionDeadlineTime: batch.submissionWindow.submissionDeadlineTime, submissionFreezeTime: batch.submissionWindow.submissionFreezeTime, status: batch.status, parentASIN: row.parentASIN, childASIN: row.childASIN, childId: row.childId, country: row.country, site: row.country, store: row.store, salesOwner: row.salesOwner, tags: row.tags, forecastDate: date, parentRuleForecast: parent?.daily?.[date] ?? null, systemSplitForecast: row.ruleDaily[date] ?? null, ruleForecast: row.daily[date] ?? null, forecastSource: '规则预测', forecastRuleVersion: result.forecastRuleVersion, splitRuleVersion: result.splitRuleVersion, relationVersion: result.relationVersion, parameterVersion: result.parameterVersion }));
           });
         },
         getSnapshot: batchId => api.getSnapshot(batchId),

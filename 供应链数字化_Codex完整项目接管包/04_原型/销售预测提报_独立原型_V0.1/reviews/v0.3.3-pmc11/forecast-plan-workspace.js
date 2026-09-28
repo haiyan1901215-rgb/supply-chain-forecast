@@ -2,7 +2,7 @@
 (() => {
   const h = React.createElement;
   const { useEffect, useMemo, useRef, useState } = React;
-  const { Alert, App, Button, Descriptions, Divider, Drawer, Empty, Form, Input, InputNumber, Pagination, Segmented, Select, Space, Steps, Table, Tabs, Tag, Timeline, Tooltip } = antd;
+  const { Alert, App, Button, Checkbox, Descriptions, Divider, Drawer, Empty, Form, Input, InputNumber, Pagination, Popover, Progress, Segmented, Select, Space, Steps, Table, Tabs, Tag, Tooltip, Upload } = antd;
   const icon = window.icons || {};
   const model = window.ForecastBatchModel.createStore();
   const contract = model.contract;
@@ -20,13 +20,13 @@
   const parentForecastKey = row => [row.country, row.store, row.parentASIN].join('|');
   const contractChild = (index, row) => index?.children?.[childForecastKey(row)] || null;
   const contractParent = (index, row) => index?.parents?.[parentForecastKey(row)] || null;
-  const statusColor = { 草稿: 'default', 评估中: 'processing', 参数调整中: 'processing', 关系确认中: 'warning', 拆解规则确认中: 'warning', 预测计算中: 'processing', 待发布: 'default', 销售填报中: 'processing', 待复盘: 'warning', 已冻结: 'blue', 已完成: 'success' };
+  const statusColor = { 草稿: 'default', 评估中: 'processing', 参数调整中: 'processing', 参数已确认: 'success', 关系确认中: 'warning', 关系已确认: 'success', 拆解规则确认中: 'warning', 拆解已确认: 'success', 预测计算中: 'processing', 规则预测已生成: 'success', 待发布: 'default', 销售填报中: 'processing', 待复盘: 'warning', 已冻结: 'default', 已完成: 'success' };
   const steps = [
     { key: 'assessment', title: '预测评估', description: '上一批次表现' },
     { key: 'parameters', title: '预测参数', description: '本批次执行值' },
-    { key: 'relations', title: '父子关系', description: '关系快照确认' },
-    { key: 'split', title: '拆解规则', description: '份额与调配' },
-    { key: 'forecast', title: '规则预测', description: '父子预测结果' },
+    { key: 'relations', title: '父子关系', description: '本批次关系与调整' },
+    { key: 'split', title: '子体拆解', description: '份额规则与人工调配' },
+    { key: 'forecast', title: '规则预测', description: '生成与校验' },
     { key: 'submission', title: '销售提报窗口', description: '发布与冻结' },
     { key: 'review', title: '预测复盘', description: '实际与偏差' }
   ];
@@ -153,15 +153,26 @@
         { label: '父ASIN预测池', value: `${new Set(batch.relationSnapshot.map(item => `${item.country}|${item.store}|${item.parentASIN}`)).size} 个` },
         { label: '子ASIN清单', value: `${batch.childForecastResults.length} 个` },
         { label: '关系版本', value: batch.relationVersion },
-        { label: '父ASIN预测规则', value: batch.forecastRuleSnapshot.version },
+        { label: '预测参数版本', value: batch.forecastRuleSnapshot.version },
+        { label: '拆解规则版本', value: batch.splitRuleSnapshot.version },
+        { label: '规则预测结果', value: batch.activeResultVersion || batch.resultState, tone: batch.resultState === '已生成' ? 'success' : batch.resultState === '需重新生成' ? 'warning' : '' },
         { label: '销售填报', value: batch.submissionState, tone: batch.submissionState === '已冻结' ? 'success' : '' },
         { label: '当前负责人', value: batch.createdBy }
       ] })
     );
   }
-  function WorkflowSteps({ active, onChange }) {
+  function WorkflowSteps({ active, batch, onChange }) {
     const current = stepIndex(active);
-    const items = steps.map((step, index) => ({ ...step, status: index < current ? 'finish' : index === current ? 'process' : 'wait' }));
+    const completed = {
+      assessment: Boolean(batch.assessment),
+      parameters: !['草稿', '评估中'].includes(batch.workflowState),
+      relations: batch.relationConfirmed,
+      split: batch.splitConfirmed,
+      forecast: batch.resultState === '已生成',
+      submission: ['填报中', '已冻结'].includes(batch.submissionState),
+      review: ['已完成', '已复盘'].includes(batch.workflowState)
+    };
+    const items = steps.map((step, index) => ({ ...step, status: index === current ? 'process' : completed[step.key] ? 'finish' : 'wait' }));
     return h('div', { className: 'fp-stepbar' }, h(Steps, { current, size: 'small', responsive: true, items, onChange: index => onChange(steps[index].key) }));
   }
   function AssessmentStep({ batch, onStep }) {
@@ -213,145 +224,314 @@
     );
   }
   function RelationStep({ batch }) {
-    const { message } = App.useApp();
+    const { message, modal } = App.useApp();
     const [query, setQuery] = useState('');
+    const [anomaly, setAnomaly] = useState();
+    const [selectedKeys, setSelectedKeys] = useState([]);
     const [selected, setSelected] = useState(null);
-    const [drawer, setDrawer] = useState(false);
-    const rows = batch.relationSnapshot.filter(row => !query || [row.parentASIN, row.childASIN, row.sellerSku].some(value => String(value).includes(query.trim().toUpperCase())));
-    const history = selected ? model.list().flatMap(item => item.relationSnapshot.filter(row => row.childASIN === selected.childASIN && row.country === selected.country).map(row => ({ batch: item.batchDate, version: item.relationVersion, parent: row.parentASIN, share: item.childForecastResults.find(child => child.childASIN === row.childASIN)?.finalShare || 0, forecast: item.childForecastResults.find(child => child.childASIN === row.childASIN)?.dailyFinalForecast || {}, status: item.status }))) : [];
-    const submit = values => { try { model.adjustRelation(batch.id, selected.childId, values.targetParent, values.reason); message.success('本批次父子关系已更新并记录原因'); setDrawer(false); } catch (error) { message.error(error.message); } };
+    const [historyOpen, setHistoryOpen] = useState(false);
+    const [historyDetail, setHistoryDetail] = useState(null);
+    const [addOpen, setAddOpen] = useState(false);
+    const [batchOpen, setBatchOpen] = useState(false);
+    const previous = model.getBatch(batch.previousBatchId);
+    const previousMap = Object.fromEntries((previous?.relationSnapshot || []).map(row => [[row.country, row.store, row.childASIN].join('|'), row]));
+    const activeRows = batch.relationSnapshot.map(row => ({ ...row, removed: false }));
+    const removedRows = (batch.removedRelations || []).map(row => ({ ...row, parentASIN: null, removed: true }));
+    const duplicateKeys = activeRows.reduce((map, row) => { const key = [row.country, row.store, row.childASIN].join('|'); map[key] = (map[key] || 0) + 1; return map; }, {});
+    const relationMeta = row => {
+      const key = [row.country, row.store, row.childASIN].join('|');
+      const old = previousMap[key];
+      if (row.removed) return { state: '移除', change: '移除', previousParent: row.previousParentASIN || row.parentASIN || old?.parentASIN };
+      if (!row.parentASIN || duplicateKeys[key] > 1) return { state: '异常待处理', change: old ? '父体变更' : '新增', previousParent: old?.parentASIN };
+      if (!old) return { state: '新增', change: '新增', previousParent: null };
+      if (old.parentASIN !== row.parentASIN) return { state: '父体变更', change: '父体变更', previousParent: old.parentASIN };
+      return { state: '正常', change: '无变化', previousParent: old.parentASIN };
+    };
+    const allRows = [...activeRows, ...removedRows].map((row, index) => ({ ...row, ...relationMeta(row), relationRowKey: row.removed ? `removed-${row.childId}-${index}` : row.childId }));
+    const anomalyMatch = row => !anomaly
+      || (anomaly === 'unparented' && !row.parentASIN)
+      || (anomaly === 'duplicate' && duplicateKeys[[row.country, row.store, row.childASIN].join('|')] > 1)
+      || (anomaly === 'orphan-parent' && row.removed)
+      || (anomaly === 'changed' && row.change === '父体变更')
+      || (anomaly === 'new' && row.change === '新增')
+      || (anomaly === 'impact' && row.change !== '无变化');
+    const rows = allRows.filter(row => anomalyMatch(row) && (!query || [row.parentASIN, row.previousParent, row.childASIN, row.country, row.store].some(value => String(value || '').toUpperCase().includes(query.trim().toUpperCase()))));
+    const counts = {
+      parents: new Set(activeRows.map(row => relationKey(row))).size,
+      children: activeRows.length,
+      unchanged: allRows.filter(row => row.change === '无变化').length,
+      added: allRows.filter(row => row.change === '新增').length,
+      changed: allRows.filter(row => row.change === '父体变更').length,
+      removed: removedRows.length,
+      anomalies: allRows.filter(row => row.state === '异常待处理').length
+    };
+    const affectedParents = new Set(allRows.filter(row => row.change !== '无变化').flatMap(row => [row.previousParent, row.parentASIN]).filter(Boolean)).size;
+    const parentOptions = [...new Set([...activeRows.map(row => row.parentASIN), ...(previous?.relationSnapshot || []).map(row => row.parentASIN), 'B0GRGFFVVN', 'B0H4QG3TLS'].filter(Boolean))].map(value => ({ value, label: value }));
+    const childOptions = [...activeRows, ...removedRows].reduce((map, row) => { if (!map.has(row.childId)) map.set(row.childId, { value: row.childId, label: `${row.childASIN} · ${row.country}` }); return map; }, new Map());
+    const history = selected ? model.list().flatMap(item => {
+      const relation = item.relationSnapshot.find(row => row.childASIN === selected.childASIN && row.country === selected.country);
+      const removed = (item.removedRelations || []).find(row => row.childASIN === selected.childASIN && row.country === selected.country);
+      const matched = relation || removed;
+      if (!matched) return [];
+      const result = item.resultSnapshots.find(snapshot => snapshot.version === item.activeResultVersion) || item.resultSnapshots.at(-1);
+      const resultRow = result?.rows.find(row => row.childASIN === selected.childASIN && row.country === selected.country);
+      const parent = result?.parents.find(row => row.key === [matched.country, matched.store, resultRow?.parentASIN || matched.parentASIN].join('|'));
+      return [{ batchId: item.id, batch: item.batchDate, version: item.relationVersion, resultVersion: result?.version, parent: relation?.parentASIN || '—', state: item.id === batch.id ? '当前' : '历史', change: relation ? relationMeta({ ...relation, removed: false }).change : '移除', share: resultRow?.finalShare || 0, childTotal: resultRow?.total || 0, parentTotal: parent?.total || 0 }];
+    }) : [];
+    const openHistory = row => { setSelected(row); setHistoryDetail(null); setHistoryOpen(true); };
+    const inherit = () => modal.confirm({
+      title: '沿用上一版本关系',
+      content: h(Descriptions, { size: 'small', column: 1, items: [{ key: 'tip', label: '说明', children: '将上一关系版本中的有效关系复制为本批次关系快照。' }, { key: 'count', label: '沿用关系', children: `${previous?.relationSnapshot.length || 0} 条` }, { key: 'change', label: '变更', children: '0 条' }] }),
+      okText: '确认沿用', cancelText: '取消',
+      onOk: () => { try { model.inheritPreviousRelations(batch.id); setSelectedKeys([]); message.success('已沿用上一关系版本'); } catch (error) { message.error(error.message); } }
+    });
+    const remove = () => {
+      if (!selectedKeys.length) return message.warning('请先选择需要移除的关系');
+      modal.confirm({ title: `移除 ${selectedKeys.length} 条本批次关系？`, content: '只从本批次关系快照移除，历史关系版本保持不变。', okText: '确认移除', cancelText: '取消', okButtonProps: { danger: true }, onOk: () => { try { model.removeRelations(batch.id, selectedKeys, '本批次关系清理'); setSelectedKeys([]); message.success('关系已从本批次移除'); } catch (error) { message.error(error.message); } } });
+    };
+    const confirmRelations = () => { try { model.confirmRelations(batch.id); message.success('本批次关系已确认，历史销量将按当前关系重新归集'); } catch (error) { message.error(error.message); } };
     const columns = [
-      { title: '父ASIN', dataIndex: 'parentASIN', width: 140 }, { title: '子ASIN', dataIndex: 'childASIN', width: 145, render: value => h(Button, { type: 'link', onClick: () => setSelected(rows.find(row => row.childASIN === value)) }, value) },
-      { title: 'Seller SKU', dataIndex: 'sellerSku', width: 165 }, { title: '国家 / 店铺', width: 150, render: (_, row) => `${row.country} · ${row.store}` }, { title: '上一批次父体', dataIndex: 'previousParentASIN', width: 145, render: value => value || '—' }, { title: '关系状态', dataIndex: 'relationState', width: 120, render: value => h(Tag, { color: value === '平台同步' ? 'default' : 'warning' }, value) }, { title: '操作', width: 88, fixed: 'right', render: (_, row) => h(Button, { type: 'link', onClick: () => { setSelected(row); setDrawer(true); } }, '调整关系') }
+      { title: '国家', dataIndex: 'country', width: 76 },
+      { title: '子ASIN', dataIndex: 'childASIN', width: 145, render: (value, row) => h(Button, { type: 'link', className: 'fp-link', onClick: () => openHistory(row) }, value) },
+      { title: '当前父ASIN', dataIndex: 'parentASIN', width: 145, render: value => value || '—' },
+      { title: '上一版本父ASIN', dataIndex: 'previousParent', width: 150, render: value => value || '—' },
+      { title: '关系状态', dataIndex: 'state', width: 116, render: value => h(Tag, { color: value === '异常待处理' ? 'error' : ['新增', '父体变更', '移除'].includes(value) ? 'warning' : 'default' }, value) },
+      { title: '变更类型', dataIndex: 'change', width: 110 },
+      { title: '操作', width: 84, fixed: 'right', render: (_, row) => h(Button, { type: 'link', onClick: () => openHistory(row) }, '查看') }
     ];
-    const parentOptions = [...new Set(batch.relationSnapshot.map(row => row.parentASIN))].map(value => ({ value, label: value }));
     return h(React.Fragment, null,
-      h(Alert, { type: 'info', showIcon: true, message: '本批次关系快照决定预测池；历史父ASIN只用于追溯，历史销量按国家 + 店铺 + 子ASIN归集到当前父ASIN预测池。' }),
+      h(Alert, { type: counts.changed || counts.added || counts.removed ? 'warning' : 'info', showIcon: true, message: counts.changed || counts.added || counts.removed ? '关系发生变更，受影响父ASIN将重新归集历史销量并重新计算预测。' : '本批次父子关系', description: `本批次预测按当前国家 + 子ASIN关系重新归集历史销量。系统检测到 ${counts.changed + counts.added + counts.removed} 条关系变化，影响 ${affectedParents} 个父ASIN；请优先确认后再进入子体拆解。` }),
+      h(MetricStrip, { items: [{ label: '父ASIN', value: number(counts.parents) }, { label: '子ASIN', value: number(counts.children) }, { label: '沿用上一版本', value: number(counts.unchanged) }, { label: '新增关系', value: number(counts.added) }, { label: '父体变更', value: number(counts.changed) }, { label: '移除关系', value: number(counts.removed) }, { label: '待处理异常', value: number(counts.anomalies), tone: counts.anomalies ? 'warning' : 'success' }] }),
+      (counts.changed > 0) && h('div', { className: 'fp-impact-note' }, h('strong', null, '历史销量归集变化'), h('span', null, `${allRows.find(row => row.change === '父体变更')?.childASIN || '变更子ASIN'} 历史销量 → 本批次重新归集至 ${allRows.find(row => row.change === '父体变更')?.parentASIN || '当前父ASIN'}。历史批次快照不回写。`)),
       h(PlanListPanel, {
-        title: '本批次父子ASIN关系',
-        meta: h(Tag, null, `${rows.length} 条关系`),
-        search: h(Input.Search, { allowClear: true, placeholder: '父ASIN / 子ASIN / SKU', onSearch: setQuery, style: { width: 260 } })
-      }, h(PlanTable, { rowKey: 'childId', dataSource: rows, columns, pagination: { pageSize: 12 }, onRow: row => ({ onClick: () => setSelected(row) }) })),
-      selected && h(PlanListPanel, {
-        title: `${selected.childASIN} · 历史挂靠关系`,
-        meta: h('span', { className: 'fp-muted' }, `当前父ASIN ${selected.parentASIN}`)
-      }, h(PlanTable, { rowKey: row => `${row.batch}-${row.version}`, dataSource: history, columns: [{ title: '预测批次', dataIndex: 'batch', render: dayText }, { title: '关系版本', dataIndex: 'version' }, { title: '父ASIN', dataIndex: 'parent' }, { title: '当时份额', dataIndex: 'share', align: 'right', render: percent }, { title: '状态', dataIndex: 'status', render: statusTag }, { title: '规则预测', render: (_, row) => number(Object.values(row.forecast).reduce((a, b) => a + (Number(b) || 0), 0)) }], locale: { emptyText: '暂无历史关系' } })),
-      h(Drawer, { open: drawer, width: 480, title: `调整本批次关系 · ${selected?.childASIN || ''}`, onClose: () => setDrawer(false), destroyOnClose: true, footer: null }, selected && h(RelationForm, { selected, parentOptions, onSubmit: submit, onCancel: () => setDrawer(false), disabled: batch.status === '已冻结' || batch.status === '已完成' }))
+        title: '本批次父子关系', meta: h(Tag, null, `${rows.length} 条`),
+        search: h(Space, { wrap: true }, h(Input.Search, { allowClear: true, placeholder: '父ASIN / 子ASIN / 国家 / 店铺', onSearch: setQuery, style: { width: 280 } }), h(Select, { allowClear: true, placeholder: '关系异常', value: anomaly, onChange: setAnomaly, style: { width: 190 }, options: [{ value: 'unparented', label: '子ASIN无父ASIN' }, { value: 'duplicate', label: '一个子ASIN多个父ASIN' }, { value: 'orphan-parent', label: '父ASIN无子ASIN' }, { value: 'changed', label: '关系发生变更' }, { value: 'new', label: '新增关系未确认' }, { value: 'impact', label: '关系影响预测结果' }] })),
+        toolbar: h(Space, { wrap: true }, h(Button, { onClick: inherit }, '沿用上一版本'), h(Button, { type: 'primary', onClick: () => setAddOpen(true) }, '新增关系'), h(Button, { onClick: () => selectedKeys.length ? setBatchOpen(true) : message.warning('请先选择需要批量调整的子ASIN') }, '批量调整'), h(Button, { onClick: () => setAnomaly(anomaly ? undefined : 'impact') }, '关系异常'), h(Button, { danger: true, disabled: !selectedKeys.length, onClick: remove }, '移除关系'), h(Button, { onClick: confirmRelations, disabled: counts.anomalies > 0 }, batch.relationConfirmed ? '关系已确认' : '确认本批次关系'))
+      }, h(PlanTable, { rowKey: 'relationRowKey', dataSource: rows, columns, pagination: { defaultPageSize: 20 }, rowSelection: { selectedRowKeys: selectedKeys, onChange: setSelectedKeys, getCheckboxProps: row => ({ disabled: row.removed }) }, onRow: row => ({ onDoubleClick: () => openHistory(row) }) })),
+      h(Drawer, { open: historyOpen, width: 620, title: `${selected?.childASIN || ''} · 父ASIN关系历史`, onClose: () => setHistoryOpen(false), destroyOnClose: true }, selected && h(React.Fragment, null,
+        h(Descriptions, { size: 'small', column: 1, items: [{ key: 'current', label: '当前关系', children: `${selected.country} · ${selected.childASIN} → ${selected.parentASIN || '已移除'}` }, { key: 'version', label: '关系版本', children: batch.relationVersion }] }),
+        h(Divider, { style: { margin: '14px 0' } }),
+        h(PlanTable, { rowKey: row => `${row.batchId}-${row.version}`, dataSource: history, pagination: false, columns: [{ title: '预测批次', dataIndex: 'batch', width: 112, render: (value, row) => h(Button, { type: 'link', onClick: () => setHistoryDetail(row) }, dayText(value)) }, { title: '关系版本', dataIndex: 'version', width: 150 }, { title: '父ASIN', dataIndex: 'parent', width: 135 }, { title: '生效状态', dataIndex: 'state', width: 86, render: value => h(Tag, null, value) }, { title: '变更', dataIndex: 'change', width: 95 }] }),
+        historyDetail && h('div', { className: 'fp-history-detail' }, h('strong', null, `${dayText(historyDetail.batch)} 批次计算结果`), h(Descriptions, { size: 'small', column: 2, items: [{ key: 'rel', label: '关系版本', children: historyDetail.version }, { key: 'result', label: '结果版本', children: historyDetail.resultVersion || '未生成' }, { key: 'parent', label: '父ASIN预测', children: number(historyDetail.parentTotal) }, { key: 'share', label: '最终份额', children: percent(historyDetail.share) }, { key: 'child', label: '子ASIN预测', children: number(historyDetail.childTotal) }] }))
+      )),
+      h(Drawer, { open: addOpen, width: 520, title: '新增父子关系', onClose: () => setAddOpen(false), destroyOnClose: true }, h(RelationAddForm, { batch, parentOptions, childOptions: [...childOptions.values()], onCancel: () => setAddOpen(false), onSubmit: values => { try { model.upsertRelations(batch.id, values); setAddOpen(false); message.success('本批次关系已保存，历史版本未覆盖'); } catch (error) { message.error(error.message); } } })),
+      h(Drawer, { open: batchOpen, width: 620, title: '批量调整关系', onClose: () => setBatchOpen(false), destroyOnClose: true }, h(RelationBatchForm, { rows: activeRows.filter(row => selectedKeys.includes(row.childId)), parentOptions, onCancel: () => setBatchOpen(false), onSubmit: values => { try { model.batchAdjustRelations(batch.id, selectedKeys, values.targetParent, values.reason); setBatchOpen(false); setSelectedKeys([]); message.success('批量关系变更已写入本批次版本'); } catch (error) { message.error(error.message); } } }))
     );
   }
-  function RelationForm({ selected, parentOptions, onSubmit, onCancel, disabled }) {
+  function RelationAddForm({ batch, parentOptions, childOptions, onSubmit, onCancel }) {
     const [form] = Form.useForm();
-    return h(Form, { form, layout: 'vertical', initialValues: { targetParent: selected.parentASIN }, onFinish: onSubmit }, h(Alert, { type: 'warning', showIcon: true, message: '保存后只更新当前批次草稿；历史批次关系与预测快照不变。', style: { marginBottom: 14 } }), h(Form.Item, { label: '子ASIN' }, h(Input, { value: selected.childASIN, disabled: true })), h(Form.Item, { name: 'targetParent', label: '本批次父ASIN', rules: [{ required: true, message: '请选择父ASIN' }] }, h(Select, { options: parentOptions, showSearch: true })), h(Form.Item, { name: 'reason', label: '变更原因', rules: [{ required: true, whitespace: true, message: '请填写关系变更原因' }] }, h(Input.TextArea, { rows: 3, maxLength: 200, showCount: true, placeholder: '例如：父体Listing结构调整' })), h('div', { className: 'fp-sticky-actions' }, h(Button, { onClick: onCancel }, '取消'), h(Button, { type: 'primary', htmlType: 'submit', disabled }, '保存关系快照')));
+    const childIds = Form.useWatch('childIds', form) || [];
+    const parentASIN = Form.useWatch('parentASIN', form);
+    const checks = childIds.map(id => batch.relationSnapshot.find(row => row.childId === id)).filter(Boolean);
+    const conflicts = checks.filter(row => parentASIN && row.parentASIN !== parentASIN);
+    return h(Form, { form, layout: 'vertical', initialValues: { country: 'US', childIds: [], reason: '本批次新增或调整父子关系' }, onFinish: onSubmit },
+      h(Form.Item, { name: 'country', label: '国家', rules: [{ required: true }] }, h(Select, { options: [{ value: 'US', label: 'US' }, { value: 'UK', label: 'UK' }] })),
+      h(Form.Item, { name: 'parentASIN', label: '父ASIN', rules: [{ required: true, message: '请选择父ASIN' }] }, h(Select, { showSearch: true, options: parentOptions, placeholder: '搜索父ASIN' })),
+      h(Form.Item, { name: 'childIds', label: '子ASIN', rules: [{ required: true, message: '请选择至少一个子ASIN' }] }, h(Select, { mode: 'multiple', showSearch: true, optionFilterProp: 'label', options: childOptions, placeholder: '搜索或批量选择子ASIN' })),
+      checks.length > 0 && h('div', { className: 'fp-relation-check' }, h('strong', null, '当前关系检查'), checks.map(row => h('div', { key: row.childId }, `${row.childASIN} · 当前父ASIN：${row.parentASIN}`, parentASIN && row.parentASIN !== parentASIN && h('span', { className: 'fp-danger' }, `，调整后将变更为 ${parentASIN}`)))),
+      conflicts.length > 0 && h(Form.Item, { name: 'confirmed', valuePropName: 'checked', rules: [{ validator: (_, value) => value ? Promise.resolve() : Promise.reject(new Error('请确认父体变更影响')) }] }, h(Checkbox, null, '我已确认关系变更将重新归集历史销量并影响父ASIN预测池')),
+      h(Form.Item, { name: 'reason', label: '调整原因', rules: [{ required: true, whitespace: true, message: '请填写调整原因' }] }, h(Input.TextArea, { rows: 3, maxLength: 200, showCount: true })),
+      h('div', { className: 'fp-sticky-actions' }, h(Button, { onClick: onCancel }, '取消'), h(Button, { type: 'primary', htmlType: 'submit' }, '保存本批次关系'))
+    );
+  }
+  function RelationBatchForm({ rows, parentOptions, onSubmit, onCancel }) {
+    const [form] = Form.useForm();
+    const [fileName, setFileName] = useState('');
+    const target = Form.useWatch('targetParent', form);
+    return h(Form, { form, layout: 'vertical', initialValues: { reason: '批量调整本批次父子关系' }, onFinish: onSubmit },
+      h(Alert, { type: 'info', showIcon: true, message: '先预览变更，确认后才写入本批次关系版本。', style: { marginBottom: 14 } }),
+      h(Space, { style: { marginBottom: 14 } }, h(Upload, { accept: '.xlsx,.xls,.csv', maxCount: 1, showUploadList: false, beforeUpload: file => { setFileName(file.name); return false; } }, h(Button, { icon: h(icon.UploadOutlined) }, 'Excel导入')), fileName && h(Tag, null, fileName), h(Tag, null, `已批量选择 ${rows.length} 条`)),
+      h(Form.Item, { name: 'targetParent', label: '新父ASIN', rules: [{ required: true, message: '请选择新父ASIN' }] }, h(Select, { showSearch: true, options: parentOptions })),
+      h(PlanTable, { rowKey: 'childId', dataSource: rows, pagination: false, columns: [{ title: '国家', dataIndex: 'country', width: 72 }, { title: '子ASIN', dataIndex: 'childASIN', width: 145 }, { title: '原父ASIN', dataIndex: 'parentASIN', width: 145 }, { title: '新父ASIN', width: 145, render: () => target || '待选择' }] }),
+      h(Form.Item, { name: 'reason', label: '变更原因', rules: [{ required: true, whitespace: true }] }, h(Input.TextArea, { rows: 3, maxLength: 200, showCount: true })),
+      h('div', { className: 'fp-sticky-actions' }, h(Button, { onClick: onCancel }, '取消'), h(Button, { type: 'primary', htmlType: 'submit' }, '确认写入本批次'))
+    );
   }
   function RuleChain({ rule }) {
-    const nodes = [['适用对象', rule.scope], ['数据周期', `${rule.historyWindow}天历史 Clean销量 + ${rule.recentWindow}天近期 Clean销量`], ['异常判断', rule.abnormalCondition], ['计算方式', `${rule.historyWeight}% × 历史份额 + ${rule.recentWeight}% × 近期份额`], ['归一化', rule.normalization ? '同一父ASIN下重新归一化至100%' : '关闭'], ['人工调配', rule.manualAllowed ? '允许PMC在本批次调配' : '不允许'], ['输出结果', '子ASIN最终规则预测']];
+    const nodes = [['父ASIN预测总量', '本批次父体预测池'], ['系统计算子体份额', `${rule.historyWindow}天历史 + ${rule.recentWindow}天近期`], ['PMC人工调配', rule.manualAllowed ? '允许调整并记录原因' : '不允许'], ['最终份额', '同一父ASIN归一化至100%'], ['子ASIN预测量', '父体预测 × 最终份额']];
     return h('div', { className: 'fp-chain' }, nodes.map(([title, value]) => h('div', { className: 'fp-chain-node', key: title }, h('span', null, title), h('strong', null, value))));
   }
   function SplitStep({ batch }) {
     const { message } = App.useApp();
     const parentOptions = [...new Set(batch.childForecastResults.map(row => relationKey(row)))];
-    const forecastIndex = contract.getForecastIndex(batch.id);
     const [selectedParent, setSelectedParent] = useState(parentOptions[0]);
     const siblings = batch.childForecastResults.filter(row => relationKey(row) === selectedParent);
     const [shares, setShares] = useState({});
-    const [reason, setReason] = useState('');
-    const [mode, setMode] = useState('proportional');
+    const [lastEdited, setLastEdited] = useState(null);
+    const [reasonCategory, setReasonCategory] = useState();
+    const [reasonNote, setReasonNote] = useState('');
+    const [ruleOpen, setRuleOpen] = useState(false);
+    const [editingRule, setEditingRule] = useState(null);
     useEffect(() => { if (parentOptions.length && !parentOptions.includes(selectedParent)) setSelectedParent(parentOptions[0]); }, [batch.id, parentOptions.join('|')]);
-    useEffect(() => setShares(Object.fromEntries(siblings.map(row => [row.childASIN, Number(((contractChild(forecastIndex, row)?.finalShare ?? row.finalShare) / 100).toFixed(2))]))), [batch.id, selectedParent, forecastIndex?.batchVersion, siblings.map(row => row.finalShare).join(',')]);
-    const update = (childASIN, value) => {
+    useEffect(() => { setShares(Object.fromEntries(siblings.map(row => [row.childASIN, Number((row.finalShare / 100).toFixed(2))]))); setLastEdited(null); }, [batch.id, selectedParent, siblings.map(row => row.finalShare).join(',')]);
+    const updateFinal = (childASIN, value) => {
       const nextValue = Math.max(0, Math.min(100, Number(value) || 0));
-      if (mode === 'manual') return setShares({ ...shares, [childASIN]: nextValue });
-      const others = siblings.filter(row => row.childASIN !== childASIN);
-      const remainder = 100 - nextValue;
-      const oldTotal = others.reduce((total, row) => total + (Number(shares[row.childASIN]) || 0), 0);
-      const next = { ...shares, [childASIN]: nextValue };
-      others.forEach(row => { next[row.childASIN] = oldTotal ? Number((remainder * (Number(shares[row.childASIN]) || 0) / oldTotal).toFixed(2)) : Number((remainder / others.length).toFixed(2)); });
-      const drift = Number((100 - Object.values(next).reduce((total, value) => total + value, 0)).toFixed(2));
+      setShares(current => ({ ...current, [childASIN]: nextValue }));
+      setLastEdited(childASIN);
+    };
+    const updateDelta = (row, value) => updateFinal(row.childASIN, row.systemShare / 100 + (Number(value) || 0));
+    const allocateRemaining = () => {
+      if (!lastEdited) return message.info('请先调整一个子ASIN，再分配剩余份额');
+      const locked = Number(shares[lastEdited]) || 0;
+      const others = siblings.filter(row => row.childASIN !== lastEdited);
+      const remainder = 100 - locked;
+      const systemTotal = others.reduce((total, row) => total + row.systemShare, 0);
+      const next = { ...shares, [lastEdited]: locked };
+      others.forEach(row => { next[row.childASIN] = Number((systemTotal ? remainder * row.systemShare / systemTotal : remainder / Math.max(1, others.length)).toFixed(2)); });
+      const drift = Number((100 - Object.values(next).reduce((total, value) => total + Number(value || 0), 0)).toFixed(2));
       if (others.at(-1)) next[others.at(-1).childASIN] = Number((next[others.at(-1).childASIN] + drift).toFixed(2));
       setShares(next);
+      message.success('剩余份额已按其他子体系统份额比例重新分配');
     };
     const rawTotal = Object.values(shares).reduce((a, b) => a + (Number(b) || 0), 0);
     const total = Number(rawTotal.toFixed(2));
     const sharesValid = Math.abs(rawTotal - 100) < 0.005;
+    const reason = reasonCategory === '其他' ? reasonNote.trim() : [reasonCategory, reasonNote.trim()].filter(Boolean).join('：');
     const save = () => {
       if (!sharesValid) return message.error('当前父ASIN下最终份额必须合计100%');
-      if (!reason.trim()) return message.warning('请填写人工调配原因');
+      if (!reasonCategory) return message.warning('请选择人工调配原因');
+      if (reasonCategory === '其他' && !reasonNote.trim()) return message.warning('选择“其他”时必须填写具体原因');
       const basisPointShares = Object.fromEntries(Object.entries(shares).map(([childASIN, value]) => [childASIN, Math.round((Number(value) || 0) * 100)]));
-      try { model.adjustShares(batch.id, selectedParent, basisPointShares, reason.trim()); setReason(''); message.success('本批次子ASIN份额已保存'); } catch (error) { message.error(error.message); }
+      try { model.adjustShares(batch.id, selectedParent, basisPointShares, reason); setReasonCategory(undefined); setReasonNote(''); message.success('本批次子ASIN份额已保存并记录调整原因'); } catch (error) { message.error(error.message); }
     };
     const parent = batch.parentForecastResults.find(row => row.key === selectedParent);
-    const syncedParent = forecastIndex?.parents?.[selectedParent] || null;
     const previewTotal = row => {
       const inputShare = Number(shares[row.childASIN]) || 0;
-      const synced = contractChild(forecastIndex, row);
-      const savedShare = (synced?.finalShare ?? row.finalShare) / 100;
-      if (Math.abs(inputShare - savedShare) < 0.005) return synced?.total ?? Object.values(row.dailyFinalForecast).reduce((sum, value) => sum + (Number(value) || 0), 0);
-      return Math.round(((syncedParent?.total ?? parent?.total) || 0) * inputShare / 100);
+      const savedShare = row.finalShare / 100;
+      if (Math.abs(inputShare - savedShare) < 0.005) return Object.values(row.dailyFinalForecast).reduce((sum, value) => sum + (Number(value) || 0), 0);
+      return Math.round((parent?.total || 0) * inputShare / 100);
     };
+    const childPreviewTotal = siblings.reduce((value, row) => value + previewTotal(row), 0);
+    const difference = childPreviewTotal - Number(parent?.total || 0);
+    const basis = row => h('div', { className: 'fp-basis-popover' },
+      h(Descriptions, { size: 'small', column: 1, items: [{ key: 'sales', label: '84天Clean销量', children: number(row.history84Sales) }, { key: 'history', label: '84天历史份额', children: percent(row.history84Share) }, { key: 'adu', label: '14天Clean ADU', children: row.recentCleanAdu }, { key: 'days', label: '14天有销量天数', children: `${row.recentSellingDays}天` }, { key: 'judge', label: '判定', children: row.splitJudgement }] }),
+      h('div', { className: 'fp-formula' }, row.splitJudgement === '低销量/不稳定' ? `70% × ${percent(row.history84Share)} + 30% × ${percent(row.recent14Share)}，归一化后 ${percent(row.systemShare)}` : `100% × ${percent(row.history84Share)}，归一化后 ${percent(row.systemShare)}`),
+      h('div', { className: 'fp-help' }, '系统份额只是父ASIN预测向子ASIN拆解的建议比例，不等于最终预测。')
+    );
     const shareColumns = [
       { title: '子ASIN', dataIndex: 'childASIN', width: 145 },
-      { title: '历史销量', dataIndex: 'historicalSales', align: 'right', render: number },
-      { title: '系统份额', align: 'right', render: (_, row) => percent(contractChild(forecastIndex, row)?.systemShare ?? row.systemShare) },
-      { title: '人工调整', align: 'right', render: (_, row) => { const systemShare = contractChild(forecastIndex, row)?.systemShare ?? row.systemShare; const delta = Number(shares[row.childASIN] || 0) - systemShare / 100; return h('span', { className: delta ? 'fp-highlight' : 'fp-muted' }, `${delta > 0 ? '+' : ''}${delta.toFixed(2)}%`); } },
-      { title: '最终份额', width: 130, align: 'right', render: (_, row) => h(InputNumber, { min: 0, max: 100, precision: 2, value: shares[row.childASIN], addonAfter: '%', onChange: value => update(row.childASIN, value), disabled: batch.status === '已冻结' || batch.status === '已完成', style: { width: 118 } }) },
-      { title: h(Tooltip, { title: '未保存调整按父ASIN总量 × 当前份额估算；保存后按日级拆解并校正取整。' }, h('span', null, '预测合计预览')), align: 'right', render: (_, row) => h('strong', null, `${number(previewTotal(row))} 件`) }
+      { title: '84天销量', dataIndex: 'history84Sales', width: 98, render: number },
+      { title: '84天份额', dataIndex: 'history84Share', width: 98, render: percent },
+      { title: '14天Clean份额', dataIndex: 'recent14Share', width: 118, render: percent },
+      { title: '匹配规则', width: 142, render: (_, row) => h(Tag, { color: row.splitJudgement === '低销量/不稳定' ? 'warning' : 'default' }, row.splitJudgement) },
+      { title: '系统份额', width: 112, render: (_, row) => h(Space, { size: 4 }, h('span', null, percent(row.systemShare)), h(Popover, { trigger: 'click', title: '系统份额计算依据', content: basis(row), placement: 'left' }, h(Button, { type: 'link', size: 'small' }, '依据'))) },
+      { title: 'PMC调整', width: 126, render: (_, row) => h(InputNumber, { min: -100, max: 100, precision: 2, value: Number((Number(shares[row.childASIN] || 0) - row.systemShare / 100).toFixed(2)), addonAfter: '%', onChange: value => updateDelta(row, value), disabled: batch.status === '已冻结' || batch.status === '已完成', style: { width: 116 } }) },
+      { title: '最终份额', width: 132, render: (_, row) => h('div', null, h(InputNumber, { min: 0, max: 100, precision: 2, value: shares[row.childASIN], addonAfter: '%', onChange: value => updateFinal(row.childASIN, value), disabled: batch.status === '已冻结' || batch.status === '已完成', style: { width: 118 } }), Math.abs(Number(shares[row.childASIN] || 0) - row.systemShare / 100) > 0.005 && h(Tag, { color: 'gold', className: 'fp-manual-tag' }, `人工 ${Number(shares[row.childASIN] || 0) - row.systemShare / 100 > 0 ? '+' : ''}${(Number(shares[row.childASIN] || 0) - row.systemShare / 100).toFixed(2)}%`)) },
+      { title: '最终预测', width: 112, render: (_, row) => h('strong', null, number(previewTotal(row))) }
     ];
     const summary = h(Descriptions, { size: 'small', column: 4, items: [
       { key: 'parent', label: '父ASIN', children: parent?.parentASIN },
-      { key: 'total', label: '父ASIN规则预测', children: `${number(syncedParent?.total ?? parent?.total)} 件` },
+      { key: 'total', label: '父ASIN预测总量', children: `${number(parent?.total)} 件` },
       { key: 'current', label: '当前子体数', children: `${siblings.length} 个` },
-      { key: 'sum', label: '最终份额合计', children: h(Tag, { color: sharesValid ? 'success' : 'error' }, `${total.toFixed(2)}%`) }
+      { key: 'sum', label: '最终份额合计', children: h(Tag, { color: sharesValid ? 'success' : 'error' }, `${total.toFixed(2)}%`) },
+      { key: 'childTotal', label: '子体拆解', children: number(childPreviewTotal) },
+      { key: 'difference', label: '差额', children: number(difference) },
+      { key: 'balance', label: '状态', children: h(Tag, { color: sharesValid && difference === 0 ? 'success' : 'error' }, sharesValid && difference === 0 ? '已平衡' : '子体拆解未平衡') }
     ] });
+    const ruleColumns = [{ title: '规则名称', dataIndex: 'name', width: 170 }, { title: '适用条件', dataIndex: 'conditionText', width: 260 }, { title: '历史观察周期', dataIndex: 'historyWindow', width: 110, render: value => `${value}天` }, { title: '近期观察周期', dataIndex: 'recentWindow', width: 110, render: value => `${value}天` }, { title: '历史权重', dataIndex: 'historyWeight', width: 92, render: value => `${value}%` }, { title: '近期权重', dataIndex: 'recentWeight', width: 92, render: value => `${value}%` }, { title: '状态', dataIndex: 'status', width: 78, render: value => h(Tag, { color: value === '启用' ? 'success' : 'default' }, value) }, { title: '适用范围', dataIndex: 'scope', width: 160 }, { title: '操作', width: 76, fixed: 'right', render: (_, row) => h(Button, { type: 'link', onClick: () => { setEditingRule(row); setRuleOpen(true); } }, '配置') }];
+    const confirmSplit = () => { try { model.confirmSplit(batch.id); message.success('本批次子体拆解已确认'); } catch (error) { message.error(error.message); } };
     return h(React.Fragment, null,
-      h(Alert, { type: 'info', showIcon: true, message: '关系回答“谁属于谁”，拆解规则回答“父ASIN总量如何拆到子ASIN”；两者在本批次快照中独立保存。' }),
+      h(Alert, { type: batch.relationConfirmed ? 'info' : 'warning', showIcon: true, message: batch.relationConfirmed ? '系统按84天/14天数据计算建议份额，不自动覆盖PMC人工判断。' : '请先确认本批次父子关系，再进行子体拆解。', description: '关系回答“谁属于谁”，拆解回答“父ASIN预测总量如何分给当前子ASIN”；关系版本与拆解规则版本独立保存。' }),
       h(RuleChain, { rule: batch.splitRuleSnapshot }),
-      h('div', { className: 'fp-rule-summary' }, [['历史周期', `${batch.splitRuleSnapshot.historyWindow} 天`], ['近期周期', `${batch.splitRuleSnapshot.recentWindow} 天`], ['历史 / 近期权重', `${batch.splitRuleSnapshot.historyWeight} / ${batch.splitRuleSnapshot.recentWeight}`], ['规则版本', batch.splitRuleSnapshot.version]].map(([label, value]) => h('div', { key: label }, h('label', null, label), h('strong', null, value)))),
+      h('div', { className: 'fp-rule-summary' }, [['系统默认规则', '84天历史份额'], ['低销量 / 不稳定子体', '启用14天近期份额修正'], ['历史 / 近期权重', '70% / 30%'], ['低销量ADU阈值', '< 2'], ['近期有销量天数', '≤ 10天'], ['拆解规则版本', batch.splitRuleSnapshot.version]].map(([label, value]) => h('div', { key: label }, h('label', null, label), h('strong', null, value)))),
+      h(PlanListPanel, { title: '拆解规则配置', meta: h(Button, { type: 'primary', onClick: () => { setEditingRule(null); setRuleOpen(true); } }, '新增规则模板') }, h(PlanTable, { rowKey: 'id', dataSource: batch.splitRuleTemplates, columns: ruleColumns, pagination: false })),
       h('div', { className: 'fp-panel' },
         h('div', { className: 'fp-panel-head' },
           h('h2', null, '本批次子ASIN份额调配'),
           h(Space, null,
             h(Select, { value: selectedParent, options: parentOptions.map(value => ({ value, label: `${value.split('|')[0]} · ${value.split('|')[2]}` })), onChange: setSelectedParent, style: { width: 250 }, 'aria-label': '选择父ASIN预测池' }),
-            h(Segmented, { size: 'small', value: mode, onChange: setMode, options: [{ label: '按比例压缩其他子体', value: 'proportional' }, { label: '手工重新分配', value: 'manual' }] })
+            h(Button, { onClick: allocateRemaining }, '按系统份额分配剩余')
           )
         ),
         h('div', { className: 'fp-panel-body' },
           summary,
-          h('div', { className: 'fp-table-wrap' }, h(PlanTable, {rowKey: 'childASIN', dataSource: siblings, columns: shareColumns })),
-          h('div', { className: 'fp-kicker', style: { marginTop: 12 } }, '调整原因（必填）'),
-          h(Input.TextArea, { value: reason, onChange: event => setReason(event.target.value), rows: 2, maxLength: 200, showCount: true, placeholder: '例如：XL近期销量异常，按运营策略提高本批次份额。', disabled: batch.status === '已冻结' || batch.status === '已完成' }),
-          h('div', { className: 'fp-sticky-actions' }, h(Button, { type: 'primary', onClick: save, disabled: batch.status === '已冻结' || batch.status === '已完成' }, '保存本批次调配'))
+          h('div', { className: 'fp-table-wrap' }, h(PlanTable, { rowKey: 'childASIN', dataSource: siblings, columns: shareColumns })),
+          !sharesValid && h(Alert, { type: 'error', showIcon: true, message: `最终份额合计为${total.toFixed(2)}%，请调整后再保存。`, style: { marginTop: 12 } }),
+          h('div', { className: 'fp-adjust-reason' }, h('div', null, h('div', { className: 'fp-kicker' }, '调整原因（必填）'), h(Select, { value: reasonCategory, onChange: setReasonCategory, placeholder: '请选择', style: { width: '100%' }, options: ['尺码需求变化', '近期销售趋势变化', '新品策略', '库存风险', '业务判断', '其他'].map(value => ({ value, label: value })) })), h('div', null, h('div', { className: 'fp-kicker' }, reasonCategory === '其他' ? '具体原因（必填）' : '补充说明'), h(Input, { value: reasonNote, onChange: event => setReasonNote(event.target.value), maxLength: 100, placeholder: '选填；选择“其他”时必填' }))),
+          h('div', { className: 'fp-sticky-actions' }, h('span', { className: 'fp-help' }, `父ASIN预测 ${number(parent?.total)} · 子体拆解 ${number(childPreviewTotal)} · 差额 ${number(difference)}`), h(Button, { onClick: confirmSplit, disabled: !batch.relationConfirmed || !sharesValid || difference !== 0 }, '确认子体拆解'), h(Button, { type: 'primary', onClick: save, disabled: !batch.relationConfirmed || batch.status === '已冻结' || batch.status === '已完成' }, '保存人工调配'))
         )
-      )
+      ),
+      h(Drawer, { open: ruleOpen, width: 560, title: editingRule ? `配置拆解规则 · ${editingRule.name}` : '新增拆解规则模板', onClose: () => setRuleOpen(false), destroyOnClose: true }, h(SplitRuleForm, { rule: editingRule, onCancel: () => setRuleOpen(false), onSubmit: values => { if (Number(values.historyWeight) + Number(values.recentWeight) !== 100) return message.error('历史权重与近期权重合计必须为100%'); try { model.saveSplitRule(batch.id, { ...editingRule, ...values }); setRuleOpen(false); message.success('拆解规则模板已保存并生成新版本'); } catch (error) { message.error(error.message); } } }))
     );
   }
-  function ForecastStep({ batch }) {
-    const forecastIndex = contract.getForecastIndex(batch.id);
-    const rows = batch.childForecastResults.map(row => {
-      const synced = contractChild(forecastIndex, row);
-      const dailyFinalForecast = synced?.daily || row.dailyFinalForecast;
-      const dailyRuleForecast = synced?.ruleDaily || row.dailyRuleForecast;
-      return { ...row, finalShare: synced?.finalShare ?? row.finalShare, systemShare: synced?.systemShare ?? row.systemShare, dailyFinalForecast, dailyRuleForecast, finalTotal: synced?.total ?? Object.values(dailyFinalForecast).reduce((a, b) => a + (Number(b) || 0), 0), ruleTotal: synced?.ruleTotal ?? Object.values(dailyRuleForecast).reduce((a, b) => a + (Number(b) || 0), 0) };
+  function SplitRuleForm({ rule, onSubmit, onCancel }) {
+    const [form] = Form.useForm();
+    return h(Form, { form, layout: 'vertical', initialValues: rule || { name: '', scope: '全部国家与父ASIN', conditionText: '国家 = US AND 商品标签 = 正常销售', historyWindow: 84, recentWindow: 14, historyWeight: 70, recentWeight: 30, status: '启用', priority: 50 }, onFinish: onSubmit },
+      h(Form.Item, { name: 'name', label: '规则名称', rules: [{ required: true, whitespace: true }] }, h(Input)),
+      h(Form.Item, { name: 'scope', label: '适用范围', rules: [{ required: true }] }, h(Input, { placeholder: '例如：US · 正常销售商品' })),
+      h(Form.Item, { name: 'conditionText', label: '适用条件', rules: [{ required: true }] }, h(Input.TextArea, { rows: 3, placeholder: '国家 = US AND 14天Clean ADU < 2 AND 14天有销量天数 ≤ 10' })),
+      h('div', { className: 'fp-form-grid' }, [['historyWindow', '历史观察周期'], ['recentWindow', '近期观察周期'], ['historyWeight', '历史权重'], ['recentWeight', '近期权重'], ['priority', '优先级']].map(([name, label]) => h(Form.Item, { key: name, name, label, rules: [{ required: true }] }, h(InputNumber, { min: 0, max: name.includes('Weight') ? 100 : 365, addonAfter: name.includes('Weight') ? '%' : name.includes('Window') ? '天' : undefined, style: { width: '100%' } })))),
+      h(Form.Item, { name: 'status', label: '状态', rules: [{ required: true }] }, h(Select, { options: [{ value: '启用', label: '启用' }, { value: '停用', label: '停用' }] })),
+      h(Alert, { type: 'info', showIcon: true, message: '规则模板只包含适用条件、参数和执行结果，不提供流程编排或公式脚本。' }),
+      h('div', { className: 'fp-sticky-actions' }, h(Button, { onClick: onCancel }, '取消'), h(Button, { type: 'primary', htmlType: 'submit' }, '保存规则模板'))
+    );
+  }
+  function ForecastStep({ batch, onStep }) {
+    const { message } = App.useApp();
+    const validation = model.validateForecast(batch.id);
+    const activeSnapshot = batch.resultSnapshots.find(snapshot => snapshot.version === batch.activeResultVersion) || null;
+    const showingSnapshot = batch.resultState === '已生成' && activeSnapshot;
+    const sourceRows = showingSnapshot ? activeSnapshot.rows : batch.childForecastResults;
+    const sourceParents = showingSnapshot ? activeSnapshot.parents : batch.parentForecastResults;
+    const [generation, setGeneration] = useState(null);
+    const timerRef = useRef(null);
+    useEffect(() => () => clearInterval(timerRef.current), []);
+    const generationSteps = ['读取本批次父子关系', '按当前关系重新归集历史销量', '计算父ASIN预测', '应用拆解规则', '应用PMC人工调配', '校验父子预测平衡', '生成规则预测快照'];
+    const rows = sourceRows.map(source => {
+      const live = batch.childForecastResults.find(row => row.childId === source.childId) || source;
+      const dailyFinalForecast = source.daily || live.dailyFinalForecast;
+      const dailyRuleForecast = source.ruleDaily || live.dailyRuleForecast;
+      const parent = sourceParents.find(item => item.key === relationKey(source));
+      return { ...live, ...source, id: childForecastKey(source), parentTotal: parent?.total || 0, dailyFinalForecast, dailyRuleForecast, finalTotal: source.total ?? Object.values(dailyFinalForecast).reduce((a, b) => a + (Number(b) || 0), 0), ruleTotal: Object.values(dailyRuleForecast).reduce((a, b) => a + (Number(b) || 0), 0) };
     });
+    const startGenerate = () => {
+      if (!validation?.passed) return message.error('生成前校验未通过，请先处理异常');
+      clearInterval(timerRef.current);
+      let index = 0;
+      setGeneration({ index, percent: 8, done: false });
+      timerRef.current = setInterval(() => {
+        index += 1;
+        if (index < generationSteps.length) return setGeneration({ index, percent: Math.round((index + 1) / generationSteps.length * 92), done: false });
+        clearInterval(timerRef.current);
+        try {
+          model.generateForecast(batch.id, batch.resultSnapshots.length ? '关系或拆解变更后重新生成' : '首次生成本批次规则预测');
+          setGeneration({ index: generationSteps.length - 1, percent: 100, done: true });
+          message.success('规则预测生成完成，已形成新的结果快照');
+        } catch (error) {
+          setGeneration(null);
+          message.error(error.message);
+        }
+      }, 260);
+    };
+    const processException = () => onStep(validation?.items.some(item => !item.passed && item.label.includes('关系')) ? 'relations' : 'split');
     const columns = [
+      { title: '国家', dataIndex: 'country', width: 72 },
       { title: '父ASIN', dataIndex: 'parentASIN', width: 140 },
       { title: '子ASIN', dataIndex: 'childASIN', width: 145 },
-      { title: '国家 / 店铺', width: 145, render: (_, row) => `${row.country} · ${row.store}` },
-      { title: '父ASIN规则', width: 142, render: () => batch.forecastRuleSnapshot.version },
-      { title: '拆解规则', width: 142, render: () => batch.splitRuleSnapshot.version },
-      { title: '系统份额', dataIndex: 'systemShare', align: 'right', render: percent },
-      { title: '人工调整', dataIndex: 'manualAdjustment', align: 'right', render: value => h('span', { className: value ? 'fp-highlight' : 'fp-muted' }, `${value > 0 ? '+' : ''}${percent(value)}`) },
-      { title: '规则预测合计', dataIndex: 'ruleTotal', align: 'right', render: number },
-      { title: '最终规则预测', dataIndex: 'finalTotal', align: 'right', render: value => h('strong', null, number(value)) },
-      { title: '预测来源', render: () => h(Tag, null, '规则预测') }
+      { title: '父ASIN预测', dataIndex: 'parentTotal', width: 118, render: number },
+      { title: '系统份额', dataIndex: 'systemShare', width: 96, render: percent },
+      { title: 'PMC调整', dataIndex: 'manualAdjustment', width: 96, render: value => h('span', { className: value ? 'fp-highlight' : 'fp-muted' }, `${value > 0 ? '+' : ''}${percent(value)}`) },
+      { title: '最终份额', dataIndex: 'finalShare', width: 96, render: (value, row) => h(Space, { size: 4 }, h('strong', null, percent(value)), row.manualAdjustment ? h(Tag, { color: 'gold' }, '人工调整') : null) },
+      { title: '子ASIN规则预测', dataIndex: 'finalTotal', width: 140, render: value => h('strong', null, number(value)) }
     ];
-    const expandedRowRender = row => h(PlanTable, {rowKey: 'date', pagination: { pageSize: 7, showSizeChanger: false }, dataSource: Object.entries(row.dailyFinalForecast).slice(0, 14).map(([date, value]) => ({ date, rule: row.dailyRuleForecast[date], value })), columns: [{ title: '预测日期', dataIndex: 'date', render: dayText }, { title: '规则预测', dataIndex: 'rule', align: 'right', render: number }, { title: '最终规则预测', dataIndex: 'value', align: 'right', render: number }] });
+    const expandedRowRender = row => h('div', { className: 'fp-forecast-calc' },
+      h('div', { className: 'fp-calc-chain' }, h('div', null, h('span', null, '父ASIN预测'), h('strong', null, number(row.parentTotal))), h('b', null, '×'), h('div', null, h('span', null, '最终拆解份额'), h('strong', null, percent(row.finalShare))), h('b', null, '='), h('div', null, h('span', null, '子ASIN规则预测'), h('strong', null, number(row.finalTotal)))),
+      h(PlanTable, { rowKey: 'date', pagination: { defaultPageSize: 7, pageSizeOptions: [7, 14, 30, 60], showSizeChanger: true }, dataSource: Object.entries(row.dailyFinalForecast).map(([date, value]) => ({ date, parent: sourceParents.find(item => item.key === relationKey(row))?.daily?.[date] || 0, share: row.finalShare, value })), columns: [{ title: '预测日期', dataIndex: 'date', width: 110, render: dayText }, { title: '父ASIN日预测', dataIndex: 'parent', width: 130, render: number }, { title: '最终份额', dataIndex: 'share', width: 100, render: percent }, { title: '子ASIN规则预测', dataIndex: 'value', width: 140, render: value => h('strong', null, number(value)) }] })
+    );
+    const latest = batch.resultSnapshots.at(-1);
     return h(React.Fragment, null,
-      h(Alert, { type: 'success', showIcon: true, message: '规则预测已按“父ASIN预测池 → 当前父子关系 → 拆解规则 → 本批次人工调配”生成；销售提报只消费下方子ASIN日级清单。' }),
+      h(Alert, { type: batch.resultState === '需重新生成' ? 'warning' : batch.resultState === '已生成' ? 'success' : 'info', showIcon: true, message: batch.resultState === '需重新生成' ? `当前关系或拆解已变更，${batch.activeResultVersion} 仍保留且销售继续读取该快照；重新生成后将创建新版本。` : batch.resultState === '已生成' ? `规则预测已生成：${batch.activeResultVersion}` : '完成关系与拆解确认后，生成本批次规则预测快照。' }),
+      h(MetricStrip, { items: [{ label: '数据截点', value: dayText(batch.dataCutoffDate) }, { label: '预测周期', value: `${dayText(batch.forecastStartDate)} ~ ${dayText(batch.forecastEndDate)}` }, { label: '父ASIN', value: `${batch.parentForecastResults.length} 个` }, { label: '子ASIN', value: `${batch.childForecastResults.length} 个` }, { label: '状态', value: batch.resultState, tone: batch.resultState === '已生成' ? 'success' : batch.resultState === '需重新生成' ? 'warning' : '' }, { label: '结果版本', value: batch.activeResultVersion || '待生成' }] }),
+      h('div', { className: 'fp-panel' }, h('div', { className: 'fp-panel-head' }, h('h2', null, '生成前校验'), h(Tag, { color: validation?.passed ? 'success' : 'error' }, validation?.passed ? '全部通过' : '存在阻断项')), h('div', { className: 'fp-panel-body' },
+        h('div', { className: 'fp-validation-grid' }, (validation?.items || []).map(item => h('div', { key: item.label, className: item.passed ? 'pass' : 'fail' }, h('span', null, item.passed ? '✓' : '!'), h('strong', null, item.label), h('em', null, item.passed ? '通过' : `${item.count} 项`)))),
+        generation && h('div', { className: 'fp-generation' }, h(Progress, { percent: generation.percent, status: generation.done ? 'success' : 'active', size: 'small' }), h('div', { className: 'fp-generation-steps' }, generationSteps.map((label, index) => h('span', { key: label, className: index < generation.index || generation.done ? 'done' : index === generation.index ? 'active' : '' }, `${index + 1}. ${label}`))), generation.done && h(Alert, { type: 'success', showIcon: true, message: '规则预测生成完成', description: `生成版本：${batch.activeResultVersion || latest?.version || ''} · 生成时间：${dateText(batch.resultSnapshots.at(-1)?.generatedAt || new Date().toISOString())}` })),
+        h('div', { className: 'fp-sticky-actions' }, validation?.passed ? h(Button, { type: 'primary', loading: generation && !generation.done, onClick: startGenerate, disabled: batch.status === '已冻结' || batch.status === '已完成' }, batch.resultSnapshots.length ? '重新生成本批次规则预测' : '生成本批次规则预测') : h(Button, { type: 'primary', danger: true, onClick: processException }, '处理异常'))
+      )),
       h(PlanListPanel, {
-        title: '子ASIN规则预测清单',
-        meta: h(Tag, { color: 'blue' }, `${rows.length} 个子ASIN · ${batch.forecastStartDate} ~ ${batch.forecastEndDate}`)
+        title: showingSnapshot ? `规则预测结果 · ${activeSnapshot.version}` : '待生成结果预览',
+        meta: h('span', { className: 'fp-muted' }, showingSnapshot ? `生成时间 ${dateText(activeSnapshot.generatedAt)}` : '当前草稿不会覆盖已生成快照')
       }, h(PlanTable, { rowKey: 'id', dataSource: rows, columns, expandable: { expandedRowRender } })),
-      h('div', { className: 'fp-panel' }, h('div', { className: 'fp-panel-body' }, h('div', { className: 'fp-help' }, '数据契约字段包含 batchId、batchVersion、dataCutoffDate、预测窗口、关系版本、拆解规则版本、父/子ASIN、预测日期、规则预测值与预测来源；销售页面不参与后台计算。')))
+      batch.resultSnapshots.length > 0 && h(PlanListPanel, { title: '结果版本记录', meta: h('span', { className: 'fp-muted' }, '历史快照不可覆盖') }, h(PlanTable, { rowKey: 'version', pagination: false, dataSource: batch.resultSnapshots.slice().reverse(), columns: [{ title: '结果版本', dataIndex: 'version', width: 170, render: value => h(Space, null, h('strong', null, value), value === batch.activeResultVersion && h(Tag, { color: 'success' }, '当前')) }, { title: '生成时间', dataIndex: 'generatedAt', width: 150, render: dateText }, { title: '关系版本', dataIndex: 'relationVersion', width: 160 }, { title: '拆解规则版本', dataIndex: 'splitRuleVersion', width: 160 }, { title: '父ASIN预测', dataIndex: 'parentTotal', width: 120, render: number }, { title: '子ASIN预测', dataIndex: 'childTotal', width: 120, render: number }] }))
     );
   }
   function WindowStep({ batch }) {
@@ -362,7 +542,12 @@
     const save = () => { try { const normalize = value => `${value}:00+08:00`; model.publishWindow(batch.id, { submissionStartTime: normalize(values.start), submissionDeadlineTime: normalize(values.deadline), submissionFreezeTime: normalize(values.freeze) }); message.success('销售填报窗口已绑定到本批次'); } catch (error) { message.error(error.message); } };
     const freeze = () => modal.confirm({ title: '冻结本批次销售预测？', content: '冻结后本批次关系、规则、参数和销售提报快照均只读，后续调整需要创建下一批次。', okText: '确认冻结', cancelText: '取消', onOk: () => { try { model.freeze(batch.id); message.success('本批次已冻结'); } catch (error) { message.error(error.message); } } });
     const disabled = batch.status === '已冻结' || batch.status === '已完成';
-    return h(React.Fragment, null, h(Alert, { type: 'info', showIcon: true, message: '销售填报窗口属于预测批次；只有规则预测完成后才发布，达到冻结时间后形成销售预测快照。' }), h('div', { className: 'fp-panel' }, h('div', { className: 'fp-panel-head' }, h('h2', null, '销售填报窗口'), statusTag(batch.submissionState)), h('div', { className: 'fp-panel-body' }, h('div', { className: 'fp-window-grid' }, [['start', '填报开始时间'], ['deadline', '填报截止时间'], ['freeze', '预测冻结时间']].map(([key, label]) => h('div', { key, className: 'fp-readonly' }, h('div', { className: 'fp-kicker' }, label), h(Input, { type: 'datetime-local', value: values[key], onChange: event => setValues({ ...values, [key]: event.target.value }), disabled })))), h(Divider, { style: { margin: '12px 0' } }), h('div', { className: 'fp-help' }, '冻结以后销售不能继续修改；后台只通过批次契约向销售提报页面提供本批次日级规则预测清单，不改变销售页面的布局和交互。'), h('div', { className: 'fp-sticky-actions' }, h(Button, { onClick: () => window.pmcWorkflow?.selectView('sales') }, '进入销售提报'), h(Button, { onClick: save, disabled }, '保存窗口'), h(Button, { danger: true, onClick: freeze, disabled }, '冻结本批次')))));
+    const canPublish = batch.resultState === '已生成' && Boolean(batch.activeResultVersion);
+    return h(React.Fragment, null,
+      h(Alert, { type: canPublish ? 'success' : 'warning', showIcon: true, message: canPublish ? `规则预测 ${batch.activeResultVersion} 已生成，可发布销售填报窗口。` : '请先完成规则预测生成。', description: '发布后销售页面只消费已生成的子ASIN规则预测清单，不参与父子关系或拆解计算。' }),
+      h(MetricStrip, { items: [{ label: '规则预测', value: canPublish ? '已生成' : '待生成', tone: canPublish ? 'success' : 'warning' }, { label: '预测结果', value: `${batch.childForecastResults.length} 个子ASIN` }, { label: '销售填报', value: batch.submissionState }, { label: '结果版本', value: batch.activeResultVersion || '—' }] }),
+      h('div', { className: 'fp-panel' }, h('div', { className: 'fp-panel-head' }, h('h2', null, '销售填报窗口'), statusTag(batch.submissionState)), h('div', { className: 'fp-panel-body' }, h('div', { className: 'fp-window-grid' }, [['start', '填报开放时间'], ['deadline', '填报截止时间'], ['freeze', '填报冻结时间']].map(([key, label]) => h('div', { key, className: 'fp-readonly' }, h('div', { className: 'fp-kicker' }, label), h(Input, { type: 'datetime-local', value: values[key], onChange: event => setValues({ ...values, [key]: event.target.value }), disabled })))), h(Divider, { style: { margin: '12px 0' } }), h('div', { className: 'fp-help' }, '截止与冻结时间按当前三个独立字段保存；若业务确认截止后立即冻结，再将两者配置为同一时间。'), h('div', { className: 'fp-sticky-actions' }, h(Button, { onClick: () => window.pmcWorkflow?.selectView('sales'), disabled: !canPublish }, '进入销售提报'), h(Tooltip, { title: canPublish ? '' : '请先完成规则预测生成' }, h('span', null, h(Button, { type: 'primary', onClick: save, disabled: disabled || !canPublish }, '发布销售填报窗口'))), h(Button, { danger: true, onClick: freeze, disabled }, '冻结本批次'))))
+    );
   }
   function ReviewStep({ batch }) {
     const comparisonPeriod = batch.assessment.comparable ? `${dayText(batch.assessment.comparisonStartDate)} ~ ${dayText(batch.assessment.comparisonEndDate)}` : '等待实际回流';
@@ -512,8 +697,8 @@
     const [step, setStep] = useState(initialStep || batch?.currentStep || 'assessment');
     useEffect(() => { if (initialStep) setStep(initialStep); }, [batchId, initialStep]);
     if (!batch) return h(Empty, { description: '预测批次不存在' });
-    const content = { assessment: h(AssessmentStep, { batch, onStep: setStep }), parameters: h(ParameterStep, { batch }), relations: h(RelationStep, { batch }), split: h(SplitStep, { batch }), forecast: h(ForecastStep, { batch }), submission: h(WindowStep, { batch }), review: h(ReviewStep, { batch }) }[step];
-    return h(React.Fragment, null, h(PlanHeader, { batch, onBack, onStep: setStep }), h(WorkflowSteps, { active: step, onChange: setStep }), content);
+    const content = { assessment: h(AssessmentStep, { batch, onStep: setStep }), parameters: h(ParameterStep, { batch }), relations: h(RelationStep, { batch }), split: h(SplitStep, { batch }), forecast: h(ForecastStep, { batch, onStep: setStep }), submission: h(WindowStep, { batch }), review: h(ReviewStep, { batch }) }[step];
+    return h(React.Fragment, null, h(PlanHeader, { batch, onBack, onStep: setStep }), h(WorkflowSteps, { active: step, batch, onChange: setStep }), content);
   }
   function ForecastPlanWorkspace() {
     useStoreRevision();

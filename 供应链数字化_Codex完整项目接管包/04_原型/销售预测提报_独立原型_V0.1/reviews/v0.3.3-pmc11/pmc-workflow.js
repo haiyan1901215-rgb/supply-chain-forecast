@@ -13,6 +13,7 @@
   const total=(data,field)=>sumValues(Object.values(data||{}).map(d=>field==='activity'?d.activity?.qty:d[field]));
   const legacyForecastAt=forecastAt;
   const plannedForecastCache=new Map();
+  let salesForecastDirty=false;
   const plannedAt=(childId,date)=>{
     const cacheKey=`${currentBatch}|${childId}|${date}`;
     if(plannedForecastCache.has(cacheKey))return plannedForecastCache.get(cacheKey);
@@ -20,7 +21,7 @@
     plannedForecastCache.set(cacheKey,value);
     return value;
   };
-  window.addEventListener('forecast-batch-change',()=>plannedForecastCache.clear());
+  window.addEventListener('forecast-batch-change',()=>{plannedForecastCache.clear();salesForecastDirty=true;});
   forecastAt=function(c,batch,date){
     const live=legacyForecastAt(c,batch,date),planned=batch===currentBatch?plannedAt(c.id,date):null;
     if(!planned)return live;
@@ -116,7 +117,7 @@
       h('div',{className:'pmc-toolbar'},h(Space,null,h(Input.Search,{placeholder:'商品名称 / 父子ASIN','aria-label':'审核查询',allowClear:true,onSearch:setQuery,style:{width:300}}),h(Select,{value:site,onChange:setSite,'aria-label':'审核国家站点',style:{width:150},options:[{value:'all',label:'全部国家 / 站点'},{value:'US',label:'🇺🇸 美国 / US'},{value:'UK',label:'🇬🇧 英国 / UK'}]})),h('span',{className:'pmc-muted'},'汇总口径：整个预测范围 · 件')),
       h(Table,{size:'small',rowKey:'id',dataSource:selected,columns,scroll:{x:1440,y:Math.max(260,viewportHeight-350)},pagination:{showSizeChanger:true,showQuickJumper:true,showTotal:n=>'共 '+n+' 个子ASIN'},locale:{emptyText:effectiveStatus==='pending'?'暂无待审核预测，请先在销售填报中提交':'暂无符合条件的预测'},expandable:{showExpandColumn:false,expandedRowKeys:expanded,expandedRowRender:row=>h(Review,{key:row.id+'|'+row.status,row,demo:row.demo,onChanged:()=>bump(revision+1)})}}));
   }
-  function selectView(view,options={}){guard(()=>{active=view;const isSales=view==='sales',isDecomposition=view==='decomposition';if(isDecomposition&&!options.keepPlanningSystemTab)planningSystemTab={active:'base',batchId:null};$('.content').hidden=!isSales;$('.content').style.display=isSales?'':'none';host.hidden=isSales;host.classList.toggle('planning-workspace',isDecomposition);bar.hidden=isDecomposition;const systemTabs=$('.workspace-tabs-v028');if(systemTabs){systemTabs.style.display=(isSales||isDecomposition)?'':'none';if(isSales)window.forecastWorkspaceTabsRedraw?.();if(isDecomposition)renderPlanningSystemTabs();}$('.crumb b').textContent=isDecomposition?'计划配置':view==='plans'?'备货计划':'销售预测';$$('.menu button').forEach((item,index)=>item.classList.toggle('active',(view==='sales'&&index===0)||(view==='plans'&&index===1)||(view==='decomposition'&&index===3)));refresh();if(isSales){syncHorizontalScrollbar();}});}
+  function selectView(view,options={}){guard(()=>{active=view;const isSales=view==='sales',isDecomposition=view==='decomposition';if(isDecomposition&&!options.keepPlanningSystemTab)planningSystemTab={active:'base',batchId:null};if(isSales&&salesForecastDirty){renderTable();salesForecastDirty=false;}$('.content').hidden=!isSales;$('.content').style.display=isSales?'':'none';host.hidden=isSales;host.classList.toggle('planning-workspace',isDecomposition);bar.hidden=isDecomposition;const systemTabs=$('.workspace-tabs-v028');if(systemTabs){systemTabs.style.display=(isSales||isDecomposition)?'':'none';if(isSales)window.forecastWorkspaceTabsRedraw?.();if(isDecomposition)renderPlanningSystemTabs();}$('.crumb b').textContent=isDecomposition?'计划配置':view==='plans'?'备货计划':'销售预测';$$('.menu button').forEach((item,index)=>item.classList.toggle('active',(view==='sales'&&index===0)||(view==='plans'&&index===1)||(view==='decomposition'&&index===3)));refresh();if(isSales){syncHorizontalScrollbar();}});}
   refresh=()=>{barRoot.render(wrap(h(Bar)));root.render(wrap(h(React.Fragment,null,storageError?h(Alert,{type:'error',message:storageError}):null,h(Workspace,{key:active}))));};
   const menu=$$('.menu button');if(menu[0]){menu[0].lastElementChild.textContent='销售预测';menu[0].addEventListener('click',()=>selectView('sales'));}if(menu[1])menu[1].addEventListener('click',()=>selectView('plans'));if(menu[3])menu[3].addEventListener('click',()=>selectView('decomposition'));
   document.addEventListener('change',e=>{if(e.target.matches('[data-row-check],[data-select-all]'))refresh();});
