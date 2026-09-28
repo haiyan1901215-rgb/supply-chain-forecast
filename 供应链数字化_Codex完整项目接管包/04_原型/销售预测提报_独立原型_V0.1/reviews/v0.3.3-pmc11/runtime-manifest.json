@@ -22,19 +22,19 @@
     },
     {
       "file": "forecast-batch-model.js",
-      "sha256": "9de4ce68f6b981cd56d916cb87b88e7d7b32d26771cd189829cf65e9b4d4fad4"
+      "sha256": "ff8d647d950b8afb038e5877d25f75e5e8aa346522f7f031078ca1ee72579f5b"
     },
     {
       "file": "forecast-plan-workspace.js",
-      "sha256": "2b96733ee4342de9b5c9ac1273174b9e0b3488cf35473ded11f030bcbe61c6f3"
+      "sha256": "1896aee78733b0d4ba22836b13174c6c1974548e10bd39a9f761d5a7d192462b"
     },
     {
       "file": "forecast-plan.css",
-      "sha256": "28fb50c40e35cc2a1ac2df17e7dae3c6a6091128d78bc9c05b45384db9d04f1e"
+      "sha256": "233c886cb3e448771fe669270284c8a97f66bc0799b64ac83972156183ad3b6b"
     },
     {
       "file": "index.html",
-      "sha256": "cd99d6bb84fa3f0a45e00fae9c3124ce1ffa0c3bfab5365d14a2a133f2364e79"
+      "sha256": "8241714db52626218fc8210d8be8301717601e6c3e6e51642e622c2a850db85f"
     },
     {
       "file": "parent-asin.css",
@@ -209,6 +209,6 @@
       "sha256": "35f4f974f4b2bcd44da73963347f8952e341f83909e4498227d4e26b98f66f0d"
     }
   ],
-  "version": "0.3.4-auto-flow1",
+  "version": "0.3.4-combo-split1",
   "status": "active"
 }

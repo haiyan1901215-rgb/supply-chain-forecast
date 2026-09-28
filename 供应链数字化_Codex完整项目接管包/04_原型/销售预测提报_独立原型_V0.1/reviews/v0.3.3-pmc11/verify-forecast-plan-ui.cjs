@@ -49,7 +49,27 @@ const assert = (condition, message) => {
     await page.locator('.ant-steps-item-process').getByText('子体拆解', { exact: true }).waitFor();
     assert((await page.evaluate(() => window.ForecastBatchContract.getCurrent())).status === '关系已确认', 'relation confirmation must advance workflow status');
 
-    const totalTag = page.locator('.fp-panel').filter({ hasText: '本批次子ASIN份额调配' }).locator('.ant-tag').filter({ hasText: '100.00%' });
+    const splitPanel = page.locator('.fp-panel').filter({ hasText: '本批次子ASIN份额调配' });
+    const comboRow = splitPanel.locator('tr.ant-table-row').filter({ hasText: '销售组合' }).first();
+    assert(await comboRow.count() === 1, 'sales combo row missing from split table');
+    assert(await comboRow.locator('.fp-combo-expand').count() === 1, 'sales combo row must be expandable');
+    const skuRow = splitPanel.locator('tr.ant-table-row').filter({ hasText: '普通SKU' }).first();
+    assert(await skuRow.locator('.fp-combo-expand').count() === 0, 'ordinary SKU must not be expandable');
+    await comboRow.locator('.fp-combo-expand').click();
+    const comboDetail = splitPanel.locator('.fp-combo-detail').first();
+    await comboDetail.getByText('COMB-001', { exact: false }).first().waitFor();
+    assert(await comboDetail.getByText('SKU-A', { exact: true }).count() === 1 && await comboDetail.getByText('SKU-B', { exact: true }).count() === 1, 'combo detail SKU rows missing');
+    assert(await comboDetail.getByText('33.33%', { exact: true }).count() === 1 && await comboDetail.getByText('66.67%', { exact: true }).count() === 1, 'combo quantity ratios missing');
+    const comboInputs = comboDetail.getByRole('spinbutton');
+    await comboInputs.nth(0).fill('20');
+    await comboInputs.nth(1).fill('-20');
+    await comboDetail.getByRole('combobox').click();
+    await page.getByText('库存消化', { exact: true }).last().click();
+    await comboDetail.getByRole('button', { name: '保存组合明细' }).click();
+    await page.getByText('COMB-001 组合明细已保存', { exact: true }).waitFor();
+    const comboState = await page.evaluate(() => window.ForecastBatchContract.getCurrent().childForecastResults.find(row => row.businessObjectType === 'COMBO'));
+    assert(comboState.comboLines.find(line => line.sku === 'SKU-A').pmcAdjustment === 20 && comboState.comboLines.find(line => line.sku === 'SKU-B').pmcAdjustment === -20, 'combo adjustment action must update model');
+    const totalTag = splitPanel.locator('.ant-tag').filter({ hasText: '100.00%' });
     await totalTag.waitFor();
     assert((await totalTag.getAttribute('class') || '').includes('ant-tag-success'), '100% share tag must be success');
 
@@ -59,7 +79,6 @@ const assert = (condition, message) => {
     const storedTotal = Object.values(firstChild.dailyFinalForecast).reduce((sum, value) => sum + Number(value || 0), 0);
     const firstPreview = await page.locator('.fp-panel').filter({ hasText: '本批次子ASIN份额调配' }).locator('tr.ant-table-row').first().locator('td').last().innerText();
     assert(firstPreview.includes(storedTotal.toLocaleString('zh-CN')), `unchanged split preview must use stored daily total: ${firstPreview} / ${storedTotal}`);
-    const splitPanel = page.locator('.fp-panel').filter({ hasText: '本批次子ASIN份额调配' });
     const firstShareInput = splitPanel.locator('tr.ant-table-row').first().getByRole('spinbutton').nth(1);
     const initialShare = Number(await firstShareInput.inputValue());
     await firstShareInput.fill(String(Math.min(99, initialShare + 1)));

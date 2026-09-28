@@ -3,7 +3,7 @@ const model = require('./forecast-batch-model.js');
 
 const groups = [{
   parent: 'B0PARENT01', market: 'US', platform: 'Amazon', account: 'STORE-US', owner: '测试销售', name: '测试商品', tags: ['成熟期', '头部'],
-  children: [{ id: 'US-C000000001', asin: 'C000000001', base: 12, businessCode: 'SKU-A' }, { id: 'US-C000000002', asin: 'C000000002', base: 8, businessCode: 'SKU-B' }]
+  children: [{ id: 'US-C000000001', asin: 'C000000001', base: 12, businessCode: 'SKU-A' }, { id: 'US-C000000002', asin: 'C000000002', base: 8, businessCode: 'COMB-001', businessObjectType: 'COMBO', businessObjectCode: 'COMB-001', businessObjectVersion: 'V1', comboSnapshot: { code: 'COMB-001', version: 'V1', effectiveFrom: '2026-10-01', effectiveTo: '2026-10-31', lines: [{ sku: 'SKU-A', quantity: 1 }, { sku: 'SKU-B', quantity: 2 }] }, comboVersionHistory: [{ code: 'COMB-001', version: 'V1', effectiveFrom: '2026-10-01', effectiveTo: '2026-10-31', lines: [{ sku: 'SKU-A', quantity: 1 }, { sku: 'SKU-B', quantity: 2 }] }, { code: 'COMB-001', version: 'V2', effectiveFrom: '2026-11-01', effectiveTo: null, lines: [{ sku: 'SKU-A', quantity: 1 }, { sku: 'SKU-C', quantity: 2 }] }] }]
 }, {
   parent: 'B0PARENT02', market: 'US', platform: 'Amazon', account: 'STORE-US', owner: '测试销售', name: '测试商品2', tags: ['成长'],
   children: [{ id: 'US-B0GRG7J9MN', asin: 'B0GRG7J9MN', base: 6, businessCode: 'SKU-C' }]
@@ -27,6 +27,10 @@ assert(current.assessment.ruleForecastTotal === 364 && current.assessment.actual
 assert(current.assessment.varianceRate === -11.5, 'assessment variance rate');
 assert(current.childForecastResults.every(row => row.dailyRuleForecast[current.forecastStartDate] != null), 'daily rule forecast');
 assert(current.childForecastResults.every(row => row.childRef === undefined), 'stored snapshot excludes runtime child reference');
+const seededCombo = current.childForecastResults.find(row => row.businessObjectType === 'COMBO');
+assert(seededCombo && seededCombo.businessObjectVersion === 'V1' && seededCombo.comboSnapshot.lines[1].sku === 'SKU-B', 'combo relation snapshot');
+assert(seededCombo.comboLines[0].defaultRatio === 3333 && seededCombo.comboLines[1].defaultRatio === 6667, 'combo quantity ratio snapshot');
+assert(seededCombo.comboLines.reduce((total, line) => total + line.systemSuggested, 0) === Object.values(seededCombo.dailyFinalForecast).reduce((total, value) => total + value, 0), 'combo integer allocation conserves child forecast');
 const previous = store.getBatch(current.previousBatchId);
 assert(previous.relationSnapshot.find(row => row.childASIN === 'B0GRG7J9MN').parentASIN === 'B0PARENT02', 'historical relation snapshot keeps its parent');
 assert(previous.childForecastResults.find(row => row.childASIN === 'B0GRG7J9MN').parentASIN === 'B0PARENT02', 'historical child forecast keeps its parent');
@@ -55,6 +59,18 @@ assert(relationChanged.relationChanges.length === 1 && relationChanged.childFore
 assert(relationChanged.relationVersions.length === 2 && relationChanged.relationVersions[0].relations[0].parentASIN !== relationChanged.relationVersions[1].relations[0].parentASIN, 'relation versions preserve before and after snapshots');
 store.confirmRelations(next.id);
 assert(store.getBatch(next.id).status === '关系已确认' && store.getBatch(next.id).currentStep === 'split', 'relation confirmation advances to split');
+const nextCombo = store.getBatch(next.id).childForecastResults.find(row => row.businessObjectType === 'COMBO');
+const nextComboTotal = Object.values(nextCombo.dailyFinalForecast).reduce((total, value) => total + value, 0);
+const comboAdjustments = { 'SKU-A': 20, 'SKU-B': -20 };
+let comboReasonBlocked = false;
+try { store.adjustComboLines(next.id, nextCombo.childId, { 'SKU-A': 10, 'SKU-B': -10 }, ''); } catch (error) { comboReasonBlocked = /调整原因/.test(error.message); }
+assert(comboReasonBlocked, 'combo manual adjustment requires reason');
+store.adjustComboLines(next.id, nextCombo.childId, comboAdjustments, '测试：老版本库存较高，优先消化');
+const comboAdjusted = store.getBatch(next.id).childForecastResults.find(row => row.childId === nextCombo.childId);
+assert(comboAdjusted.comboLines.find(line => line.sku === 'SKU-A').finalForecast === comboAdjusted.comboLines.find(line => line.sku === 'SKU-A').systemSuggested + 20, 'combo PMC adjustment');
+assert(comboAdjusted.comboLines.reduce((total, line) => total + line.finalForecast, 0) === nextComboTotal, 'combo manual adjustment remains balanced');
+assert(comboAdjusted.comboLines.every(line => line.pmcAdjustment === 0 || line.adjustmentReason.includes('老版本库存')), 'combo adjustment reason audit');
+assert(comboAdjusted.comboVersionHistory.some(version => version.version === 'V2' && version.lines[1].sku === 'SKU-C'), 'combo future version history retained');
 const siblings = relationChanged.childForecastResults.filter(row => row.parentASIN === 'B0PARENT02');
 const shares = Object.fromEntries(siblings.map((row, index) => [row.childASIN, index === 0 ? 6000 : 4000]));
 if (siblings.length === 1) shares[siblings[0].childASIN] = 10000;
@@ -74,6 +90,8 @@ const generatedV1 = store.getBatch(next.id);
 assert(generatedV1.status === '规则预测已生成' && generatedV1.currentStep === 'submission', 'forecast generation advances to submission');
 const v1Daily = generatedV1.resultSnapshots[0].rows.find(row => row.childId === siblings[0].childId).daily[generatedV1.forecastStartDate];
 assert(store.contract.getDailyForecast(next.id, siblings[0].childId, generatedV1.forecastStartDate).ruleForecast === v1Daily, 'sales contract uses generated snapshot');
+const generatedCombo = generatedV1.resultSnapshots[0].rows.find(row => row.childId === nextCombo.childId);
+assert(generatedCombo.comboSnapshot.version === 'V1' && generatedCombo.comboLines.find(line => line.sku === 'SKU-B').pmcAdjustment === -20, 'generated result keeps combo snapshot and adjustment');
 const submissionRows = store.contract.getSubmissionRows(next.id);
 assert(submissionRows.length === generatedV1.childForecastResults.length * 182, 'sales-facing daily contract range');
 assert(['batchId', 'batchVersion', 'resultVersion', 'parentASIN', 'childASIN', 'country', 'site', 'store', 'forecastDate', 'parentRuleForecast', 'systemSplitForecast', 'ruleForecast', 'submissionDeadlineTime', 'relationVersion', 'splitRuleVersion'].every(key => key in submissionRows[0]), 'contract fields');

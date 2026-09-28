@@ -359,14 +359,26 @@
     const [reasonNote, setReasonNote] = useState('');
     const [ruleOpen, setRuleOpen] = useState(false);
     const [editingRule, setEditingRule] = useState(null);
+    const [expandedCombos, setExpandedCombos] = useState([]);
+    const [comboAdjustments, setComboAdjustments] = useState({});
+    const [comboReasonCategory, setComboReasonCategory] = useState({});
+    const [comboReasonNote, setComboReasonNote] = useState({});
     useEffect(() => { if (parentOptions.length && !parentOptions.includes(selectedParent)) setSelectedParent(parentOptions[0]); }, [batch.id, parentOptions.join('|')]);
     useEffect(() => { setShares(Object.fromEntries(siblings.map(row => [row.childASIN, Number((row.finalShare / 100).toFixed(2))]))); setLastEdited(null); }, [batch.id, selectedParent, siblings.map(row => row.finalShare).join(',')]);
+    const comboSiblings = siblings.filter(row => row.businessObjectType === 'COMBO');
+    useEffect(() => {
+      setComboAdjustments(Object.fromEntries(comboSiblings.map(row => [row.childASIN, Object.fromEntries((row.comboLines || []).map(line => [line.sku, Number(line.pmcAdjustment) || 0]))])));
+      setComboReasonCategory({});
+      setComboReasonNote({});
+      setExpandedCombos([]);
+    }, [batch.id, selectedParent, comboSiblings.map(row => (row.comboLines || []).map(line => `${line.sku}:${line.systemSuggested}:${line.pmcAdjustment}`).join(',')).join('|')]);
     const updateFinal = (childASIN, value) => {
       const nextValue = Math.max(0, Math.min(100, Number(value) || 0));
       setShares(current => ({ ...current, [childASIN]: nextValue }));
       setLastEdited(childASIN);
     };
     const updateDelta = (row, value) => updateFinal(row.childASIN, row.systemShare / 100 + (Number(value) || 0));
+    const updateComboAdjustment = (childASIN, sku, value) => setComboAdjustments(current => ({ ...current, [childASIN]: { ...(current[childASIN] || {}), [sku]: Math.round(Number(value) || 0) } }));
     const allocateRemaining = () => {
       if (!lastEdited) return message.info('请先调整一个子ASIN，再分配剩余份额');
       const locked = Number(shares[lastEdited]) || 0;
@@ -398,6 +410,41 @@
       if (Math.abs(inputShare - savedShare) < 0.005) return Object.values(row.dailyFinalForecast).reduce((sum, value) => sum + (Number(value) || 0), 0);
       return Math.round((parent?.total || 0) * inputShare / 100);
     };
+    const allocateCombo = (total, lines) => {
+      const quantityTotal = lines.reduce((sum, line) => sum + (Number(line.quantity) || 0), 0);
+      const raw = lines.map(line => (Number(total) || 0) * (Number(line.quantity) || 0) / Math.max(1, quantityTotal));
+      const values = raw.map(Math.floor);
+      let remainder = Math.max(0, Math.round(Number(total) || 0) - values.reduce((sum, value) => sum + value, 0));
+      raw.map((value, index) => ({ index, fraction: value - values[index] })).sort((left, right) => right.fraction - left.fraction || left.index - right.index).forEach(item => { if (remainder > 0) { values[item.index] += 1; remainder -= 1; } });
+      return values;
+    };
+    const comboLineRows = row => {
+      const lines = row.comboSnapshot?.lines || [];
+      const suggestions = allocateCombo(previewTotal(row), lines);
+      return lines.map((line, index) => {
+        const persisted = row.comboLines?.find(item => item.sku === line.sku);
+        const adjustment = Number(comboAdjustments[row.childASIN]?.[line.sku] ?? persisted?.pmcAdjustment ?? 0);
+        return { ...(persisted || {}), id: `${row.childASIN}-${line.sku}`, sku: line.sku, quantity: line.quantity, defaultRatio: quantityRatio(line.quantity, lines), systemSuggested: suggestions[index], pmcAdjustment: adjustment, finalForecast: suggestions[index] + adjustment };
+      });
+    };
+    const quantityRatio = (quantity, lines) => {
+      const total = lines.reduce((sum, line) => sum + (Number(line.quantity) || 0), 0);
+      return total ? Math.round((Number(quantity) || 0) / total * 10000) : 0;
+    };
+    const comboAdjustmentReason = childASIN => [comboReasonCategory[childASIN], comboReasonNote[childASIN]?.trim()].filter(Boolean).join('：');
+    const comboBalanced = row => {
+      const lines = comboLineRows(row);
+      return lines.reduce((sum, line) => sum + (Number(line.finalForecast) || 0), 0) === previewTotal(row);
+    };
+    const saveCombo = row => {
+      const lines = comboLineRows(row);
+      if (!comboBalanced(row)) return message.error(`销售组合拆解后必须等于子ASIN预测 ${number(previewTotal(row))} 件`);
+      const hasAdjustment = lines.some(line => Number(line.pmcAdjustment));
+      const reason = comboAdjustmentReason(row.childASIN);
+      if (hasAdjustment && !comboReasonCategory[row.childASIN]) return message.warning('组合明细有人工作调整时必须选择调整原因');
+      if (comboReasonCategory[row.childASIN] === '其他' && !comboReasonNote[row.childASIN]?.trim()) return message.warning('选择“其他”时必须填写具体原因');
+      try { model.adjustComboLines(batch.id, row.childId, Object.fromEntries(lines.map(line => [line.sku, line.pmcAdjustment])), reason); message.success(`${row.businessObjectCode} 组合明细已保存`); } catch (error) { message.error(error.message); }
+    };
     const childPreviewTotal = siblings.reduce((value, row) => value + previewTotal(row), 0);
     const difference = childPreviewTotal - Number(parent?.total || 0);
     const basis = row => h('div', { className: 'fp-basis-popover' },
@@ -407,6 +454,9 @@
     );
     const shareColumns = [
       { title: '子ASIN', dataIndex: 'childASIN', width: 145 },
+      { title: '业务对象', width: 120, render: (_, row) => h(Tag, { color: row.businessObjectType === 'COMBO' ? 'gold' : 'default' }, row.businessObjectType === 'COMBO' ? '销售组合' : '普通SKU') },
+      { title: '业务对象编码', width: 155, render: (_, row) => h('div', null, h('strong', null, row.businessObjectCode || '—'), row.businessObjectVersion && h('span', { className: 'fp-muted fp-version-note' }, ` · ${row.businessObjectVersion}`)) },
+      { title: '拆解方式', width: 140, render: (_, row) => row.businessObjectType === 'COMBO' ? '组合明细数量比例' : '直接映射' },
       { title: '84天销量', dataIndex: 'history84Sales', width: 98, render: number },
       { title: '84天份额', dataIndex: 'history84Share', width: 98, render: percent },
       { title: '14天Clean份额', dataIndex: 'recent14Share', width: 118, render: percent },
@@ -416,6 +466,29 @@
       { title: '最终份额', width: 132, render: (_, row) => h('div', null, h(InputNumber, { min: 0, max: 100, precision: 2, value: shares[row.childASIN], addonAfter: '%', onChange: value => updateFinal(row.childASIN, value), disabled: batch.status === '已冻结' || batch.status === '已完成', style: { width: 118 } }), Math.abs(Number(shares[row.childASIN] || 0) - row.systemShare / 100) > 0.005 && h(Tag, { color: 'gold', className: 'fp-manual-tag' }, `人工 ${Number(shares[row.childASIN] || 0) - row.systemShare / 100 > 0 ? '+' : ''}${(Number(shares[row.childASIN] || 0) - row.systemShare / 100).toFixed(2)}%`)) },
       { title: '最终预测', width: 112, render: (_, row) => h('strong', null, number(previewTotal(row))) }
     ];
+    const comboDetail = row => {
+      const lines = comboLineRows(row);
+      const total = previewTotal(row);
+      const adjustmentReasonOptions = ['库存消化', '新旧版本切换', '供应能力', '供应商交期', '销售趋势', '特殊业务安排', '其他'];
+      const columns = [
+        { title: '组合明细SKU', dataIndex: 'sku', width: 150, render: value => h('strong', null, value) },
+        { title: '组合数量', dataIndex: 'quantity', width: 90, render: value => `${number(value)} 件` },
+        { title: '组合默认比例', dataIndex: 'defaultRatio', width: 120, render: percent },
+        { title: '系统建议', dataIndex: 'systemSuggested', width: 110, render: number },
+        { title: 'PMC调整', width: 150, render: (_, line) => h(InputNumber, { min: -total, max: total, precision: 0, value: line.pmcAdjustment, addonAfter: '件', 'aria-label': `${row.businessObjectCode} ${line.sku} PMC调整`, onChange: value => updateComboAdjustment(row.childASIN, line.sku, value), disabled: batch.status === '已冻结' || batch.status === '已完成', style: { width: 136 } }) },
+        { title: '最终预测', width: 110, render: (_, line) => h('strong', null, number(line.finalForecast)) },
+        { title: '来源', width: 110, render: (_, line) => line.pmcAdjustment ? h(Tag, { color: 'gold' }, 'PMC人工调整') : h(Tag, null, '系统自动') }
+      ];
+      const finalTotal = lines.reduce((sum, line) => sum + (Number(line.finalForecast) || 0), 0);
+      const balanced = finalTotal === total;
+      return h('div', { className: 'fp-combo-detail' },
+        h(Alert, { type: 'info', showIcon: true, message: `${row.businessObjectCode} · ${row.businessObjectVersion} · 本批次引用快照`, description: `组合默认按明细数量比例拆解；销售组合预测 ${number(total)} 件，系统建议与PMC调整分别保留。` }),
+        h('div', { className: 'fp-combo-history' }, h('span', null, '组合版本历史'), (row.comboVersionHistory || []).map(version => h(Tag, { key: version.version, color: version.version === row.businessObjectVersion ? 'blue' : 'default' }, `${version.version} · ${dayText(version.effectiveFrom)}${version.effectiveTo ? ` ~ ${dayText(version.effectiveTo)}` : ' 起'}${version.version === row.businessObjectVersion ? ' · 本批次引用' : ''}`))),
+        h(PlanTable, { rowKey: 'id', dataSource: lines, columns, pagination: false, scroll: { x: 860 }, locale: { emptyText: '暂无组合明细' } }),
+        h('div', { className: `fp-combo-summary ${balanced ? 'is-balanced' : 'is-unbalanced'}` }, h('span', null, `组合预测 ${number(total)} 件`), h('span', null, `明细最终合计 ${number(finalTotal)} 件`), h(Tag, { color: balanced ? 'success' : 'error' }, balanced ? '已平衡' : '未平衡')),
+        h('div', { className: 'fp-combo-adjust' }, h('div', null, h('div', { className: 'fp-kicker' }, '组合人工调整原因'), h(Select, { value: comboReasonCategory[row.childASIN], placeholder: '有人工作调整时必选', allowClear: true, 'aria-label': `${row.businessObjectCode} 调整原因`, options: adjustmentReasonOptions.map(value => ({ value, label: value })), onChange: value => setComboReasonCategory(current => ({ ...current, [row.childASIN]: value })), style: { width: '100%' } })), h('div', null, h('div', { className: 'fp-kicker' }, '调整说明'), h(Input, { value: comboReasonNote[row.childASIN] || '', maxLength: 100, placeholder: '例如：老版本库存较高，优先消化', onChange: event => setComboReasonNote(current => ({ ...current, [row.childASIN]: event.target.value })) })), h(Button, { type: 'primary', onClick: () => saveCombo(row), disabled: !balanced || batch.status === '已冻结' || batch.status === '已完成' }, '保存组合明细'))
+      );
+    };
     const summary = h(Descriptions, { size: 'small', column: 4, items: [
       { key: 'parent', label: '父ASIN', children: parent?.parentASIN },
       { key: 'total', label: '父ASIN预测总量', children: `${number(parent?.total)} 件` },
@@ -442,10 +515,10 @@
         ),
         h('div', { className: 'fp-panel-body' },
           summary,
-          h('div', { className: 'fp-table-wrap' }, h(PlanTable, { rowKey: 'childASIN', dataSource: siblings, columns: shareColumns })),
+          h('div', { className: 'fp-table-wrap' }, h(PlanTable, { rowKey: 'childASIN', dataSource: siblings, columns: shareColumns, expandable: { expandedRowKeys: expandedCombos, onExpandedRowsChange: setExpandedCombos, rowExpandable: row => row.businessObjectType === 'COMBO', expandIcon: ({ expanded, onExpand, record }) => record.businessObjectType === 'COMBO' ? h(Button, { type: 'text', size: 'small', className: 'fp-combo-expand', icon: h(expanded ? icon.DownOutlined : icon.RightOutlined), 'aria-label': `${expanded ? '收起' : '展开'} ${record.businessObjectCode} 明细`, onClick: event => onExpand(record, event) }) : null, expandedRowRender: comboDetail } })),
           !sharesValid && h(Alert, { type: 'error', showIcon: true, message: `最终份额合计为${total.toFixed(2)}%，请调整后再保存。`, style: { marginTop: 12 } }),
           h('div', { className: 'fp-adjust-reason' }, h('div', null, h('div', { className: 'fp-kicker' }, '调整原因（必填）'), h(Select, { value: reasonCategory, onChange: setReasonCategory, placeholder: '请选择', style: { width: '100%' }, options: ['尺码需求变化', '近期销售趋势变化', '新品策略', '库存风险', '业务判断', '其他'].map(value => ({ value, label: value })) })), h('div', null, h('div', { className: 'fp-kicker' }, reasonCategory === '其他' ? '具体原因（必填）' : '补充说明'), h(Input, { value: reasonNote, onChange: event => setReasonNote(event.target.value), maxLength: 100, placeholder: '选填；选择“其他”时必填' }))),
-          h('div', { className: 'fp-sticky-actions' }, h('span', { className: 'fp-help' }, `父ASIN预测 ${number(parent?.total)} · 子体拆解 ${number(childPreviewTotal)} · 差额 ${number(difference)}`), h(Button, { onClick: confirmSplit, disabled: !batch.relationConfirmed || !sharesValid || difference !== 0 }, '确认子体拆解'), h(Button, { type: 'primary', onClick: save, disabled: !batch.relationConfirmed || batch.status === '已冻结' || batch.status === '已完成' }, '保存人工调配'))
+          h('div', { className: 'fp-sticky-actions' }, h('span', { className: 'fp-help' }, `父ASIN预测 ${number(parent?.total)} · 子体拆解 ${number(childPreviewTotal)} · 差额 ${number(difference)}${comboSiblings.length ? ` · 销售组合 ${comboSiblings.length} 个` : ''}`), h(Button, { onClick: confirmSplit, disabled: !batch.relationConfirmed || !sharesValid || difference !== 0 || comboSiblings.some(row => !comboBalanced(row)) }, '确认子体拆解'), h(Button, { type: 'primary', onClick: save, disabled: !batch.relationConfirmed || batch.status === '已冻结' || batch.status === '已完成' }, '保存人工调配'))
         )
       ),
       h(Drawer, { open: ruleOpen, width: 560, title: editingRule ? `配置拆解规则 · ${editingRule.name}` : '新增拆解规则模板', onClose: () => setRuleOpen(false), destroyOnClose: true }, h(SplitRuleForm, { rule: editingRule, onCancel: () => setRuleOpen(false), onSubmit: values => { if (Number(values.historyWeight) + Number(values.recentWeight) !== 100) return message.error('历史权重与近期权重合计必须为100%'); try { model.saveSplitRule(batch.id, { ...editingRule, ...values }); setRuleOpen(false); message.success('拆解规则模板已保存并生成新版本'); } catch (error) { message.error(error.message); } } }))
