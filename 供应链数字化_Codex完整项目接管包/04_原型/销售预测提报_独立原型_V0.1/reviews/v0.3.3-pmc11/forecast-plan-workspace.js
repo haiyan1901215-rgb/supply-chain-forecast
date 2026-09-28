@@ -41,7 +41,7 @@
     return h('div', { className: 'fp-metrics' }, items.map(item => h('div', { className: 'fp-metric', key: item.label }, h('span', null, item.label), h('strong', { className: item.tone || '' }, item.value))));
   }
   function PageHead({ title, subtitle, actions }) {
-    return h('div', { className: 'fp-page-head' }, h('div', null, h('div', { className: 'fp-eyebrow' }, '销售预测 / 预测计划'), h('h1', null, title), subtitle && h('div', { className: 'fp-subtitle' }, subtitle)), actions && h('div', { className: 'fp-head-actions' }, actions));
+    return h('div', { className: 'fp-page-head' }, h('div', null, h('h1', null, title), subtitle && h('div', { className: 'fp-subtitle' }, subtitle)), actions && h('div', { className: 'fp-head-actions' }, actions));
   }
   const sumColumnWidths = columns => (columns || []).reduce((total, column) => {
     if (column.children) return total + sumColumnWidths(column.children);
@@ -58,16 +58,18 @@
     if (pagination === false || pagination == null) return base;
     return { ...base, ...pagination, showTotal: pagination.showTotal || base.showTotal };
   };
-  const planScroll = (columns, scroll) => ({ x: Math.max(960, sumColumnWidths(columns)), ...(scroll || {}) });
+  const planScroll = (columns, scroll) => ({ x: Math.max(960, sumColumnWidths(columns)), y: 420, ...(scroll || {}) });
   function PlanTable({ columns = [], className, pagination, scroll, ...props }) {
     return h(Table, { size: 'small', sticky: true, ...props, className: ['fp-plan-table', className].filter(Boolean).join(' '), columns: normalizePlanColumns(columns), scroll: planScroll(columns, scroll), pagination: planPagination(pagination) });
   }
   function PlanListPanel({ title, meta, search, toolbar, children }) {
-    return h('div', { className: 'fp-panel fp-list-panel' },
-      (title || meta) && h('div', { className: 'fp-panel-head' }, h('h2', null, title), meta),
-      search && h('div', { className: 'fp-list-search' }, search),
-      toolbar && h('div', { className: 'fp-list-toolbar' }, toolbar),
-      h('div', { className: 'fp-table-wrap fp-list-table' }, children)
+    return h('div', { className: 'fp-list-layout' },
+      search && h('section', { className: 'fp-panel fp-list-search-panel' }, search),
+      toolbar && h('section', { className: 'fp-panel fp-list-toolbar-panel' }, toolbar),
+      h('section', { className: 'fp-panel fp-list-table-panel' },
+        (title || meta) && h('div', { className: 'fp-panel-head' }, h('h2', null, title), meta),
+        h('div', { className: 'fp-table-wrap fp-list-table' }, children)
+      )
     );
   }
   function BatchList({ onOpen }) {
@@ -84,15 +86,10 @@
       { title: '规则版本', width: 162, render: (_, row) => h('div', null, row.forecastRuleSnapshot.version, h('div', { className: 'fp-muted' }, `${row.splitRuleSnapshot.version} · ${row.parameterSnapshot.version}`)) },
       { title: '父子关系版本', dataIndex: 'relationVersion', width: 150 },
       { title: '销售填报窗口', width: 184, render: (_, row) => `${dateText(row.submissionWindow.submissionStartTime)} ~ ${dateText(row.submissionWindow.submissionFreezeTime)}` },
-      { title: '状态', dataIndex: 'status', width: 112, render: statusTag },
-      { title: '操作', width: 80, fixed: 'right', render: (_, row) => h(Button, { type: 'link', onClick: () => onOpen(row.id) }, '查看') }
+      { title: '状态', dataIndex: 'status', width: 112, render: statusTag }
     ];
     return h(React.Fragment, null,
-      h(PageHead, { title: '预测计划', subtitle: '以预测批次为主对象，串联评估、参数、关系、拆解、规则预测、销售填报与复盘。' }),
-      h(Alert, { className: 'fp-status-note', type: 'info', showIcon: true, message: '历史批次是不可变预测快照；新批次继承上一批次作为评估起点，不直接覆盖历史关系或预测结果。' }),
       h(PlanListPanel, {
-        title: '预测批次列表',
-        meta: h('span', { className: 'fp-muted' }, `共 ${batches.length} 个批次`),
         search: h(Input.Search, { allowClear: true, placeholder: '批次名称 / 版本', onSearch: setQuery, style: { width: 260 } }),
         toolbar: h(Button, { type: 'primary', icon: h(icon.PlusOutlined), onClick: create }, '创建下一批次')
       }, h(PlanTable, { rowKey: 'id', dataSource: batches, columns, onRow: row => ({ className: 'fp-batch-row', onDoubleClick: () => onOpen(row.id) }) }))
@@ -400,10 +397,7 @@
       { title: '来源', width: 96, render: () => h(Tag, null, '规则预测') }
     ];
     return h(React.Fragment, null,
-      h(PageHead, { title: '预测结果', subtitle: '一个列表汇总全部预测批次，可按批次、父ASIN、子ASIN、站点店铺和平台筛选历史预测结果。' }),
       h(PlanListPanel, {
-        title: '预测结果列表',
-        meta: h(Tag, { color: 'blue' }, `${filteredRows.length}/${rows.length} 条 · ${batches.length} 个批次`),
         search: h(Form, { layout: 'inline', size: 'small', style: { rowGap: 8 } },
             h(Form.Item, { label: '预测批次' }, h(Select, { allowClear: true, showSearch: true, optionFilterProp: 'label', placeholder: '全部批次', value: filters.batchId, options: batchOptions, onChange: value => setFilter('batchId', value), style: { width: 210 } })),
             h(Form.Item, { label: '父ASIN' }, h(Select, { allowClear: true, showSearch: true, optionFilterProp: 'label', placeholder: '全部父ASIN', value: filters.parentASIN, options: parentOptions, onChange: value => setFilter('parentASIN', value), style: { width: 150 } })),
@@ -440,12 +434,12 @@
     const [view, setView] = useState(initialView);
     const [detailId, setDetailId] = useState(pendingRoute.detailId);
     const [detailStep, setDetailStep] = useState(pendingRoute.step || 'assessment');
-    const current = model.getCurrent();
     useEffect(() => { const fn = event => { const route = event.detail || {}; setView(route.view || 'plans'); setDetailId(route.detailId || null); setDetailStep(route.step || 'assessment'); }; window.addEventListener('forecast-plan-route', fn); return () => window.removeEventListener('forecast-plan-route', fn); }, []);
     const open = id => { setDetailId(id); setView('plans'); setDetailStep('assessment'); };
     if (view === 'system-detail' && detailId) return h('div', { className: 'forecast-plan-root' }, h(PlanDetail, { batchId: detailId, initialStep: detailStep, onBack: () => window.pmcWorkflow?.showPlanningBaseTab?.() }));
-    const body = detailId ? h(PlanDetail, { batchId: detailId, initialStep: detailStep, onBack: () => setDetailId(null) }) : view === 'plans' ? h(BatchList, { onOpen: open }) : view === 'results' ? h(ResultsView) : view === 'submission' ? h(SubmissionView, { batch: current }) : h(ReviewView);
-    return h('div', { className: 'forecast-plan-root' }, h(Tabs, { className: 'fp-nav', size: 'small', tabBarStyle: { margin: 0 }, activeKey: view, onChange: key => { setView(key); setDetailId(null); setDetailStep('assessment'); }, items: [{ key: 'plans', label: '预测计划' }, { key: 'results', label: '预测结果' }, { key: 'submission', label: '销售提报' }, { key: 'review', label: '预测复盘' }] }), body);
+    const activeView = view === 'results' ? 'results' : 'plans';
+    const body = detailId ? h(PlanDetail, { batchId: detailId, initialStep: detailStep, onBack: () => setDetailId(null) }) : activeView === 'results' ? h(ResultsView) : h(BatchList, { onOpen: open });
+    return h('div', { className: 'forecast-plan-root' }, h(Tabs, { className: 'fp-nav', size: 'small', tabBarStyle: { margin: 0 }, activeKey: activeView, onChange: key => { setView(key); setDetailId(null); setDetailStep('assessment'); }, items: [{ key: 'plans', label: '预测计划' }, { key: 'results', label: '预测结果' }] }), body);
   }
   function navigate(route) {
     const stepMap = { forecast: 'forecast', split: 'split', relations: 'relations', params: 'parameters' };
