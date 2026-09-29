@@ -22,19 +22,19 @@
     },
     {
       "file": "forecast-batch-model.js",
-      "sha256": "ff8d647d950b8afb038e5877d25f75e5e8aa346522f7f031078ca1ee72579f5b"
+      "sha256": "a353eb322d44bf760964753c62bd0ada98533b14a9edd936bce2b71db1099c2b"
     },
     {
       "file": "forecast-plan-workspace.js",
-      "sha256": "1896aee78733b0d4ba22836b13174c6c1974548e10bd39a9f761d5a7d192462b"
+      "sha256": "3d5355bbeb1c7d684349c967b8fd9ce4e6dc0568207be8ac350d6769565d13be"
     },
     {
       "file": "forecast-plan.css",
-      "sha256": "233c886cb3e448771fe669270284c8a97f66bc0799b64ac83972156183ad3b6b"
+      "sha256": "808be7b7cadb397bee872fd12265a39a52ab7105e6914ff62ba21a2f21472486"
     },
     {
       "file": "index.html",
-      "sha256": "8241714db52626218fc8210d8be8301717601e6c3e6e51642e622c2a850db85f"
+      "sha256": "e51ecb530ccffe9012c6de1fc8b2876be7bcb903645bb989c3463ec42883fa85"
     },
     {
       "file": "parent-asin.css",
@@ -58,7 +58,7 @@
     },
     {
       "file": "pmc-workflow.js",
-      "sha256": "3f3c2b9fa97296596fa5be9728c0cda4331b1ec0d0557e130f3f1010f6a6a824"
+      "sha256": "6492133f545cbc37df35d8bba750fc45029619ab384135eed5e4b99e016416c2"
     },
     {
       "file": "sales-freeze.css",
@@ -209,6 +209,6 @@
       "sha256": "35f4f974f4b2bcd44da73963347f8952e341f83909e4498227d4e26b98f66f0d"
     }
   ],
-  "version": "0.3.4-combo-split1",
+  "version": "0.3.5-batch-center1",
   "status": "active"
 }

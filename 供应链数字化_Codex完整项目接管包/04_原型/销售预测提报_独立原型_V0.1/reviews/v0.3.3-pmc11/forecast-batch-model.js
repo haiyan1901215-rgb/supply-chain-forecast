@@ -471,6 +471,7 @@
       dataCutoffDate: input.dataCutoffDate || shiftDate(batchDate, -1),
       forecastStartDate: start,
       forecastEndDate: end,
+      scope: input.scope || { country: '全部', platform: '全部' },
       previousBatchId: previous?.id || input.previousBatchId || null,
       status: input.status || '草稿',
       currentStep: input.currentStep || 'assessment',
@@ -609,15 +610,34 @@
       getSnapshot: batchId => api.getBatch(batchId),
       list: () => state.batches.slice().sort((a, b) => b.batchDate.localeCompare(a.batchDate)).map(clone),
       createNextBatch: input => {
-        const previous = getBatchRaw();
+        const previous = getBatchRaw(input?.inheritFromBatchId) || getBatchRaw();
         const nextDate = input?.batchDate || shiftDate(previous.batchDate, 7);
+        if (state.batches.some(batch => batch.batchDate === nextDate)) throw Error('该日期已有预测批次，请选择其他批次日期');
+        const inherit = input?.inherit || { parameters: true, relations: true, split: true, combo: true, season: true };
+        const suffix = nextDate.replaceAll('-', '');
+        const defaultRelations = rowsFromGroups(sourceGroups(services), nextDate, services).map(row => relationFromRow(row, nextDate));
+        const inScope = row => (!input?.country || input.country === '全部' || row.country === input.country) && (!input?.platform || input.platform === '全部' || row.platform === input.platform);
+        const relations = inherit.relations ? previous.relationSnapshot.filter(inScope).map(relation => {
+          const current = defaultRelations.find(row => row.childId === relation.childId);
+          return { ...clone(relation), childRef: current?.childRef, ...(inherit.combo ? {} : { businessObjectType: current?.businessObjectType, businessObjectCode: current?.businessObjectCode, businessObjectVersion: current?.businessObjectVersion, comboSnapshot: current?.comboSnapshot, comboVersionHistory: current?.comboVersionHistory }) };
+        }) : defaultRelations.filter(inScope);
+        if (!relations.length) throw Error('所选范围内没有可创建的子ASIN关系');
+        const parameters = inherit.parameters ? { ...clone(previous.parameterSnapshot), version: `PARAM-${suffix}-V01`, inheritedFrom: previous.parameterSnapshot.version } : defaultParams(`PARAM-${suffix}-V01`);
+        if (!inherit.season) { parameters.seasonIndex = 1; parameters.listingFactor = 1; }
         const next = createBatch({
-          id: `FB-${nextDate.replaceAll('-', '')}-01`, batchVersion: `V${nextDate.replaceAll('-', '')}-01`, name: input?.name || `${nextDate} 第1批预测`, batchDate: nextDate,
-          dataCutoffDate: shiftDate(nextDate, -1), status: '草稿', currentStep: 'assessment', previousBatchId: previous.id,
-          relationVersion: `REL-${nextDate.replaceAll('-', '')}-V01`, forecastRuleVersion: `FORECAST-${nextDate.replaceAll('-', '')}-V01`, splitRuleVersion: `SPLIT-${nextDate.replaceAll('-', '')}-V01`, parameterVersion: `PARAM-${nextDate.replaceAll('-', '')}-V01`,
-          relations: previous.relationSnapshot.map(relation => ({ ...relation, childRef: (sourceGroups(services).flatMap(group => group.children).find(child => child.id === relation.childId) || undefined) }))
+          id: `FB-${suffix}-01`, batchVersion: `V${suffix}-01`, name: input?.name || `${nextDate} 预测批次`, batchDate: nextDate,
+          dataCutoffDate: input?.dataCutoffDate || shiftDate(nextDate, -1), forecastStartDate: input?.forecastStartDate, forecastEndDate: input?.forecastEndDate,
+          status: '草稿', currentStep: 'assessment', previousBatchId: previous.id,
+          relationVersion: `REL-${suffix}-V01`, forecastRuleVersion: `FORECAST-${suffix}-V01`, splitRuleVersion: `SPLIT-${suffix}-V01`, parameterVersion: `PARAM-${suffix}-V01`,
+          parameterSnapshot: parameters,
+          forecastRuleSnapshot: inherit.parameters ? { ...clone(previous.forecastRuleSnapshot), version: `FORECAST-${suffix}-V01` } : undefined,
+          splitRuleSnapshot: inherit.split ? { ...clone(previous.splitRuleSnapshot), version: `SPLIT-${suffix}-V01` } : undefined,
+          splitRuleTemplates: inherit.split ? clone(previous.splitRuleTemplates) : undefined,
+          submissionWindow: input?.submissionWindow,
+          scope: { country: input?.country || '全部', platform: input?.platform || '全部' },
+          relations
         }, services, previous);
-        next.auditTimeline[0].reason = '继承上一批次快照，等待PMC重新评估与确认';
+        next.auditTimeline[0].reason = `基准 ${previous.name}；继承：${Object.entries(inherit).filter(([, enabled]) => enabled).map(([key]) => key).join('、') || '无'}；等待PMC重新评估与确认`;
         state.batches.push(next); state.currentBatchId = next.id; state.revision += 1; save(); return clone(next);
       },
       confirmAssessment: batchId => write(batchId, batch => { batch.status = '参数调整中'; batch.workflowState = '评估已完成'; batch.currentStep = 'parameters'; batch.auditTimeline.push({ at: new Date().toISOString(), action: '完成预测评估', actor: 'PMC计划员', reason: '确认上一批次偏差与本批次关系异常，进入参数确认' }); }),
@@ -705,7 +725,18 @@
       generateForecast: (batchId, reason = '生成本批次规则预测快照') => write(batchId, batch => { const validation = resultValidation(batch); if (!validation.passed) throw Error(`生成前校验未通过：${validation.items.find(item => !item.passed).label}`); recalculateSplit(batch); const prefix = `RESULT-${batch.batchDate.replaceAll('-', '')}-V`; const version = `${prefix}${String(batch.resultSnapshots.length + 1).padStart(2, '0')}`; const generatedAt = new Date().toISOString(); batch.resultSnapshots.push(makeResultSnapshot(batch, version, generatedAt)); batch.activeResultVersion = version; batch.resultState = '已生成'; batch.status = '规则预测已生成'; batch.workflowState = '规则预测已生成'; batch.currentStep = 'submission'; batch.auditTimeline.push({ at: generatedAt, action: '生成规则预测快照', actor: 'PMC计划员', reason: `${reason} · ${version}` }); }),
       recalculate: (batchId, reason = '规则参数已确认，重新生成父/子ASIN规则预测') => api.generateForecast(batchId, reason),
       publishWindow: (batchId, window, reason = '规则预测完成，发布销售填报窗口') => write(batchId, batch => { if (batch.resultState !== '已生成' || !batch.activeResultVersion) throw Error('请先完成规则预测生成'); const next = { ...batch.submissionWindow, ...window, status: '填报中' }; if (Date.parse(next.submissionStartTime) >= Date.parse(next.submissionDeadlineTime)) throw Error('填报开放时间必须早于截止时间'); if (Date.parse(next.submissionDeadlineTime) > Date.parse(next.submissionFreezeTime)) throw Error('填报截止时间不能晚于冻结时间'); batch.submissionWindow = next; batch.submissionState = '填报中'; batch.status = '销售填报中'; batch.workflowState = '填报进行中'; batch.currentStep = 'submission'; batch.auditTimeline.push({ at: new Date().toISOString(), action: '发布销售填报窗口', actor: 'PMC计划员', reason: `${reason} · ${batch.activeResultVersion}` }); }),
-      freeze: (batchId, reason = '到达本批次冻结时间') => write(batchId, batch => { batch.status = '已冻结'; batch.workflowState = '填报已冻结'; batch.submissionState = '已冻结'; batch.submissionWindow.status = '已冻结'; batch.currentStep = 'review'; batch.auditTimeline.push({ at: new Date().toISOString(), action: '冻结销售预测', actor: '系统', reason }); }),
+      freeze: (batchId, reason = '到达本批次冻结时间') => write(batchId, batch => { if (batch.submissionState !== '填报中') throw Error('请先发布销售填报窗口'); batch.status = '已冻结'; batch.workflowState = '填报已冻结'; batch.submissionState = '已冻结'; batch.submissionWindow.status = '已冻结'; batch.currentStep = 'review'; batch.auditTimeline.push({ at: new Date().toISOString(), action: '冻结销售预测', actor: '系统', reason }); }),
+      completeBatch: (batchId, confirmedCount) => {
+        const batch = getBatchRaw(batchId);
+        if (!batch || batch.status !== '已冻结') throw Error('请先冻结本批次销售填报');
+        if (confirmedCount !== batch.childForecastResults.length) throw Error('仍有子ASIN未完成PMC审核');
+        batch.status = '已完成';
+        batch.workflowState = '已完成';
+        batch.updatedAt = new Date().toISOString();
+        batch.auditTimeline.push({ at: batch.updatedAt, action: '最终确认预测批次', actor: 'PMC计划员', reason: `${confirmedCount} 个子ASIN已审核并冻结` });
+        state.revision += 1; save();
+        return clone(batch);
+      },
       subscribe: listener => { listeners.add(listener); return () => listeners.delete(listener); },
       contract: {
         getCurrent: () => api.getCurrent(),

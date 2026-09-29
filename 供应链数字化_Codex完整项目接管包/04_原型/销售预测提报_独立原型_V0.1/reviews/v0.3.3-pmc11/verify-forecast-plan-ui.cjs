@@ -7,7 +7,7 @@ const assert = (condition, message) => {
 };
 
 (async () => {
-  const url = process.argv[2] || 'http://127.0.0.1:8800/reviews/v0.3.3-pmc11/index.html?v=0.3.4-auto-flow1';
+  const url = process.argv[2] || 'http://127.0.0.1:8812/reviews/v0.3.3-pmc11/index.html?v=0.3.5-batch-center1';
   const installedChrome = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
   const browser = await chromium.launch({ headless: true, ...(fs.existsSync(installedChrome) ? { executablePath: installedChrome } : {}) });
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 });
@@ -21,8 +21,11 @@ const assert = (condition, message) => {
     const planningMenu = page.locator('.menu button').filter({ hasText: '计划配置' });
     await planningMenu.waitFor({ state: 'visible' });
     await planningMenu.click();
-    await page.getByText('预测计划', { exact: true }).first().waitFor();
-    await page.getByRole('button', { name: '2026/10/21 批次', exact: true }).click();
+    await page.getByText('预测批次列表', { exact: true }).waitFor();
+    assert(await page.getByRole('tab', { name: '预测计划' }).count() === 0 && await page.getByRole('tab', { name: '预测结果' }).count() === 0, 'plan and result tabs must be removed');
+    await page.getByRole('button', { name: '2026-10-21 第1批预测', exact: true }).click();
+    await page.getByRole('navigation', { name: '批次内容导航' }).getByRole('menuitem', { name: '概览' }).waitFor();
+    await page.getByRole('navigation', { name: '批次内容导航' }).getByRole('menuitem', { name: '预测评估' }).click();
     assert(await page.getByText('流程演示状态', { exact: true }).count() === 0, 'manual planning demo state control must be removed');
     const initial = await page.evaluate(() => window.ForecastBatchContract.getCurrent());
     assert(initial.status === '评估中' && initial.currentStep === 'assessment' && initial.resultSnapshots.length === 0, 'planning demo must start at assessment without generated results');
@@ -158,8 +161,21 @@ const assert = (condition, message) => {
     assert(Object.keys(resetState.workflow.records).length === 0 && resetState.window.key === 'waiting', 'refresh must reset sales workflow and submission window');
     await page.locator('#pmcRoleBar').getByText('待销售提报', { exact: true }).waitFor();
     await page.locator('.menu button').filter({ hasText: '计划配置' }).click();
-    await page.getByRole('button', { name: '2026/10/21 批次', exact: true }).click();
+    await page.getByRole('button', { name: '2026-10-21 第1批预测', exact: true }).click();
+    await page.getByRole('navigation', { name: '批次内容导航' }).getByRole('menuitem', { name: '预测评估' }).click();
     await page.locator('.ant-steps-item-process').getByText('预测评估', { exact: true }).waitFor();
+
+    await page.getByRole('button', { name: '返回预测批次列表' }).click();
+    await page.getByRole('button', { name: '发起预测填报' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: '下一步' }).click();
+    const createDrawer = page.getByRole('dialog');
+    await createDrawer.getByText('选择继承内容').waitFor();
+    await createDrawer.getByRole('checkbox', { name: '子体拆解规则' }).uncheck();
+    await createDrawer.getByRole('button', { name: '创建批次' }).click();
+    const newBatch = await page.evaluate(() => window.ForecastBatchContract.getCurrent());
+    assert(newBatch.batchDate === '2026-10-28' && newBatch.status === '草稿', 'create wizard must create a draft batch');
+    assert(newBatch.parameterSnapshot.inheritedFrom === 'PARAM-20261021-V01', 'selected parameter inheritance must be stored');
+    assert(newBatch.splitRuleSnapshot.name === '标准子ASIN份额拆解' && newBatch.auditTimeline[0].reason.includes('parameters') && !newBatch.auditTimeline[0].reason.includes('split'), 'unchecked split inheritance must use defaults');
 
     assert(errors.length === 0, errors.join('\n'));
     console.log('forecast plan browser verification passed');

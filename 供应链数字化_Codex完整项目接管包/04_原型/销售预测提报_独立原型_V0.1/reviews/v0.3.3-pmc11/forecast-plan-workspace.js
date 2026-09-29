@@ -2,7 +2,7 @@
 (() => {
   const h = React.createElement;
   const { useEffect, useMemo, useRef, useState } = React;
-  const { Alert, App, Button, Checkbox, Descriptions, Divider, Drawer, Empty, Form, Input, InputNumber, Pagination, Popover, Progress, Segmented, Select, Space, Steps, Table, Tabs, Tag, Tooltip, Upload } = antd;
+  const { Alert, App, Button, Checkbox, Descriptions, Divider, Drawer, Empty, Form, Input, InputNumber, Menu, Pagination, Popover, Progress, Segmented, Select, Space, Steps, Table, Tabs, Tag, Tooltip, Upload } = antd;
   const icon = window.icons || {};
   const model = window.ForecastBatchModel.createStore({}, null);
   const contract = model.contract;
@@ -20,7 +20,7 @@
   const parentForecastKey = row => [row.country, row.store, row.parentASIN].join('|');
   const contractChild = (index, row) => index?.children?.[childForecastKey(row)] || null;
   const contractParent = (index, row) => index?.parents?.[parentForecastKey(row)] || null;
-  const statusColor = { 草稿: 'default', 评估中: 'processing', 参数调整中: 'processing', 参数已确认: 'success', 关系确认中: 'warning', 关系已确认: 'success', 拆解规则确认中: 'warning', 拆解已确认: 'success', 预测计算中: 'processing', 规则预测已生成: 'success', 待发布: 'default', 销售填报中: 'processing', 待复盘: 'warning', 已冻结: 'default', 已完成: 'success' };
+  const statusColor = { 草稿: 'default', 评估中: 'processing', 参数调整中: 'processing', 参数已确认: 'success', 关系确认中: 'warning', 关系已确认: 'success', 拆解规则确认中: 'warning', 拆解已确认: 'success', 预测计算中: 'processing', 规则预测已生成: 'success', 待发布: 'default', 销售填报中: 'processing', PMC审核中: 'warning', 待复盘: 'warning', 已冻结: 'default', 已完成: 'success' };
   const steps = [
     { key: 'assessment', title: '预测评估', description: '上一批次表现' },
     { key: 'parameters', title: '预测参数', description: '本批次执行值' },
@@ -118,33 +118,82 @@
       )
     );
   }
+  const addDays = (value, days) => { const date = new Date(`${value}T12:00:00Z`); date.setUTCDate(date.getUTCDate() + days); return date.toISOString().slice(0, 10); };
+  const salesCounts = batch => {
+    const records = batch.id === model.getCurrent()?.id ? Object.values(window.pmcWorkflow?.getState?.().records || {}) : [];
+    return { submitted: records.length, pending: records.filter(row => row.status === 'pending').length, confirmed: records.filter(row => row.status === 'confirmed').length };
+  };
+  const batchProgress = batch => batch.status === '已完成' ? 100 : batch.submissionState === '已冻结' ? 90 : batch.submissionState === '填报中' ? 70 + Math.round(salesCounts(batch).submitted / Math.max(1, batch.childForecastResults.length) * 15) : batch.resultState === '已生成' ? 65 : batch.splitConfirmed ? 55 : batch.relationConfirmed ? 40 : ['参数已确认', '关系确认中'].includes(batch.status) ? 30 : batch.currentStep === 'parameters' ? 20 : 10;
+  const batchTodo = batch => {
+    const counts = salesCounts(batch);
+    if (batch.status === '已完成') return '查看最终预测';
+    if (batch.submissionState === '已冻结') return counts.confirmed === batch.childForecastResults.length ? '最终确认批次' : `${batch.childForecastResults.length - counts.confirmed} 条待PMC审核`;
+    if (batch.submissionState === '填报中') return counts.pending ? `${counts.pending} 条待PMC审核` : `${Math.max(0, batch.childForecastResults.length - counts.submitted)} 个子ASIN待填报`;
+    return batch.resultState === '需重新生成' ? '重新生成规则预测' : batch.resultState === '已生成' ? '发起销售填报' : batch.splitConfirmed ? '生成规则预测' : batch.relationConfirmed ? '确认子体与组合拆解' : batch.currentStep === 'relations' ? '确认父子关系' : batch.currentStep === 'parameters' ? '确认预测参数' : '评估上一批次';
+  };
   function BatchList({ onOpen }) {
     const { message } = App.useApp();
     const [query, setQuery] = useState('');
-    const batches = model.list().filter(batch => !query || [batchText(batch), batch.id, batch.batchVersion].some(value => String(value).includes(query.trim())));
-    const create = () => { try { const next = model.createNextBatch(); onOpen(next.id); message.success(`已创建 ${next.batchVersion} 草稿`); } catch (error) { message.error(error.message); } };
+    const [drawerOpen, setDrawerOpen] = useState(false);
+    const [wizardStep, setWizardStep] = useState(0);
+    const [draft, setDraft] = useState(null);
+    const batches = model.list().filter(batch => !query || [batch.name, batchText(batch), batch.id, batch.batchVersion].some(value => String(value).includes(query.trim())));
+    const openCreate = () => {
+      const current = model.getCurrent();
+      const batchDate = addDays(current.batchDate, 7);
+      setDraft({ name: `${batchDate} 预测批次`, batchDate, country: 'US', platform: 'Amazon', dataCutoffDate: addDays(batchDate, -1), forecastStartDate: batchDate, forecastEndDate: addDays(batchDate, 181), start: `${batchDate}T09:00`, deadline: `${addDays(batchDate, 4)}T18:00`, freeze: `${addDays(batchDate, 5)}T00:00`, inheritFromBatchId: current.id, inherit: { parameters: true, relations: true, split: true, combo: true, season: true } });
+      setWizardStep(0); setDrawerOpen(true);
+    };
+    const update = (key, value) => setDraft(current => ({ ...current, [key]: value }));
+    const validateDraft = () => {
+      if (!draft.name?.trim() || !draft.batchDate || !draft.dataCutoffDate || !draft.forecastStartDate || !draft.forecastEndDate || !draft.start || !draft.deadline || !draft.freeze) return '请填写完整的批次与时间信息';
+      if (draft.forecastStartDate > draft.forecastEndDate) return '预测开始日期不能晚于结束日期';
+      if (draft.dataCutoffDate >= draft.forecastStartDate) return '数据截点必须早于预测开始日期';
+      if (draft.start >= draft.deadline || draft.deadline > draft.freeze) return '填报开放、截止和冻结时间顺序不正确';
+      if (model.list().some(batch => batch.batchDate === draft.batchDate)) return '该日期已有预测批次';
+      return null;
+    };
+    const create = () => { const error = validateDraft(); if (error) return message.error(error); try {
+      const time = value => `${value}:00+08:00`;
+      const next = model.createNextBatch({ ...draft, name: draft.name.trim(), submissionWindow: { submissionStartTime: time(draft.start), submissionDeadlineTime: time(draft.deadline), submissionFreezeTime: time(draft.freeze), status: '待发布' } });
+      setDrawerOpen(false); onOpen(next.id); message.success(`已创建 ${next.name} 草稿`);
+    } catch (failure) { message.error(failure.message); } };
+    const base = model.getBatch(draft?.inheritFromBatchId);
+    const fields = [['name', '预测批次名称', 'text'], ['batchDate', '批次日期', 'date'], ['dataCutoffDate', '数据截点', 'date'], ['forecastStartDate', '预测开始日期', 'date'], ['forecastEndDate', '预测结束日期', 'date'], ['start', '填报开放时间', 'datetime-local'], ['deadline', '填报截止时间', 'datetime-local'], ['freeze', '填报冻结时间', 'datetime-local']];
+    const inheritItems = [['parameters', '预测参数', base?.parameterSnapshot?.version], ['relations', '父子ASIN关系', base?.relationVersion], ['split', '子体拆解规则', base?.splitRuleSnapshot?.version], ['combo', '销售组合映射', `${base?.childForecastResults?.filter(row => row.businessObjectType === 'COMBO').length || 0} 个组合`], ['season', '季节参数', `季节指数 ${base?.parameterSnapshot?.seasonIndex ?? 1}`]];
     const columns = [
-      { title: '预测批次', dataIndex: 'name', width: 196, render: (_, row) => h(Button, { type: 'link', className: 'fp-link', onClick: () => onOpen(row.id) }, batchText(row)) },
+      { title: '预测批次', dataIndex: 'name', width: 205, fixed: 'left', render: (_, row) => h(Button, { type: 'link', className: 'fp-link', onClick: () => onOpen(row.id) }, row.name) },
+      { title: '预测月份', width: 90, render: (_, row) => row.forecastStartDate.slice(0, 7) },
       { title: '数据截点', dataIndex: 'dataCutoffDate', width: 112, render: dayText },
       { title: '预测周期', width: 190, render: (_, row) => `${dayText(row.forecastStartDate)} ~ ${dayText(row.forecastEndDate)}` },
-      { title: '父ASIN', width: 78, align: 'right', render: (_, row) => new Set(row.relationSnapshot.map(item => `${item.country}|${item.store}|${item.parentASIN}`)).size },
-      { title: '子ASIN', width: 78, align: 'right', render: (_, row) => row.childForecastResults.length },
-      { title: '规则版本', width: 162, render: (_, row) => h('div', null, row.forecastRuleSnapshot.version, h('div', { className: 'fp-muted' }, `${row.splitRuleSnapshot.version} · ${row.parameterSnapshot.version}`)) },
-      { title: '父子关系版本', dataIndex: 'relationVersion', width: 150 },
-      { title: '销售填报窗口', width: 184, render: (_, row) => `${dateText(row.submissionWindow.submissionStartTime)} ~ ${dateText(row.submissionWindow.submissionFreezeTime)}` },
-      { title: '状态', dataIndex: 'status', width: 112, render: statusTag }
+      { title: '填报周期', width: 210, render: (_, row) => `${dateText(row.submissionWindow.submissionStartTime)} ~ ${dateText(row.submissionWindow.submissionDeadlineTime)}` },
+      { title: '当前状态', dataIndex: 'status', width: 118, render: (_, row) => statusTag(row.submissionState === '填报中' && salesCounts(row).pending ? 'PMC审核中' : row.status) },
+      { title: '当前进度', width: 120, render: (_, row) => h(Progress, { percent: batchProgress(row), size: 'small' }) },
+      { title: '当前待处理事项', width: 168, render: (_, row) => batchTodo(row) },
+      { title: '创建人', dataIndex: 'createdBy', width: 100 },
+      { title: '创建时间', dataIndex: 'createdAt', width: 148, render: dateText }
     ];
     return h(React.Fragment, null,
+      h(PageHead, { title: '预测批次列表' }),
       h(PlanListPanel, {
-        search: h(Input.Search, { allowClear: true, placeholder: '批次名称 / 版本', onSearch: setQuery, style: { width: 260 } }),
-        toolbar: h(Button, { type: 'primary', icon: h(icon.PlusOutlined), onClick: create }, '创建下一批次')
-      }, h(PlanTable, { rowKey: 'id', dataSource: batches, columns, scroll: { y: 'max(120px, calc(100vh - 300px))' }, onRow: row => ({ className: 'fp-batch-row', onDoubleClick: () => onOpen(row.id) }) }))
+        search: h(Input.Search, { allowClear: true, placeholder: '批次名称 / 日期 / 版本', onSearch: setQuery, style: { width: 280 } }),
+        toolbar: h(Button, { type: 'primary', icon: h(icon.PlusOutlined), onClick: openCreate }, '发起预测填报')
+      }, h(PlanTable, { rowKey: 'id', dataSource: batches, columns, scroll: { y: 'max(120px, calc(100vh - 340px))' }, onRow: row => ({ className: 'fp-batch-row', onDoubleClick: () => onOpen(row.id) }) })),
+      h(Drawer, { open: drawerOpen, width: 576, title: '发起预测填报 · 创建批次', onClose: () => setDrawerOpen(false), footer: h('div', { className: 'fp-drawer-footer' }, h(Button, { onClick: () => wizardStep ? setWizardStep(0) : setDrawerOpen(false) }, wizardStep ? '上一步' : '取消'), h(Button, { type: 'primary', onClick: () => { if (wizardStep) create(); else { const error = validateDraft(); if (error) message.error(error); else setWizardStep(1); } } }, wizardStep ? '创建批次' : '下一步')) },
+        h(Steps, { size: 'small', current: wizardStep, items: [{ title: '批次信息' }, { title: '参数继承' }], style: { marginBottom: 20 } }),
+        draft && (wizardStep === 0 ? h(React.Fragment, null,
+          h('div', { className: 'fp-form-grid fp-create-grid' }, fields.map(([key, label, type]) => h('label', { key }, h('span', { className: 'fp-kicker' }, label), h(Input, { type, value: draft[key], onChange: event => update(key, event.target.value) })))),
+          h('div', { className: 'fp-form-grid fp-create-grid' }, [['country', '国家', ['US', 'UK']], ['platform', '平台', ['Amazon']]].map(([key, label, options]) => h('label', { key }, h('span', { className: 'fp-kicker' }, label), h(Select, { value: draft[key], options: options.map(value => ({ value, label: value })), onChange: value => update(key, value), style: { width: '100%' } }))))) : h(React.Fragment, null,
+          h('div', { className: 'fp-kicker' }, '继承基准批次'), h(Select, { value: draft.inheritFromBatchId, options: model.list().map(row => ({ value: row.id, label: `${row.name} · ${row.status}` })), onChange: value => update('inheritFromBatchId', value), style: { width: '100%', marginBottom: 16 } }),
+          h('div', { className: 'fp-panel' }, h('div', { className: 'fp-panel-head' }, h('h2', null, '选择继承内容')), h('div', { className: 'fp-panel-body' }, inheritItems.map(([key, label, version]) => h('div', { className: 'fp-inherit-row', key }, h(Checkbox, { checked: draft.inherit[key], onChange: event => update('inherit', { ...draft.inherit, [key]: event.target.checked }) }, label), h('span', { className: 'fp-muted' }, version || '默认规则'))))),
+          h(Alert, { type: 'info', showIcon: true, style: { marginTop: 12 }, message: '新批次形成独立快照；未勾选的内容使用当前默认规则或主数据，历史批次不变。' })
+        )))
     );
   }
-  function PlanHeader({ batch, onBack }) {
+  function PlanHeader({ batch, onBack, onAction }) {
     const status = batch.status;
     return h(React.Fragment, null,
-      h(PageHead, { title: h('div', { className: 'fp-detail-title' }, h(Button, { type: 'text', icon: h(icon.ArrowLeftOutlined), onClick: onBack, 'aria-label': '返回预测计划列表' }), h('strong', null, batchText(batch)), statusTag(status)), subtitle: `${batch.batchVersion} · 数据截点 ${dayText(batch.dataCutoffDate)} · 预测周期 ${dayText(batch.forecastStartDate)} ~ ${dayText(batch.forecastEndDate)}` }),
+      h(PageHead, { title: h('div', { className: 'fp-detail-title' }, h(Button, { type: 'text', icon: h(icon.ArrowLeftOutlined), onClick: onBack, 'aria-label': '返回预测批次列表' }), h('strong', null, batch.name), statusTag(status)), subtitle: `${batch.scope?.platform || 'Amazon'} / ${batch.scope?.country || '全部'} · 数据截点 ${dayText(batch.dataCutoffDate)} · 预测周期 ${dayText(batch.forecastStartDate)} ~ ${dayText(batch.forecastEndDate)} · 销售填报 ${dateText(batch.submissionWindow.submissionStartTime)} ~ ${dateText(batch.submissionWindow.submissionDeadlineTime)}`, actions: h(Button, { type: 'primary', onClick: onAction }, batch.status === '已完成' ? '查看最终预测' : batch.submissionState === '已冻结' ? '完成PMC审核' : batch.submissionState === '填报中' ? '查看填报进度' : batch.resultState === '已生成' ? '发起销售填报' : '继续配置') }),
       h(MetricStrip, { items: [
         { label: '父ASIN预测池', value: `${new Set(batch.relationSnapshot.map(item => `${item.country}|${item.store}|${item.parentASIN}`)).size} 个` },
         { label: '子ASIN清单', value: `${batch.childForecastResults.length} 个` },
@@ -348,9 +397,9 @@
     const nodes = [['父ASIN预测总量', '本批次父体预测池'], ['系统计算子体份额', `${rule.historyWindow}天历史 + ${rule.recentWindow}天近期`], ['PMC人工调配', rule.manualAllowed ? '允许调整并记录原因' : '不允许'], ['最终份额', '同一父ASIN归一化至100%'], ['子ASIN预测量', '父体预测 × 最终份额']];
     return h('div', { className: 'fp-chain' }, nodes.map(([title, value]) => h('div', { className: 'fp-chain-node', key: title }, h('span', null, title), h('strong', null, value))));
   }
-  function SplitStep({ batch }) {
+  function SplitStep({ batch, mode = 'share' }) {
     const { message } = App.useApp();
-    const parentOptions = [...new Set(batch.childForecastResults.map(row => relationKey(row)))];
+    const parentOptions = [...new Set(batch.childForecastResults.filter(row => mode !== 'combo' || row.businessObjectType === 'COMBO').map(row => relationKey(row)))];
     const [selectedParent, setSelectedParent] = useState(parentOptions[0]);
     const siblings = batch.childForecastResults.filter(row => relationKey(row) === selectedParent);
     const [shares, setShares] = useState({});
@@ -500,6 +549,19 @@
     ] });
     const ruleColumns = [{ title: '规则名称', dataIndex: 'name', width: 170 }, { title: '适用条件', dataIndex: 'conditionText', width: 260 }, { title: '历史观察周期', dataIndex: 'historyWindow', width: 110, render: value => `${value}天` }, { title: '近期观察周期', dataIndex: 'recentWindow', width: 110, render: value => `${value}天` }, { title: '历史权重', dataIndex: 'historyWeight', width: 92, render: value => `${value}%` }, { title: '近期权重', dataIndex: 'recentWeight', width: 92, render: value => `${value}%` }, { title: '状态', dataIndex: 'status', width: 78, render: value => h(Tag, { color: value === '启用' ? 'success' : 'default' }, value) }, { title: '适用范围', dataIndex: 'scope', width: 160 }, { title: '操作', width: 76, fixed: 'right', render: (_, row) => h(Button, { type: 'link', onClick: () => { setEditingRule(row); setRuleOpen(true); } }, '配置') }];
     const confirmSplit = () => { try { model.confirmSplit(batch.id); message.success('本批次子体拆解已确认'); } catch (error) { message.error(error.message); } };
+    if (mode === 'combo') return h(React.Fragment, null,
+      h(Alert, { type: batch.relationConfirmed ? 'info' : 'warning', showIcon: true, message: batch.relationConfirmed ? '销售组合按本批次引用的组合版本和明细数量比例计算SKU建议量，PMC调整需记录原因。' : '请先确认本批次父子关系。' }),
+      h(PlanListPanel, { title: '销售组合拆解', search: h(Select, { value: selectedParent, options: parentOptions.map(value => ({ value, label: `${value.split('|')[0]} · ${value.split('|')[2]}` })), onChange: setSelectedParent, style: { width: 270 }, 'aria-label': '选择销售组合所属父ASIN' }) },
+        h(PlanTable, { rowKey: 'childASIN', dataSource: comboSiblings, columns: [
+          { title: '父ASIN', dataIndex: 'parentASIN', width: 150 }, { title: '子ASIN', dataIndex: 'childASIN', width: 150 },
+          { title: '销售组合', dataIndex: 'businessObjectCode', width: 130 }, { title: '引用版本', dataIndex: 'businessObjectVersion', width: 100 },
+          { title: '子体预测', width: 110, render: (_, row) => number(previewTotal(row)) },
+          { title: 'SKU数量', width: 90, render: (_, row) => row.comboLines?.length || 0 },
+          { title: '人工调整', width: 110, render: (_, row) => (row.comboLines || []).some(line => line.pmcAdjustment) ? h(Tag, { color: 'gold' }, '有调整') : h(Tag, null, '无') },
+          { title: '拆解状态', width: 105, render: (_, row) => h(Tag, { color: comboBalanced(row) ? 'success' : 'error' }, comboBalanced(row) ? '已平衡' : '未平衡') }
+        ], expandable: { expandedRowKeys: expandedCombos, onExpandedRowsChange: setExpandedCombos, expandedRowRender: comboDetail }, locale: { emptyText: '该批次没有销售组合' } })
+      )
+    );
     return h(React.Fragment, null,
       h(Alert, { type: batch.relationConfirmed ? 'info' : 'warning', showIcon: true, message: batch.relationConfirmed ? '系统按84天/14天数据计算建议份额，不自动覆盖PMC人工判断。' : '请先确认本批次父子关系，再进行子体拆解。', description: '关系回答“谁属于谁”，拆解回答“父ASIN预测总量如何分给当前子ASIN”；关系版本与拆解规则版本独立保存。' }),
       h(RuleChain, { rule: batch.splitRuleSnapshot }),
@@ -613,10 +675,16 @@
     const freeze = () => modal.confirm({ title: '冻结本批次销售预测？', content: '冻结后本批次关系、规则、参数和销售提报快照均只读，后续调整需要创建下一批次。', okText: '确认冻结', cancelText: '取消', onOk: () => { try { model.freeze(batch.id); message.success('本批次已冻结'); } catch (error) { message.error(error.message); } } });
     const disabled = batch.status === '已冻结' || batch.status === '已完成';
     const canPublish = batch.resultState === '已生成' && Boolean(batch.activeResultVersion);
+    const salesRecords = batch.id === model.getCurrent()?.id ? Object.values(window.pmcWorkflow?.getState?.().records || {}) : [];
+    const submitted = salesRecords.length;
+    const confirmedCount = salesRecords.filter(row => row.status === 'confirmed').length;
+    const pendingCount = salesRecords.filter(row => row.status === 'pending').length;
+    const progress = batch.submissionState === '已冻结' ? 100 : Math.round(submitted / Math.max(1, batch.childForecastResults.length) * 100);
+    const complete = () => modal.confirm({ title: '最终确认本批次预测？', content: '全部子ASIN已经PMC审核且填报已冻结。确认后本批次进入已完成状态。', okText: '最终确认', cancelText: '取消', onOk: () => { try { model.completeBatch(batch.id, confirmedCount); message.success('本批次预测已完成'); } catch (error) { message.error(error.message); } } });
     return h(React.Fragment, null,
       h(Alert, { type: canPublish ? 'success' : 'warning', showIcon: true, message: canPublish ? `规则预测 ${batch.activeResultVersion} 已生成，可发布销售填报窗口。` : '请先完成规则预测生成。', description: '发布后销售页面只消费已生成的子ASIN规则预测清单，不参与父子关系或拆解计算。' }),
-      h(MetricStrip, { items: [{ label: '规则预测', value: canPublish ? '已生成' : '待生成', tone: canPublish ? 'success' : 'warning' }, { label: '预测结果', value: `${batch.childForecastResults.length} 个子ASIN` }, { label: '销售填报', value: batch.submissionState }, { label: '结果版本', value: batch.activeResultVersion || '—' }] }),
-      h('div', { className: 'fp-panel' }, h('div', { className: 'fp-panel-head' }, h('h2', null, '销售填报窗口'), statusTag(batch.submissionState)), h('div', { className: 'fp-panel-body' }, h('div', { className: 'fp-window-grid' }, [['start', '填报开放时间'], ['deadline', '填报截止时间'], ['freeze', '填报冻结时间']].map(([key, label]) => h('div', { key, className: 'fp-readonly' }, h('div', { className: 'fp-kicker' }, label), h(Input, { type: 'datetime-local', value: values[key], onChange: event => setValues({ ...values, [key]: event.target.value }), disabled })))), h(Divider, { style: { margin: '12px 0' } }), h('div', { className: 'fp-help' }, '截止与冻结时间按当前三个独立字段保存；若业务确认截止后立即冻结，再将两者配置为同一时间。'), h('div', { className: 'fp-sticky-actions' }, h(Button, { onClick: () => window.pmcWorkflow?.selectView('sales'), disabled: !canPublish }, '进入销售提报'), h(Tooltip, { title: canPublish ? '' : '请先完成规则预测生成' }, h('span', null, h(Button, { type: 'primary', onClick: save, disabled: disabled || !canPublish }, '发布销售填报窗口'))), h(Button, { danger: true, onClick: freeze, disabled }, '冻结本批次'))))
+      h(MetricStrip, { items: [{ label: '规则预测', value: canPublish ? '已生成' : '待生成', tone: canPublish ? 'success' : 'warning' }, { label: '预测结果', value: `${batch.childForecastResults.length} 个子ASIN` }, { label: '销售填报', value: batch.submissionState }, { label: '填报进度', value: `${progress}%` }, { label: '结果版本', value: batch.activeResultVersion || '—' }] }),
+      h('div', { className: 'fp-panel' }, h('div', { className: 'fp-panel-head' }, h('h2', null, '销售填报窗口'), statusTag(batch.submissionState)), h('div', { className: 'fp-panel-body' }, h('div', { className: 'fp-window-grid' }, [['start', '填报开放时间'], ['deadline', '填报截止时间'], ['freeze', '填报冻结时间']].map(([key, label]) => h('div', { key, className: 'fp-readonly' }, h('div', { className: 'fp-kicker' }, label), h(Input, { type: 'datetime-local', value: values[key], onChange: event => setValues({ ...values, [key]: event.target.value }), disabled })))), h(Divider, { style: { margin: '12px 0' } }), h('div', { className: 'fp-help' }, '截止与冻结时间按当前三个独立字段保存；若业务确认截止后立即冻结，再将两者配置为同一时间。'), h('div', { className: 'fp-sticky-actions' }, h(Button, { onClick: () => window.pmcWorkflow?.selectView('sales'), disabled: batch.submissionState === '待发布' }, '进入销售提报'), h(Button, { onClick: () => window.pmcWorkflow?.selectView('review'), disabled: !pendingCount }, `进入PMC审核${pendingCount ? `（${pendingCount}）` : ''}`), h(Tooltip, { title: canPublish ? '' : '请先完成规则预测生成' }, h('span', null, h(Button, { type: 'primary', onClick: save, disabled: disabled || !canPublish }, '发布销售填报窗口'))), h(Button, { danger: true, onClick: freeze, disabled: disabled || batch.submissionState !== '填报中' }, '冻结本批次'), h(Button, { type: 'primary', onClick: complete, disabled: batch.status !== '已冻结' || confirmedCount !== batch.childForecastResults.length }, '最终确认'))))
     );
   }
   function ReviewStep({ batch }) {
@@ -761,16 +829,70 @@
     const columns = [{ title: '调整批次', dataIndex: 'name', width: 190, render: (_, row) => batchText(row) }, { title: '评估来源', render: (_, row) => row.assessment.previousBatchVersion || '待下一批次回流' }, { title: '对比期', render: (_, row) => row.assessment.comparable ? `${dayText(row.assessment.comparisonStartDate)} ~ ${dayText(row.assessment.comparisonEndDate)}` : '—' }, { title: '规则预测', render: (_, row) => row.assessment.comparable ? number(row.assessment.ruleForecastTotal) : '—', align: 'right' }, { title: '实际销量', render: (_, row) => row.assessment.comparable ? number(row.assessment.actualSalesTotal) : '—', align: 'right' }, { title: '整体偏差', render: (_, row) => row.assessment.comparable ? h(Tag, { color: Math.abs(row.assessment.varianceRate) > 15 ? 'warning' : 'default' }, signedPercent(row.assessment.varianceRate)) : h(Tag, null, '待回流'), align: 'right' }, { title: '下一批次依据', render: (_, row) => row.assessment.trend }];
     return h(React.Fragment, null, h(PageHead, { title: '预测复盘', subtitle: '从规则预测、销售提报与实际销量的偏差中形成下一批次调整依据。' }), h(PlanListPanel, { title: '批次复盘总览' }, h(PlanTable, { rowKey: 'id', dataSource: batches, columns })), h(Alert, { style: { marginTop: 12 }, type: 'info', showIcon: true, message: '复盘建议需要PMC确认后才会进入下一批次；系统不会自动修改预测参数。' }));
   }
+  const batchSections = [
+    ['overview', '概览'], ['assessment', '预测评估'], ['parameters', '预测参数'], ['relations', '父子关系'],
+    ['split', '子体拆解'], ['combo', '销售组合拆解'], ['forecast', '预测结果'], ['submission', '销售填报'], ['audit', '变更记录']
+  ];
+  function BatchOverview({ batch, onNavigate }) {
+    const workflow = window.pmcWorkflow?.getState?.();
+    const records = batch.id === model.getCurrent()?.id ? Object.values(workflow?.records || {}) : [];
+    const submitted = records.filter(row => row.status !== 'draft').length;
+    const confirmed = records.filter(row => row.status === 'confirmed').length;
+    const comboRows = batch.childForecastResults.filter(row => row.businessObjectType === 'COMBO');
+    const progressItems = [
+      ['创建批次', true, 'overview'], ['参数继承 / 调整', !['草稿', '评估中'].includes(batch.status), 'parameters'],
+      ['父子关系确认', batch.relationConfirmed, 'relations'], ['子体拆解', batch.splitConfirmed, 'split'],
+      ['销售组合拆解', comboRows.every(row => (row.comboLines || []).reduce((total, line) => total + line.finalForecast, 0) === Object.values(row.dailyFinalForecast || {}).reduce((total, value) => total + value, 0)), 'combo'],
+      ['规则预测生成', batch.resultState === '已生成', 'forecast'], ['销售填报', batch.submissionState === '填报中' || batch.submissionState === '已冻结', 'submission'],
+      ['填报冻结', batch.submissionState === '已冻结', 'submission']
+    ];
+    return h(React.Fragment, null,
+      h(MetricStrip, { items: [
+        { label: '父ASIN', value: `${batch.parentForecastResults.length} 个` }, { label: '子ASIN', value: `${batch.childForecastResults.length} 个` },
+        { label: '销售组合', value: `${comboRows.length} 个` }, { label: '组合明细SKU', value: `${comboRows.reduce((total, row) => total + (row.comboLines?.length || 0), 0)} 个` },
+        { label: '规则预测', value: batch.resultState }, { label: '销售已填报', value: `${submitted}/${batch.childForecastResults.length}` },
+        { label: 'PMC已确认', value: `${confirmed} 条` }, { label: '当前待处理', value: batchTodo(batch) }
+      ] }),
+      h('div', { className: 'fp-panel' }, h('div', { className: 'fp-panel-head' }, h('h2', null, '批次进度'), statusTag(batch.status)), h('div', { className: 'fp-panel-body fp-overview-flow' }, progressItems.map(([label, done, key], index) => h('a', { key: label, href: `#batch-${key}`, className: 'fp-flow-item', onClick: event => { event.preventDefault(); onNavigate(key); } }, h('span', { className: done ? 'fp-flow-done' : 'fp-flow-wait' }, done ? '✓' : String(index + 1)), h('span', null, label), h(icon.RightOutlined))))),
+      h('div', { className: 'fp-sticky-actions' }, h(Button, { type: 'primary', onClick: () => onNavigate(batch.currentStep || 'assessment') }, batchTodo(batch)))
+    );
+  }
+  function BatchResultComparison({ batch }) {
+    const active = batch.resultSnapshots.find(item => item.version === batch.activeResultVersion);
+    if (!active) return null;
+    const isCurrent = batch.id === model.getCurrent()?.id;
+    const records = isCurrent ? window.pmcWorkflow?.getState?.().records || {} : {};
+    const rows = active.rows.map(row => {
+      const record = records[`${batch.batchDate}|${row.childId}`];
+      const daily = Object.values(record?.sales || {});
+      const total = field => daily.reduce((sum, day) => sum + (Number(day?.[field]) || 0), 0);
+      return { ...row, record, manualTotal: total('manual'), activityTotal: daily.reduce((sum, day) => sum + (Number(day?.activity?.qty) || 0), 0), salesTotal: total('final') };
+    });
+    return h(PlanListPanel, { title: '规则预测与销售填报对比', meta: h('span', { className: 'fp-muted' }, active.version) }, h(PlanTable, { rowKey: 'childId', dataSource: rows, columns: [
+      { title: '父ASIN', dataIndex: 'parentASIN', width: 145 }, { title: '子ASIN', dataIndex: 'childASIN', width: 145 },
+      { title: '规则预测', dataIndex: 'total', width: 110, render: number },
+      { title: '人工预测', dataIndex: 'manualTotal', width: 110, render: (value, row) => row.record ? number(value) : isCurrent ? '待填报' : '—' },
+      { title: '活动预测', dataIndex: 'activityTotal', width: 110, render: (value, row) => row.record ? number(value) : isCurrent ? '待填报' : '—' },
+      { title: '销售最终预测', dataIndex: 'salesTotal', width: 120, render: (value, row) => row.record ? number(value) : isCurrent ? '待填报' : '—' },
+      { title: '状态', width: 110, render: (_, row) => row.record ? h(Tag, null, row.record.status === 'confirmed' ? 'PMC已确认' : row.record.status === 'pending' ? '待PMC审核' : '已退回') : h(Tag, null, isCurrent ? '待销售填报' : '历史规则快照') }
+    ] }));
+  }
+  function BatchAudit({ batch }) {
+    return h(PlanListPanel, { title: '批次变更记录' }, h(PlanTable, { rowKey: (_, index) => index, dataSource: batch.auditTimeline.slice().reverse(), columns: [
+      { title: '时间', dataIndex: 'at', width: 170, render: dateText }, { title: '操作', dataIndex: 'action', width: 190 },
+      { title: '操作人', dataIndex: 'actor', width: 130 }, { title: '原因 / 版本', dataIndex: 'reason', width: 440 }
+    ] }));
+  }
   function PlanDetail({ batchId, onBack, initialStep }) {
     const revision = useStoreRevision();
     const batch = model.getBatch(batchId);
-    const [step, setStep] = useState(initialStep || batch?.currentStep || 'assessment');
+    const [step, setStep] = useState(initialStep || 'overview');
     const workflowStepRef = useRef(batch?.currentStep);
-    useEffect(() => { workflowStepRef.current = batch?.currentStep; setStep(initialStep || batch?.currentStep || 'assessment'); }, [batchId, initialStep]);
-    useEffect(() => { if (workflowStepRef.current !== batch?.currentStep) { workflowStepRef.current = batch?.currentStep; setStep(batch?.currentStep || 'assessment'); } }, [batch?.currentStep]);
+    useEffect(() => { workflowStepRef.current = batch?.currentStep; setStep(initialStep || 'overview'); }, [batchId, initialStep]);
+    useEffect(() => { if (workflowStepRef.current !== batch?.currentStep) { workflowStepRef.current = batch?.currentStep; setStep(batch?.currentStep === 'review' ? 'forecast' : batch?.currentStep || 'assessment'); } }, [batch?.currentStep]);
     if (!batch) return h(Empty, { description: '预测批次不存在' });
-    const content = { assessment: h(AssessmentStep, { batch, onStep: setStep }), parameters: h(ParameterStep, { batch }), relations: h(RelationStep, { batch }), split: h(SplitStep, { batch }), forecast: h(ForecastStep, { batch, onStep: setStep }), submission: h(WindowStep, { batch }), review: h(ReviewStep, { batch }) }[step];
-    return h(React.Fragment, null, h(PlanHeader, { batch, onBack }), h(WorkflowSteps, { active: step, batch, onChange: setStep }), content);
+    const content = { overview: h(BatchOverview, { batch, onNavigate: setStep }), assessment: h(AssessmentStep, { batch, onStep: setStep }), parameters: h(ParameterStep, { batch }), relations: h(RelationStep, { batch }), split: h(SplitStep, { batch }), combo: h(SplitStep, { batch, mode: 'combo' }), forecast: h(React.Fragment, null, h(ForecastStep, { batch, onStep: setStep }), h(BatchResultComparison, { batch })), submission: h(WindowStep, { batch }), audit: h(BatchAudit, { batch }) }[step] || h(BatchOverview, { batch, onNavigate: setStep });
+    return h(React.Fragment, null, h(PlanHeader, { batch, onBack, onAction: () => setStep(batch.status === '已完成' ? 'forecast' : batch.submissionState === '已冻结' || batch.submissionState === '填报中' || batch.resultState === '已生成' ? 'submission' : batch.currentStep || 'assessment') }), h('div', { className: 'fp-batch-workspace' }, h('nav', { className: 'fp-batch-nav', 'aria-label': '批次内容导航' }, h(Menu, { mode: 'inline', selectedKeys: [step], onClick: event => setStep(event.key), items: batchSections.map(([key, label]) => ({ key, label })) })), h('main', { className: 'fp-batch-content' }, h(WorkflowSteps, { active: step === 'combo' ? 'split' : steps.some(item => item.key === step) ? step : batch.currentStep, batch, onChange: setStep }), content)));
   }
   function ForecastPlanWorkspace() {
     useStoreRevision();
@@ -779,11 +901,10 @@
     const [detailId, setDetailId] = useState(pendingRoute.detailId);
     const [detailStep, setDetailStep] = useState(pendingRoute.step || 'assessment');
     useEffect(() => { const fn = event => { const route = event.detail || {}; setView(route.view || 'plans'); setDetailId(route.detailId || null); setDetailStep(route.step || 'assessment'); }; window.addEventListener('forecast-plan-route', fn); return () => window.removeEventListener('forecast-plan-route', fn); }, []);
-    const open = id => { setDetailId(id); setView('plans'); setDetailStep(model.getBatch(id)?.currentStep || 'assessment'); };
+    const open = id => { setDetailId(id); setView('plans'); setDetailStep('overview'); };
     if (view === 'system-detail' && detailId) return h('div', { className: 'forecast-plan-root' }, h(PlanDetail, { batchId: detailId, initialStep: detailStep, onBack: () => window.pmcWorkflow?.showPlanningBaseTab?.() }));
-    const activeView = view === 'results' ? 'results' : 'plans';
-    const body = detailId ? h(PlanDetail, { batchId: detailId, initialStep: detailStep, onBack: () => setDetailId(null) }) : activeView === 'results' ? h(ResultsView) : h(BatchList, { onOpen: open });
-    return h('div', { className: `forecast-plan-root ${detailId ? '' : 'fp-list-page'}` }, h(Tabs, { className: 'fp-nav', size: 'small', tabBarStyle: { margin: 0 }, activeKey: activeView, onChange: key => { setView(key); setDetailId(null); setDetailStep('assessment'); }, items: [{ key: 'plans', label: '预测计划' }, { key: 'results', label: '预测结果' }] }), body);
+    const body = detailId ? h(PlanDetail, { batchId: detailId, initialStep: detailStep, onBack: () => setDetailId(null) }) : h(BatchList, { onOpen: open });
+    return h('div', { className: `forecast-plan-root ${detailId ? '' : 'fp-list-page'}` }, body);
   }
   function navigate(route) {
     const stepMap = { forecast: 'forecast', split: 'split', relations: 'relations', params: 'parameters' };
@@ -794,7 +915,7 @@
     ParentAsinWorkspace: ForecastPlanWorkspace,
     navigate,
     openResultsList() {
-      pendingRoute = { view: 'results', detailId: null, step: 'assessment' };
+      pendingRoute = { view: 'plans', detailId: null, step: 'overview' };
       window.dispatchEvent(new CustomEvent('forecast-plan-route', { detail: pendingRoute }));
     },
     openSystemBatchDetail(batchId, step = 'forecast') {

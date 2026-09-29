@@ -85,6 +85,9 @@ assert(store.contract.getDailyForecast(next.id, siblings[0].childId, allocated.f
 let publishBlocked = false;
 try { store.publishWindow(next.id, { submissionStartTime: '2026-10-28T09:00:00+08:00', submissionDeadlineTime: '2026-11-01T18:00:00+08:00', submissionFreezeTime: '2026-11-02T00:00:00+08:00' }); } catch (error) { publishBlocked = /规则预测/.test(error.message); }
 assert(publishBlocked, 'window publish blocked before result generation');
+let freezeBlocked = false;
+try { store.freeze(next.id); } catch (error) { freezeBlocked = /先发布/.test(error.message); }
+assert(freezeBlocked, 'freeze is blocked until sales submission is published');
 store.generateForecast(next.id);
 const generatedV1 = store.getBatch(next.id);
 assert(generatedV1.status === '规则预测已生成' && generatedV1.currentStep === 'submission', 'forecast generation advances to submission');
@@ -114,6 +117,11 @@ assert(store.getBatch(next.id).status === '已冻结' && store.getBatch(next.id)
 let frozenError = false;
 try { store.updateParameters(next.id, { trendWindow: 14 }, '不应写入'); } catch (error) { frozenError = /冻结/.test(error.message); }
 assert(frozenError, 'frozen batch write protection');
+let incompleteError = false;
+try { store.completeBatch(next.id, 0); } catch (error) { incompleteError = /PMC审核/.test(error.message); }
+assert(incompleteError, 'final confirmation requires all child forecasts to pass PMC review');
+store.completeBatch(next.id, store.getBatch(next.id).childForecastResults.length);
+assert(store.getBatch(next.id).status === '已完成' && store.getBatch(next.id).auditTimeline.at(-1).action === '最终确认预测批次', 'final confirmation completes and audits batch');
 const snapshot = store.contract.getSnapshot(next.id);
 snapshot.name = '外部修改不应回写';
 assert(store.getBatch(next.id).name !== snapshot.name, 'immutable snapshot read');
@@ -122,4 +130,10 @@ transient.confirmAssessment(transient.getCurrent().id);
 assert(transient.getCurrent().status === '参数调整中', 'in-memory demo state mutates during session');
 const refreshed = model.createStore({ groups, forecastAt, actualAt }, null);
 assert(refreshed.getCurrent().status === '评估中' && refreshed.getCurrent().currentStep === 'assessment', 'refresh creates initial demo state');
+refreshed.updateParameters(refreshed.getCurrent().id, { historyShareWindow: 60 }, '测试继承');
+refreshed.saveSplitRule(refreshed.getCurrent().id, { id: 'SPLIT-TPL-DEFAULT', name: '测试自定义规则', historyWeight: 70, recentWeight: 30 });
+const unInherited = refreshed.createNextBatch({ batchDate: '2026-10-28', inherit: { parameters: false, relations: false, split: false, combo: false, season: false }, country: 'US', platform: 'Amazon' });
+assert(unInherited.parameterSnapshot.historyShareWindow === 84 && unInherited.splitRuleTemplates[0].name === '默认子体拆解', 'unchecked inheritance uses defaults rather than previous snapshots');
+assert(unInherited.relationSnapshot.every(row => row.country === 'US' && row.platform === 'Amazon'), 'creation scope filters batch relations');
+assert(refreshed.getBatch(current.id).parameterSnapshot.historyShareWindow === 60, 'new batch never overwrites inheritance source');
 console.log('forecast batch verification passed');
