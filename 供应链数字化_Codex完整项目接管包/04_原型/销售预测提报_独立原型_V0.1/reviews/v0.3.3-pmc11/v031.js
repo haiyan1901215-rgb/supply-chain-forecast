@@ -3,7 +3,9 @@
   const compactDateWidth = 72;
   const compactWeekWidth = 112;
   const compactLineWidth = 96;
-  const compactIdentityWidth = 290;
+  const compactIdentityWidth = 270;
+  const compactIdentityVersion = '0.3.9-product-layout2';
+  const compactIdentityVersionKey = 'pmc-forecast-identity-width-version';
   const inheritedWidth = columnWidth;
   const savedWidths = (() => {
     try {
@@ -25,7 +27,13 @@
     return inheritedWidth(key);
   };
 
-  if (!savedWidths || !Number.isFinite(savedWidths.identity)) state.identityWidth = compactIdentityWidth;
+  const identityNeedsMigration = (() => {
+    try { return localStorage.getItem(compactIdentityVersionKey) !== compactIdentityVersion; } catch { return true; }
+  })();
+  if (identityNeedsMigration || !savedWidths || !Number.isFinite(savedWidths.identity)) {
+    setColumnWidth('identity', compactIdentityWidth);
+    try { localStorage.setItem(compactIdentityVersionKey, compactIdentityVersion); } catch {}
+  }
   if (!savedWidths || !Number.isFinite(savedWidths.line)) state.lineWidth = compactLineWidth;
 
   const inheritedApply = applyColumnWidths;
