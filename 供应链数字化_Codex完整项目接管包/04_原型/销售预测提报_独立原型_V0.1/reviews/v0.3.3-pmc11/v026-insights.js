@@ -6,6 +6,21 @@
   const tokens=enterpriseThemeV020.token,cutoff=dayjs(dateKey(dataAsOf)),today=cutoff.add(1,'day'),snapshotActualAt=actualAt;
   const earliest=dayjs('2023-01-01'),key=d=>d.format('YYYY-MM-DD'),display=d=>d.format('YYYY/MM/DD');
   const theme={...enterpriseThemeV020,token:{...tokens,fontSize:12}};
+  let echartsPromise=null;
+  const loadEcharts=()=>{
+    if(window.echarts)return Promise.resolve(window.echarts);
+    if(echartsPromise)return echartsPromise;
+    echartsPromise=new Promise((resolve,reject)=>{
+      const script=document.createElement('script');
+      script.src='vendor/echarts-6.0.0.min.js';
+      script.async=true;
+      script.dataset.echartsLazy='true';
+      script.onload=()=>window.echarts?resolve(window.echarts):reject(Error('ECharts 未正确加载'));
+      script.onerror=()=>reject(Error('ECharts 加载失败'));
+      document.head.append(script);
+    });
+    return echartsPromise;
+  };
   const calendarLocale={lang:{locale:'zh_CN',placeholder:'请选择日期',rangePlaceholder:['开始日期','结束日期'],today:'今天',now:'此刻',backToToday:'返回今天',ok:'确定',clear:'清除',month:'月',year:'年',previousMonth:'上个月',nextMonth:'下个月',monthSelect:'选择月份',yearSelect:'选择年份',decadeSelect:'选择年代',yearFormat:'YYYY年',cellYearFormat:'YYYY年',monthFormat:'M月',shortWeekDays:['日','一','二','三','四','五','六'],shortMonths:['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'],previousYear:'上一年',nextYear:'下一年',previousDecade:'上一年代',nextDecade:'下一年代',previousCentury:'上一世纪',nextCentury:'下一世纪',monthBeforeYear:false},timePickerLocale:{placeholder:'请选择时间'}};
   const initialGroup=groups.find(g=>g.id==='US-B0GRGFFVVN');
   if(initialGroup){initialGroup.listedAt='2024-01-15';initialGroup.listingDays=cutoff.diff(dayjs(initialGroup.listedAt),'day');}
@@ -39,11 +54,14 @@
   function Chart({series,dates,label}){
     const host=useRef(null),chart=useRef(null),option=useRef(null),[failed,setFailed]=useState(false);
     useEffect(()=>{
-      if(!window.echarts){setFailed(true);return;}
-      const el=host.current;
-      const ensure=()=>{if(!el.clientWidth||!el.clientHeight)return;if(!chart.current){chart.current=echarts.init(el,null,{renderer:'svg'});if(option.current)chart.current.setOption(option.current,{notMerge:true});}chart.current.resize();};
-      const observer=new ResizeObserver(ensure);observer.observe(el);ensure();
-      return()=>{observer.disconnect();chart.current?.dispose();chart.current=null;};
+      let disposed=false,observer=null;
+      loadEcharts().then(echarts=>{
+        if(disposed||!host.current)return;
+        const el=host.current;
+        const ensure=()=>{if(!el.clientWidth||!el.clientHeight)return;if(!chart.current){chart.current=echarts.init(el,null,{renderer:'svg'});if(option.current)chart.current.setOption(option.current,{notMerge:true});}chart.current.resize();};
+        observer=new ResizeObserver(ensure);observer.observe(el);ensure();
+      }).catch(()=>{if(!disposed)setFailed(true);});
+      return()=>{disposed=true;observer?.disconnect();chart.current?.dispose();chart.current=null;};
     },[]);
     useEffect(()=>{
       const colors=series.map(s=>s.name==='去年同期销量'?'#70ad62':s.name==='上期销量'||s.name==='最终预测'?'#e48ba2':tokens.colorPrimary);
@@ -93,7 +111,7 @@
   function Mapping({c,g}){
     return h('section',{className:'product-mapping'},h(Table,{size:'small',rowKey:'key',pagination:false,scroll:{x:650},columns:[
       {title:'SKU',dataIndex:'sku',width:140,render:v=>code(v,'SKU')},{title:'业务识别码',dataIndex:'biz',width:210,render:v=>v?code(v,'业务识别码'):''},{title:'有效期',dataIndex:'period',width:240},{title:'状态',dataIndex:'status',width:70}
-    ],dataSource:[{key:'current',sku:c.sku,biz:c.businessCode,period:'2026/10/01 - 2026/11/15',status:'当前'},{key:'history',sku:c.historicSku,biz:null,period:'2026/08/01 - 2026/09/30',status:'历史'}]}));
+    ],dataSource:[{key:'current',sku:c.sku,biz:c.businessCode,period:'2026/09/01 - 2026/10/15',status:'当前'},{key:'history',sku:c.historicSku,biz:null,period:'2026/07/01 - 2026/08/31',status:'历史'}]}));
   }
   function Analysis({c}){
     const dates=visibleDays().map(dateKey),forecasts=dates.map(k=>forecastAt(c,state.batch,k));

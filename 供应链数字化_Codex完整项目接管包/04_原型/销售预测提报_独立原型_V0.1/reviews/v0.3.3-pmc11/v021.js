@@ -25,7 +25,7 @@ const differenceHelp='按同一销售日期比较：本次最终预测减去该�
 deltaMarkup=function(value,label='较前次提报'){return value==null?'':`<span class="delta ${value===0?'flat':value>0?'up':'down'}">${label?label+' ':''}${signed(value)}</span>`;};
 historyRowHTML=function(c,row){
   const expanded=state.historyParts.has(c.id+'|'+row.batch),isBatch=row.kind==='final';
-  const labels=isBatch?`<button type="button" data-history-part="${c.id}|${row.batch}" aria-expanded="${expanded}">${expanded?'−':'+'} ${row.label}</button><small tabindex="0" data-hint="${differenceHelp}">本次较该批增减</small>`:row.kind==='error'?`预测与实销差异<small tabindex="0" data-hint="当前批次最终预测减去实际销量；正数表示预测偏高，负数表示预测偏低。仅比较双方都有数据的日期。">正数偏高 · 负数偏低</small>`:row.kind==='actual'?'实际销量<small>截至 2026/10/20</small>':row.label;
+  const labels=isBatch?`<button type="button" data-history-part="${c.id}|${row.batch}" aria-expanded="${expanded}">${expanded?'−':'+'} ${row.label}</button><small tabindex="0" data-hint="${differenceHelp}">本次较该批增减</small>`:row.kind==='error'?`预测与实销差异<small tabindex="0" data-hint="当前批次最终预测减去实际销量；正数表示预测偏高，负数表示预测偏低。仅比较双方都有数据的日期。">正数偏高 · 负数偏低</small>`:row.kind==='actual'?'实际销量<small>截至 2026/09/28</small>':row.label;
   const cells=visibleColumns().map((col,i)=>{
     let value=null,hint='';
     if(row.kind==='actual'){

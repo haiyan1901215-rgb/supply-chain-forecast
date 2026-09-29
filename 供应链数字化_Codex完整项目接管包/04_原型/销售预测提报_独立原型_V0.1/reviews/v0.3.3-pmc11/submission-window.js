@@ -1,6 +1,6 @@
 /* Batch window configuration is independent from the forecast coverage range. */
 (() => {
-  const fallback=Object.freeze({title:'2026年10月销售预测',startsAt:'2026-10-21T09:00:00+08:00',deadlineAt:'2026-10-25T18:00:00+08:00',freezesAt:'2026-10-26T00:00:00+08:00'});
+  const fallback=Object.freeze({title:'2026年9月销售预测',startsAt:'2026-09-29T09:00:00+08:00',deadlineAt:'2026-10-03T18:00:00+08:00',freezesAt:'2026-10-04T00:00:00+08:00'});
   const resolveConfig=()=>{
     const contract=window.ForecastBatchContract,batchWindow=contract?.getWindow?.(),batch=contract?.getCurrent?.();
     return Object.freeze({title:batch?.name||fallback.title,startsAt:batchWindow?.submissionStartTime||fallback.startsAt,deadlineAt:batchWindow?.submissionDeadlineTime||fallback.deadlineAt,freezesAt:batchWindow?.submissionFreezeTime||fallback.freezesAt,batchId:batchWindow?.batchId||null,batchVersion:batchWindow?.batchVersion||null});

@@ -7,7 +7,7 @@ const assert = (condition, message) => {
 const domClick = locator => locator.evaluate(element => element.click());
 
 (async () => {
-  const url = process.argv[2] || 'http://127.0.0.1:8814/reviews/v0.3.3-pmc11/index.html?v=0.3.5-sales-batch-sync1';
+  const url = process.argv[2] || 'http://127.0.0.1:8814/reviews/v0.3.3-pmc11/index.html?v=0.3.6-performance-date1';
   const installedChrome = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
   const browser = await chromium.launch({ headless: true, ...(fs.existsSync(installedChrome) ? { executablePath: installedChrome } : {}) });
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 });
@@ -29,8 +29,12 @@ const domClick = locator => locator.evaluate(element => element.click());
   try {
     await page.goto(url, { waitUntil: 'networkidle' });
     await page.locator('.app').waitFor({ state: 'visible' });
+    assert(!await page.evaluate(() => performance.getEntriesByType('resource').some(entry => entry.name.includes('echarts-6.0.0.min.js'))), 'ECharts must not load before an insight chart is opened');
+    const planningStarted = Date.now();
     await page.evaluate(() => document.querySelectorAll('.menu button')[3].click());
     await page.getByText('预测批次列表', { exact: true }).waitFor();
+    assert(Date.now() - planningStarted < 2000, 'planning menu switch must complete within 2 seconds');
+    for (const date of ['2026-09-29', '2026-09-22', '2026-09-15', '2026-09-08']) assert(await page.getByText(date, { exact: false }).count() > 0, `planning batch list missing ${date}`);
 
     await page.getByRole('button', { name: '发起预测填报' }).click();
     await domClick(page.getByRole('dialog').getByRole('button', { name: '下一步' }));
@@ -39,7 +43,7 @@ const domClick = locator => locator.evaluate(element => element.click());
     await domClick(createDrawer.getByRole('button', { name: '创建批次' }));
 
     const created = await page.evaluate(() => window.ForecastBatchContract.getCurrent());
-    assert(created.batchDate === '2026-10-28' && created.status === '草稿', 'new batch must start as a 2026-10-28 draft');
+    assert(created.batchDate === '2026-10-06' && created.status === '草稿', 'new batch must start as a 2026-10-06 draft');
     await page.getByRole('navigation', { name: '批次内容导航' }).getByRole('menuitem', { name: '预测评估' }).click();
     await domClick(page.getByRole('button', { name: '确认评估并进入参数调整' }));
     await page.getByPlaceholder('例如：上一批次低销量子体偏差较大，本批次提高近期份额权重。').fill('专项回归：确认新批次参数');
@@ -53,13 +57,15 @@ const domClick = locator => locator.evaluate(element => element.click());
 
     const published = await page.evaluate(() => window.ForecastBatchContract.getCurrent());
     const child = published.childForecastResults[0];
-    assert(published.batchDate === '2026-10-28' && published.submissionState === '填报中', 'new batch must publish its own sales window');
+    assert(published.batchDate === '2026-10-06' && published.submissionState === '填报中', 'new batch must publish its own sales window');
 
+    const salesStarted = Date.now();
     await page.evaluate(() => document.querySelectorAll('.menu button')[0].click());
     await page.locator('.forecast-table').waitFor();
-    assert(await page.locator('#batchSelect').inputValue() === '2026-10-28', 'sales selector must follow the active batch');
-    assert((await page.locator('#coverageRange').innerText()).includes('2026/10/28'), 'sales range must follow the active batch');
-    assert((await page.locator('.date-head').first().innerText()).includes('10/28'), 'sales dates must start at the active batch date');
+    assert(Date.now() - salesStarted < 1200, 'sales menu switch must complete within 1.2 seconds');
+    assert(await page.locator('#batchSelect').inputValue() === '2026-10-06', 'sales selector must follow the active batch');
+    assert((await page.locator('#coverageRange').innerText()).includes('2026/10/06'), 'sales range must follow the active batch');
+    assert((await page.locator('.date-head').first().innerText()).includes('10/06'), 'sales dates must start at the active batch date');
     const contractValue = await page.evaluate(({ childId, date }) => window.ForecastBatchContract.getDailyForecast(undefined, childId, date).ruleForecast, { childId: child.childId, date: published.forecastStartDate });
     const salesValue = await page.locator(`[data-child-row="${child.childId}"][data-forecast-line="final"] td.date-col`).first().innerText();
     assert(salesValue.includes(Number(contractValue).toLocaleString('zh-CN')), `sales value must match contract: ${salesValue} / ${contractValue}`);
@@ -69,18 +75,21 @@ const domClick = locator => locator.evaluate(element => element.click());
     await page.getByText('已提交至PMC审核', { exact: true }).waitFor();
     const isolated = await page.evaluate(batchId => ({
       active: window.pmcWorkflow.getBatchState(batchId),
-      previous: window.pmcWorkflow.getBatchState('FB-20261021-01'),
+      previous: window.pmcWorkflow.getBatchState('FB-20260929-01'),
       keys: Object.keys(window.pmcWorkflow.getState().records)
     }), published.id);
     assert(isolated.active.submitted === published.childForecastResults.length, 'all active-batch children must be submitted');
-    assert(isolated.keys.every(key => key.startsWith('2026-10-28|')), 'submission keys must use the active batch date');
+    assert(isolated.keys.every(key => key.startsWith('2026-10-06|')), 'submission keys must use the active batch date');
     assert(isolated.previous.submitted === 0, 'previous batch totals must remain isolated');
 
     await page.reload({ waitUntil: 'networkidle' });
     await page.locator('.app').waitFor({ state: 'visible' });
     const reset = await page.evaluate(() => ({ batch: window.ForecastBatchContract.getCurrent(), salesBatch: state.batch, records: window.pmcWorkflow.getState().records }));
-    assert(reset.batch.batchDate === '2026-10-21' && reset.batch.status === '评估中', 'refresh must restore the initial planning batch');
-    assert(reset.salesBatch === '2026-10-21' && Object.keys(reset.records).length === 0, 'refresh must reset sales batch state and submissions');
+    assert(reset.batch.batchDate === '2026-09-29' && reset.batch.status === '评估中', 'refresh must restore the initial planning batch');
+    assert(reset.salesBatch === '2026-09-29' && Object.keys(reset.records).length === 0, 'refresh must reset sales batch state and submissions');
+    await page.locator('[data-history-entry]').first().click();
+    const historyText = await page.locator('tr.history-row[data-history-for]').allTextContents();
+    assert(historyText.some(text => text.includes('2026/09/22')) && historyText.some(text => text.includes('2026/09/15')), 'sales history must include the 2026/09/22 and 2026/09/15 submissions');
     assert(errors.length === 0, errors.join('\n'));
     console.log('sales batch sync browser verification passed');
   } finally {

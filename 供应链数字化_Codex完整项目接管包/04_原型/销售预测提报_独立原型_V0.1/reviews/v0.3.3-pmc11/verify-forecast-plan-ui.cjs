@@ -8,7 +8,7 @@ const assert = (condition, message) => {
 const domClick = locator => locator.evaluate(element => element.click());
 
 (async () => {
-  const url = process.argv[2] || 'http://127.0.0.1:8812/reviews/v0.3.3-pmc11/index.html?v=0.3.5-batch-center1';
+  const url = process.argv[2] || 'http://127.0.0.1:8814/reviews/v0.3.3-pmc11/index.html?v=0.3.6-performance-date1';
   const installedChrome = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
   const browser = await chromium.launch({ headless: true, ...(fs.existsSync(installedChrome) ? { executablePath: installedChrome } : {}) });
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 });
@@ -32,7 +32,7 @@ const domClick = locator => locator.evaluate(element => element.click());
     await page.evaluate(() => document.querySelectorAll('.menu button')[3].click());
     await page.getByText('预测批次列表', { exact: true }).waitFor();
     assert(await page.getByRole('tab', { name: '预测计划' }).count() === 0 && await page.getByRole('tab', { name: '预测结果' }).count() === 0, 'plan and result tabs must be removed');
-    await domClick(page.getByRole('button', { name: '2026-10-21 第1批预测', exact: true }));
+    await domClick(page.getByRole('button', { name: '2026-09-29 预测批次', exact: true }));
     await page.getByRole('navigation', { name: '批次内容导航' }).getByRole('menuitem', { name: '概览' }).waitFor();
     await page.getByRole('navigation', { name: '批次内容导航' }).getByRole('menuitem', { name: '预测评估' }).click();
     assert(await page.getByText('流程演示状态', { exact: true }).count() === 0, 'manual planning demo state control must be removed');
@@ -112,7 +112,7 @@ const domClick = locator => locator.evaluate(element => element.click());
     await waitForBatchStep('submission');
     await page.locator('.ant-steps-item-process').getByText('销售提报窗口', { exact: true }).waitFor();
     const generated = await page.evaluate(() => window.ForecastBatchContract.getCurrent());
-    assert(generated.activeResultVersion === 'RESULT-20261021-V01' && generated.resultSnapshots.length === 1 && generated.status === '规则预测已生成', 'generation must create V01 and advance to submission');
+    assert(generated.activeResultVersion === 'RESULT-20260929-V01' && generated.resultSnapshots.length === 1 && generated.status === '规则预测已生成', 'generation must create V01 and advance to submission');
 
     await domClick(page.getByRole('button', { name: '发布销售填报窗口' }));
     await page.getByText('销售填报窗口已绑定到本批次', { exact: true }).waitFor();
@@ -171,7 +171,7 @@ const domClick = locator => locator.evaluate(element => element.click());
     assert(Object.keys(resetState.workflow.records).length === 0 && resetState.window.key === 'waiting', 'refresh must reset sales workflow and submission window');
     await page.locator('#pmcRoleBar').getByText('待销售提报', { exact: true }).waitFor();
     await page.evaluate(() => document.querySelectorAll('.menu button')[3].click());
-    await domClick(page.getByRole('button', { name: '2026-10-21 第1批预测', exact: true }));
+    await domClick(page.getByRole('button', { name: '2026-09-29 预测批次', exact: true }));
     await page.getByRole('navigation', { name: '批次内容导航' }).getByRole('menuitem', { name: '预测评估' }).click();
     await page.locator('.ant-steps-item-process').getByText('预测评估', { exact: true }).waitFor();
 
@@ -183,8 +183,8 @@ const domClick = locator => locator.evaluate(element => element.click());
     await createDrawer.getByRole('checkbox', { name: '子体拆解规则' }).uncheck();
     await domClick(createDrawer.getByRole('button', { name: '创建批次' }));
     const newBatch = await page.evaluate(() => window.ForecastBatchContract.getCurrent());
-    assert(newBatch.batchDate === '2026-10-28' && newBatch.status === '草稿', 'create wizard must create a draft batch');
-    assert(newBatch.parameterSnapshot.inheritedFrom === 'PARAM-20261021-V01', 'selected parameter inheritance must be stored');
+    assert(newBatch.batchDate === '2026-10-06' && newBatch.status === '草稿', 'create wizard must create a draft batch');
+    assert(newBatch.parameterSnapshot.inheritedFrom === 'PARAM-20260929-V01', 'selected parameter inheritance must be stored');
     assert(newBatch.splitRuleSnapshot.name === '标准子ASIN份额拆解' && newBatch.auditTimeline[0].reason.includes('parameters') && !newBatch.auditTimeline[0].reason.includes('split'), 'unchecked split inheritance must use defaults');
 
     await page.getByRole('navigation', { name: '批次内容导航' }).getByRole('menuitem', { name: '预测评估' }).click();
@@ -201,13 +201,13 @@ const domClick = locator => locator.evaluate(element => element.click());
 
     const newPublished = await page.evaluate(() => window.ForecastBatchContract.getCurrent());
     const newChild = newPublished.childForecastResults[0];
-    assert(newPublished.batchDate === '2026-10-28' && newPublished.submissionState === '填报中', 'new batch must publish its own submission window');
+    assert(newPublished.batchDate === '2026-10-06' && newPublished.submissionState === '填报中', 'new batch must publish its own submission window');
     await page.evaluate(() => document.querySelectorAll('.menu button')[0].click());
     await page.locator('.forecast-table').waitFor();
-    assert(await page.locator('#batchSelect').inputValue() === '2026-10-28', 'sales batch selector must follow the active planning batch');
-    assert((await page.locator('#coverageRange').innerText()).includes('2026/10/28'), 'sales coverage must start from the new batch range');
-    assert((await page.locator('.date-head').first().innerText()).includes('10/28'), 'sales first date header must use the new batch start date');
-    assert(await page.locator('.date-head').filter({ hasText: '10/21' }).count() === 0, 'new batch daily range must not show the old batch start date');
+    assert(await page.locator('#batchSelect').inputValue() === '2026-10-06', 'sales batch selector must follow the active planning batch');
+    assert((await page.locator('#coverageRange').innerText()).includes('2026/10/06'), 'sales coverage must start from the new batch range');
+    assert((await page.locator('.date-head').first().innerText()).includes('10/06'), 'sales first date header must use the new batch start date');
+    assert(await page.locator('.date-head').filter({ hasText: '09/29' }).count() === 0, 'new batch daily range must not show the old batch start date');
     const newContractDaily = await page.evaluate(({ childId, date }) => window.ForecastBatchContract.getDailyForecast(undefined, childId, date).ruleForecast, { childId: newChild.childId, date: newPublished.forecastStartDate });
     const newSalesFinal = await page.locator(`[data-child-row="${newChild.childId}"][data-forecast-line="final"] td.date-col`).first().innerText();
     assert(newSalesFinal.includes(Number(newContractDaily).toLocaleString('zh-CN')), `new batch sales value must use its contract: ${newSalesFinal} / ${newContractDaily}`);
@@ -217,18 +217,18 @@ const domClick = locator => locator.evaluate(element => element.click());
     await page.getByText('已提交至PMC审核', { exact: true }).waitFor();
     const isolated = await page.evaluate(({ batchId, count }) => ({
       active: window.pmcWorkflow.getBatchState(batchId),
-      previous: window.pmcWorkflow.getBatchState('FB-20261021-01'),
+      previous: window.pmcWorkflow.getBatchState('FB-20260929-01'),
       keys: Object.keys(window.pmcWorkflow.getState().records),
       expected: count
     }), { batchId: newPublished.id, count: newPublished.childForecastResults.length });
-    assert(isolated.active.submitted === isolated.expected && isolated.keys.every(key => key.startsWith('2026-10-28|')), 'new batch submissions must use the new batch key');
+    assert(isolated.active.submitted === isolated.expected && isolated.keys.every(key => key.startsWith('2026-10-06|')), 'new batch submissions must use the new batch key');
     assert(isolated.previous.submitted === 0, 'new batch submission totals must not include the previous batch');
 
     await page.reload({ waitUntil: 'networkidle' });
     await page.locator('.app').waitFor({ state: 'visible' });
     const finalReset = await page.evaluate(() => ({ batch: window.ForecastBatchContract.getCurrent(), salesBatch: state.batch, records: window.pmcWorkflow.getState().records }));
-    assert(finalReset.batch.batchDate === '2026-10-21' && finalReset.batch.status === '评估中', 'refresh must return the demo to the initial planning batch');
-    assert(finalReset.salesBatch === '2026-10-21' && Object.keys(finalReset.records).length === 0, 'refresh must reset sales batch context and submissions');
+    assert(finalReset.batch.batchDate === '2026-09-29' && finalReset.batch.status === '评估中', 'refresh must return the demo to the initial planning batch');
+    assert(finalReset.salesBatch === '2026-09-29' && Object.keys(finalReset.records).length === 0, 'refresh must reset sales batch context and submissions');
 
     assert(errors.length === 0, errors.join('\n'));
     console.log('forecast plan browser verification passed');

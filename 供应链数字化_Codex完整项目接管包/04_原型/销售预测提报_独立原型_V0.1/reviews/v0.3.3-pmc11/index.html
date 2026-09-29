@@ -471,13 +471,13 @@
         </section>
         <section class="range-bar" aria-label="预测时间轴导航">
           <div class="range-left">
-            <div class="range-title"><span>预测覆盖范围</span><strong id="coverageRange">2026/10/21 - 2027/04/20</strong></div>
+            <div class="range-title"><span>预测覆盖范围</span><strong id="coverageRange">2026/09/29 - 2027/03/29</strong></div>
             <span class="range-section-separator" aria-hidden="true">丨</span>
-            <div class="range-current"><span>当前查看窗口</span><button class="range-display" id="rangeDisplay" type="button" data-action="toggle-range-editor" aria-label="选择当前查看窗口" aria-haspopup="dialog" aria-expanded="false" aria-controls="rangeEditor">2026/10/21 - 2026/11/03</button></div>
+            <div class="range-current"><span>当前查看窗口</span><button class="range-display" id="rangeDisplay" type="button" data-action="toggle-range-editor" aria-label="选择当前查看窗口" aria-haspopup="dialog" aria-expanded="false" aria-controls="rangeEditor">2026/09/29 - 2026/10/12</button></div>
             <div class="range-nav"><button class="icon-button" type="button" aria-label="向前切换窗口" data-action="previous">‹</button><button class="icon-button" type="button" aria-label="向后切换窗口" data-action="next">›</button></div>
             <div class="range-tabs" role="group" aria-label="窗口天数"><button class="active" type="button" data-range-size="14">14天</button><button type="button" data-range-size="30">30天</button></div>
           </div>
-          <span class="range-meta">数据更新时间：2026/10/20 08:30</span>
+          <span class="range-meta">数据更新时间：2026/09/28 08:30</span>
         </section>
         <div class="workbench-shell"><div class="workbench" id="workbench" aria-label="日级预测台账"></div><div class="horizontal-scrollbar" id="horizontalScrollbar" role="scrollbar" aria-label="列表横向滚动" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="horizontal-scroll-track"><div class="horizontal-scroll-thumb"></div></div></div><div class="list-footer"><div class="pagination" aria-label="列表分页"><span class="page-total">共 50 条</span><button type="button" aria-label="上一页">‹</button><button class="active" type="button">1</button><button type="button">2</button><button type="button">3</button><button type="button">4</button><button type="button">5</button><button type="button" aria-label="下一页">›</button><select class="control" style="width:82px;height:28px" aria-label="每页条数"><option>20 / 页</option><option>50 / 页</option></select></div></div></div>
       </div>
@@ -494,17 +494,17 @@
     const $ = (s, root = document) => root.querySelector(s);
     const $$ = (s, root = document) => Array.from(root.querySelectorAll(s));
     const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-    const startDate = new Date(2026, 9, 21);
+    const startDate = new Date(2026, 8, 29);
     let allDays = Array.from({length: 182}, (_, i) => { const d = new Date(startDate); d.setDate(startDate.getDate() + i); return d; });
     const state = { windowSize: 14, windowStart: 0, windowEnd: 13, identityWidth: 370, sizeWidth: 60, contextWidth: 190, lineWidth: 130, dateWidths: {}, weekWidths: {}, collapsedWeeks: new Set(), noteEditing: null, noteDraft: '', query: '', selected: new Set(), collapsed: new Set(), editing: null, modalMode: '', modalData: {} };
     const groups = [];
     const dateKey = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     const fullDate = d => dateKey(d).replaceAll('-', '/');
-    const dataAsOf = new Date(2026, 9, 20);
+    const dataAsOf = new Date(2026, 8, 28);
     const listingDates = ['2025-10-10', '2026-06-03', '2026-01-15'];
     groups.forEach((g, index) => {
       g.listedAt = listingDates[index]; g.platform = 'Amazon'; g.market = 'US'; g.account = 'BRABIC-US';
-      g.listingDays = Math.floor((Date.UTC(2026,9,20) - Date.parse(g.listedAt)) / 86400000);
+      g.listingDays = Math.floor((Date.UTC(2026,8,28) - Date.parse(g.listedAt)) / 86400000);
       g.colors = [...new Set(g.children.map(c=>c.color.split(' / ')[0]))];
     });
     const notesStorageKey = 'pmc-sales-forecast-notes-v1';
@@ -818,13 +818,13 @@
       let body = '';
       if (view === 'sales') {
         const history=salesHistory(c), total=history.reduce((sum,v)=>sum+v,0);
-        body = `<section class="drawer-section"><h3>近30天销量 · 2026/09/21 - 2026/10/20</h3>${insightDetails([['7日ADU',`${c.base} 件/天`],['近30天销量',`${num(total)} 件`],['14日ADU',`${c.base-1} 件/天`],['30日ADU',`${c.base-3} 件/天`]])}${trendChart([{label:'销量',values:history,color:'var(--blue)'}],'09/21','10/20')}<div class="chart-legend"><span>每日销量</span></div></section>`;
+        body = `<section class="drawer-section"><h3>近30天销量 · 2026/08/30 - 2026/09/28</h3>${insightDetails([['7日ADU',`${c.base} 件/天`],['近30天销量',`${num(total)} 件`],['14日ADU',`${c.base-1} 件/天`],['30日ADU',`${c.base-3} 件/天`]])}${trendChart([{label:'销量',values:history,color:'var(--blue)'}],'08/30','09/28')}<div class="chart-legend"><span>每日销量</span></div></section>`;
       } else if (view === 'analysis') {
         const days=visibleDays(), ai=days.map((d,i)=>systemValue(c,state.windowStart+i)), final=days.map((d,i)=>finalValue(c,d,state.windowStart+i));
         const totalAI=ai.reduce((sum,v)=>sum+v,0), total=final.reduce((sum,v)=>sum+v,0), change=totalAI ? (total-totalAI)/totalAI*100 : 0;
         body = `<section class="drawer-section"><h3>${fullDate(days[0])} - ${fullDate(days.at(-1))}</h3>${insightDetails([['规则预测总量',`${num(totalAI)} 件`],['最终预测总量',`${num(total)} 件`],['预测变化',`${change>=0?'+':''}${num(change)}%`],['活动提报',`${days.filter(d=>activityAt(c,d)).length} 天`]])}${trendChart([{label:'规则预测',values:ai,color:'var(--blue)'},{label:'最终预测',values:final,color:'var(--cyan)'}],dateLabel(days[0]),dateLabel(days.at(-1)))}<div class="chart-legend"><span>规则预测</span><span class="final">最终预测</span></div></section><section class="drawer-section"><h3>取值构成</h3>${insightDetails(['system','manual','activity'].map((kind,i)=>[['规则预测','人工修正','活动提报'][i],`${days.filter((d,j)=>source(c,d,state.windowStart+j)[0]===kind).length} 天`]))}</section>`;
       } else if (view === 'mapping') {
-        body = `<section class="drawer-section"><h3>映射记录</h3><table class="mapping-table"><thead><tr><th>商品编码</th><th>有效期</th><th>状态</th></tr></thead><tbody><tr><td>${copyable(c.sku,'SKU')}</td><td>2026/10/01 - 2026/11/15</td><td><span class="pill green">当前</span></td></tr><tr><td>${copyable(c.sku+'-OLD','SKU')}</td><td>2026/08/01 - 2026/09/30</td><td><span class="pill">历史</span></td></tr></tbody></table></section>`;
+        body = `<section class="drawer-section"><h3>映射记录</h3><table class="mapping-table"><thead><tr><th>商品编码</th><th>有效期</th><th>状态</th></tr></thead><tbody><tr><td>${copyable(c.sku,'SKU')}</td><td>2026/09/01 - 2026/10/15</td><td><span class="pill green">当前</span></td></tr><tr><td>${copyable(c.sku+'-OLD','SKU')}</td><td>2026/07/01 - 2026/08/31</td><td><span class="pill">历史</span></td></tr></tbody></table></section>`;
       } else {
         body = `<section class="drawer-section"><div class="product-box"><button class="thumb" type="button" data-preview="${g.image}" aria-label="放大${g.name}主图"><img src="${g.image}" alt="${g.name}" /></button><div><div class="product-title">${g.name}</div><div class="product-sub">颜色：${c.color.split(' / ')[0]} · 尺码：${c.size}</div><div class="product-tags">${productTags(g)}</div></div></div><div class="profile-codes">${copyable(g.parent,'Parent ASIN')}${copyable(g.spu,'SPU')}${copyable(c.asin,'Child ASIN')}${copyable(g.skc,'SKC')}${copyable(c.sku,'SKU')}</div>${insightDetails([['平台 / 站点',`${g.platform} / ${g.market}`],['账号 / 店铺',g.account],['销售负责人',g.owner],['上架日期',g.listedAt.replaceAll('-','/')],['上架时长',`${g.listingDays} 天`],['数据更新',`${fullDate(dataAsOf)} 08:30`]])}</section><section class="drawer-section"><h3>库存背景</h3>${insightDetails([['国内仓库存',`${c.stock} 件`],['采购在途',`${c.inbound} 件`],['FBA库存',`${c.fba} 件`],['FBA在途',`${c.fbaInbound} 件`]])}</section>`;
       }
@@ -835,7 +835,7 @@
     }
     function openDrawer(asin, index) { const c = findChild(asin); const d = visibleDays()[index - state.offset] || allDays[index]; if (!c || !d) return; const activity = activityAt(c, d); const manual = manualValue(c, index); const sys = systemValue(c,index); const final = finalValue(c,d,index); const [kind,label] = source(c,d,index); const g = groups.find(x=>x.children.includes(c)); $('#drawerTitle').textContent = `${dateLabel(d)} 预测详情`; $('#drawerSub').textContent = `${c.asin} · ${g.name} · ${g.skc}`; $('#drawerBody').innerHTML = `<section class="drawer-section"><h3>计算关系</h3><div class="callout" style="margin-bottom:10px">取值优先级：活动预测 ＞ 人工修正 ＞ 系统 / 规则基准。</div><div class="formula"><div class="formula-row"><span>系统 / 规则基准预测</span><strong>${sys}</strong></div><div class="formula-row"><span>人工修正基准</span><strong>${manual === null ? '未填写' : manual}</strong></div><div class="formula-row"><span>活动当天销量预测</span><strong>${activity ? `${activity.qty}（${esc(activity.name)}）` : '未填写'}</strong></div><div class="formula-row total"><span>最终预测 · 来源 ${label}</span><strong>${final}</strong></div></div></section><section class="drawer-section"><h3>销量与库存背景</h3><div class="detail-grid"><div class="detail"><label>14日ADU</label><strong>${c.base - 1}</strong></div><div class="detail"><label>30日ADU</label><strong>${c.base - 3}</strong></div><div class="detail"><label>可售库存</label><strong>${num(c.stock + c.fba)} 件</strong></div><div class="detail"><label>库存覆盖</label><strong>${c.doi} 天</strong></div><div class="detail"><label>预计库存耗尽</label><strong>${c.exhausted}</strong></div><div class="detail"><label>预计采购到货</label><strong>${c.arrival}</strong></div></div></section><section class="drawer-section"><h3>SKU 映射历史</h3><div class="detail-grid"><div class="detail"><label>当前 SKU</label><strong>${c.sku}</strong></div><div class="detail"><label>生效时间</label><strong>10/01 - 11/15</strong></div><div class="detail"><label>历史 SKU</label><strong>${c.sku.replace(/-[A-Z]-/, '-OLD-')}</strong></div><div class="detail"><label>上一段生效</label><strong>08/01 - 09/30</strong></div></div></section>${c.doi < 20 ? `<div class="callout red">库存预计在 ${c.exhausted} 耗尽，早于预计到货日 ${c.arrival}。该提示只用于理解预测影响，不代表销售需要做采购决策。</div>` : `<div class="callout">销售填写只影响需求曲线。库存、在途、到货与 SKU 映射来自系统主数据，提交后由 PMC 在备货计划中继续处理。</div>`}`; $('#mask').classList.add('show'); $('#drawer').classList.add('show'); $('#drawer').setAttribute('aria-hidden','false'); }
     function openEventModal(asin, date) { const c = findChild(asin); const old = c?.activity[date]; state.modalMode = 'event'; state.modalData = {asin,date}; $('#modalTitle').textContent = old ? '编辑活动预测' : '添加活动预测'; $('#modalBody').innerHTML = `<div class="form-grid"><div class="field"><label>Child ASIN</label><input class="control" value="${esc(asin)}" disabled /></div><div class="field"><label>活动日期</label><input class="control" value="${date}" disabled /></div><div class="field"><label for="eventType">活动类型</label><select class="control" id="eventType"><option ${old?.type==='大促'?'selected':''}>大促</option><option ${old?.type==='日常活动'?'selected':''}>日常活动</option><option ${old?.type==='站内资源'?'selected':''}>站内资源</option></select></div><div class="field"><label for="eventQty">预计销量</label><input class="control" id="eventQty" type="number" min="0" value="${old?.qty ?? ''}" placeholder="例如 80" /></div><div class="field full"><label for="eventName">活动名称</label><input class="control" id="eventName" value="${esc(old?.name || '')}" placeholder="例如：黑五预热" /></div><div class="field full"><label for="eventNote">备注</label><textarea class="control" id="eventNote" placeholder="补充活动资源、站点或预估依据">${esc(old?.note || '')}</textarea></div></div>`; showModal(); }
-    function openBatchModal() { state.modalMode = 'batch'; $('#modalTitle').textContent = '批量调整人工修正基准'; $('#modalBody').innerHTML = `<div class="callout" style="margin-bottom:14px">批量调整只作用于人工修正基准，不会改写系统基准。活动日期仍通过单日活动预测维护。</div><div class="form-grid"><div class="field"><label for="batchStart">开始日期</label><input class="control" id="batchStart" type="date" value="2026-10-21" /></div><div class="field"><label for="batchEnd">结束日期</label><input class="control" id="batchEnd" type="date" value="2026-11-03" /></div><div class="field"><label for="batchMethod">应用方式</label><select class="control" id="batchMethod"><option value="percent">在系统基准上 +10%</option><option value="plus">在系统基准上 +5</option><option value="fixed">覆盖为固定 ADU</option><option value="copy">复制当前窗口第一天</option></select></div><div class="field"><label for="batchValue">调整值</label><input class="control" id="batchValue" type="number" value="10" min="0" /></div></div>`; showModal(); }
+    function openBatchModal() { state.modalMode = 'batch'; $('#modalTitle').textContent = '批量调整人工修正基准'; $('#modalBody').innerHTML = `<div class="callout" style="margin-bottom:14px">批量调整只作用于人工修正基准，不会改写系统基准。活动日期仍通过单日活动预测维护。</div><div class="form-grid"><div class="field"><label for="batchStart">开始日期</label><input class="control" id="batchStart" type="date" value="2026-09-29" /></div><div class="field"><label for="batchEnd">结束日期</label><input class="control" id="batchEnd" type="date" value="2026-10-12" /></div><div class="field"><label for="batchMethod">应用方式</label><select class="control" id="batchMethod"><option value="percent">在系统基准上 +10%</option><option value="plus">在系统基准上 +5</option><option value="fixed">覆盖为固定 ADU</option><option value="copy">复制当前窗口第一天</option></select></div><div class="field"><label for="batchValue">调整值</label><input class="control" id="batchValue" type="number" value="10" min="0" /></div></div>`; showModal(); }
     function showModal() { $('#mask').classList.add('show'); $('#modal').classList.add('show'); $('#modal').setAttribute('aria-hidden','false'); }
     function closeOverlays() { hideCodeTooltip(); hideImagePreview(); $('#mask').classList.remove('show'); $('#drawer').classList.remove('show'); $('#modal').classList.remove('show'); $('#drawer').setAttribute('aria-hidden','true'); $('#modal').setAttribute('aria-hidden','true'); if(insightReturnTarget?.isConnected) insightReturnTarget.focus(); insightReturnTarget=null; }
     function toast(message) { const el = $('#toast'); el.textContent = message; el.classList.add('show'); clearTimeout(window.__toast); window.__toast = setTimeout(()=>el.classList.remove('show'), 2200); }
@@ -1080,19 +1080,18 @@
       if(e.key==='Enter' && e.target.matches('[data-manual]')) { e.preventDefault(); e.target.blur(); }
     });
   </script>
-  <script src="v024-core.js?v=0.3.5-sales-batch-sync1"></script>
+  <script src="v024-core.js?v=0.3.6-performance-date1"></script>
   <script src="vendor/react-18.3.1.min.js"></script>
   <script src="vendor/react-dom-18.3.1.min.js"></script>
   <script src="vendor/dayjs-1.11.13.min.js"></script>
   <script src="vendor/antd-5.27.6.min.js"></script>
   <script src="vendor/antd-icons-5.6.1.min.js"></script>
   <script src="enterprise-theme.js"></script>
-  <script src="v021.js?v=0.2.1"></script>
+  <script src="v021.js?v=0.3.6-performance-date1"></script>
   <script src="v022.js?v=0.3.5-sales-batch-sync1"></script>
   <script src="v024.js?v=0.2.4"></script>
   <script src="v033-controls.js?v=0.3.5-sales-batch-sync1"></script>
-  <script src="vendor/echarts-6.0.0.min.js"></script>
-  <script src="v026-insights.js?v=0.2.6"></script>
+  <script src="v026-insights.js?v=0.3.6-performance-date1"></script>
   <script src="v032-timeline.js?v=0.3.5-sales-batch-sync1"></script>
   <script src="v027.js?v=0.3.5-sales-batch-sync1"></script>
   <script src="v031-workspace.js?v=0.3.4-plan-layout1"></script>
@@ -1102,12 +1101,12 @@
   <script src="v032.js?v=0.3.2"></script>
   <script src="v033.js?v=0.3.3"></script>
   <script src="sales-freeze.js?v=0.3.5-sales-batch-sync1"></script>
-  <script src="planning-model.js?v=0.3.3-config12"></script>
-  <script src="parent-asin.js?v=0.3.3-pmc11"></script>
-  <script src="parent-asin-config12.js?v=0.3.4-sync1"></script>
-  <script src="forecast-batch-model.js?v=0.3.5-sales-batch-sync1"></script>
+  <script src="planning-model.js?v=0.3.6-performance-date1"></script>
+  <script src="parent-asin.js?v=0.3.6-performance-date1"></script>
+  <script src="parent-asin-config12.js?v=0.3.6-performance-date1"></script>
+  <script src="forecast-batch-model.js?v=0.3.6-performance-date1"></script>
   <script src="forecast-plan-workspace.js?v=0.3.5-sales-batch-sync1"></script>
-  <script src="pmc-workflow.js?v=0.3.5-sales-batch-sync1"></script>
-  <script src="submission-window.js?v=0.3.4-auto-flow1"></script>
+  <script src="pmc-workflow.js?v=0.3.6-performance-date1"></script>
+  <script src="submission-window.js?v=0.3.6-performance-date1"></script>
 </body>
 </html>

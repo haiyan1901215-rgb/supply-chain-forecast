@@ -24,7 +24,7 @@
   } = antd;
 
   const flag = { US: '🇺🇸', UK: '🇬🇧', DE: '🇩🇪' };
-  const currentBatchLabel = typeof currentBatch === 'string' ? currentBatch.replaceAll('-', '/') : '2026/10/21';
+  const currentBatchLabel = typeof currentBatch === 'string' ? currentBatch.replaceAll('-', '/') : '2026/09/29';
   const formatNumber = value => Number(value || 0).toLocaleString('zh-CN');
   const formatPercent = value => `${Number(value || 0).toFixed(1)}%`;
   const closeTo = (value, target) => Math.abs(Number(value || 0) - target) < 0.05;
@@ -42,9 +42,9 @@
     { key: 'split-new-version', name: '新版本观察', scope: 'US / 新版本', conditionText: 'SKU版本 = 新', baseWindow: 28, recentWindow: 14, judgement: '按版本匹配', historyWeight: 30, recentWeight: 70, method: '历史 + 近期调和', priority: 25, status: '草稿', normalize: true, conditions: [{ field: 'SKU版本', operator: '等于', value: '新' }] }
   ];
   const parameterVersionSeed = [
-    { key: 'v11', version: 'V1.1', createdAt: '2026/10/01 09:00', scope: 'Amazon / 全部站点', description: '默认规则与低销量调和规则', batch: '2026/10/21', status: '当前使用', lock: '已冻结' },
-    { key: 'v12', version: 'V1.2', createdAt: '2026/10/20 16:30', scope: 'US / 畅款 / 新版本', description: '增加小众尺码与新品专项规则', batch: '未绑定', status: '草稿', lock: '可编辑' },
-    { key: 'v10', version: 'V1.0', createdAt: '2026/09/01 09:00', scope: 'Amazon / 全部站点', description: '首版默认拆解规则', batch: '2026/09/23', status: '已归档', lock: '历史快照' }
+    { key: 'v11', version: 'V1.1', createdAt: '2026/09/01 09:00', scope: 'Amazon / 全部站点', description: '默认规则与低销量调和规则', batch: '2026/09/29', status: '当前使用', lock: '已冻结' },
+    { key: 'v12', version: 'V1.2', createdAt: '2026/09/28 16:30', scope: 'US / 畅款 / 新版本', description: '增加小众尺码与新品专项规则', batch: '未绑定', status: '草稿', lock: '可编辑' },
+    { key: 'v10', version: 'V1.0', createdAt: '2026/08/18 09:00', scope: 'Amazon / 全部站点', description: '首版默认拆解规则', batch: '2026/08/25', status: '已归档', lock: '历史快照' }
   ];
 
   function buildRelationGroups() {
@@ -54,7 +54,7 @@
       const versions = [
         { version: 'R01', effectiveAt: '2026/07/01', status: '历史', parent: previousParents[groupIndex % previousParents.length], source: '平台同步', changedAt: '2026/07/01', current: false },
         { version: 'R02', effectiveAt: '2026/08/15', status: '历史', parent: `B0${String(6 + groupIndex)}J${String(4 + groupIndex)}N${String(7 + groupIndex)}Q${String(2 + groupIndex)}M`, source: '平台同步', changedAt: '2026/08/15', current: false },
-        { version: 'R03', effectiveAt: '2026/09/10', status: groupIndex === 1 ? '已发生变化' : '本批次已冻结', parent: group.parent, source: groupIndex === 1 ? '人工维护' : '平台同步', changedAt: groupIndex === 1 ? '2026/10/20' : '2026/09/10', current: true }
+        { version: 'R03', effectiveAt: '2026/09/10', status: groupIndex === 1 ? '已发生变化' : '本批次已冻结', parent: group.parent, source: groupIndex === 1 ? '人工维护' : '平台同步', changedAt: groupIndex === 1 ? '2026/09/28' : '2026/09/10', current: true }
       ];
       return [versions[2], versions[1], versions[0]].map(version => {
         const rows = children.map((child, childIndex) => ({
@@ -305,9 +305,9 @@
     const [draft, setDraft] = useState(filters);
     const [detail, setDetail] = useState(null);
     const [relationAction, setRelationAction] = useState(null);
-    const [relationDraft, setRelationDraft] = useState({ targetParent: '', effectiveAt: '2026/09/25', impact: '从生效日期开始', reason: '' });
+    const [relationDraft, setRelationDraft] = useState({ targetParent: '', effectiveAt: '2026/09/29', impact: '从生效日期开始', reason: '' });
     const openRelationAction = (row, mode) => {
-      setRelationDraft({ targetParent: row.type === 'parent' ? '' : row.parent, effectiveAt: '2026/09/25', impact: '从生效日期开始', reason: '' });
+      setRelationDraft({ targetParent: row.type === 'parent' ? '' : row.parent, effectiveAt: '2026/09/29', impact: '从生效日期开始', reason: '' });
       setRelationAction({ row, mode });
     };
     const submitRelationAction = () => {
@@ -412,7 +412,7 @@
     };
     const saveAdjustments = () => {
       if (!reason.trim()) return message.warning('请填写本次调优原因');
-      setHistory(old => [{ key: Date.now(), at: '2026/10/21 10:30', by: '张三 · PMC', parents: changedParents.join('、'), reason: reason.trim() }, ...old]);
+      setHistory(old => [{ key: Date.now(), at: '2026/09/29 10:30', by: '张三 · PMC', parents: changedParents.join('、'), reason: reason.trim() }, ...old]);
       setModalOpen(false);
       setReason('');
       setReasonTags([]);
@@ -473,7 +473,7 @@
       { key: 'days', label: '近期有销量天数', value: '≤ 10天', note: '与 ADU 条件同时满足时标记不稳定' }
     ];
     return h('div', { className: 'decomp-workspace' },
-      h('div', { className: 'decomp-page-head' }, h('div', null, h('div', { className: 'decomp-breadcrumb' }, '计划配置  /  规则与关系维护'), h('h1', null, '计划配置'), h('div', { className: 'decomp-page-meta' }, h(Tag, { color: 'blue', style: { marginInlineEnd: 0 } }, '参数版本 V1.1'), h('span', null, `${currentBatchLabel} · 规则快照已冻结`), h('span', null, '最后同步 2026/10/20 08:30'))), h(Button, { size: 'small', onClick: () => openRules(null) }, '查看当前拆解规则')),
+      h('div', { className: 'decomp-page-head' }, h('div', null, h('div', { className: 'decomp-breadcrumb' }, '计划配置  /  规则与关系维护'), h('h1', null, '计划配置'), h('div', { className: 'decomp-page-meta' }, h(Tag, { color: 'blue', style: { marginInlineEnd: 0 } }, '参数版本 V1.1'), h('span', null, `${currentBatchLabel} · 规则快照已冻结`), h('span', null, '最后同步 2026/09/28 08:30'))), h(Button, { size: 'small', onClick: () => openRules(null) }, '查看当前拆解规则')),
       h('div', { className: 'decomp-model-strip' },
         h('div', { className: 'decomp-model-item' }, h('strong', null, 'SPU'), h('span', null, '稳定商品归属 / 汇总层')),
         h('span', { className: 'decomp-model-arrow', 'aria-hidden': 'true' }, '→'),

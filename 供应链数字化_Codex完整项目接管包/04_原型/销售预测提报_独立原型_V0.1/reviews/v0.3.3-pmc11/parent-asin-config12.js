@@ -86,7 +86,7 @@
           h(Form.Item, { name: 'country', label: '适用国家', rules: [{ required: true }] }, select(['全部', 'US', 'UK', 'DE'])),
           h(Form.Item, { name: 'scope', label: '商品范围', rules: [{ required: true }] }, select(['全部商品', '服饰', '塑身衣', '运动内衣'])),
           h(Form.Item, { name: 'priority', label: '优先级（数字越小越优先）', rules: [{ required: true, type: 'integer', min: 1, max: 999 }] }, inputNumber({ min: 1, max: 999 })),
-          h(Form.Item, { name: 'effective', label: '生效时间', rules: [{ required: true, pattern: /^\d{4}-\d{2}-\d{2}$/, message: '格式：YYYY-MM-DD' }] }, h(Input, { placeholder: '2026-10-28' })),
+          h(Form.Item, { name: 'effective', label: '生效时间', rules: [{ required: true, pattern: /^\d{4}-\d{2}-\d{2}$/, message: '格式：YYYY-MM-DD' }] }, h(Input, { placeholder: '2026-10-06' })),
           h(Form.Item, { name: 'enabled', label: '状态', valuePropName: 'checked' }, h(Switch, { checkedChildren: '启用', unCheckedChildren: '停用' })),
           kind === 'forecast' ? h(React.Fragment, null,
             h(Form.Item, { name: 'lifecycle', label: '生命周期' }, select(['成长', '后期', '全部'])),
@@ -353,5 +353,5 @@
     const body = h('div', { className: 'pc12-workspace' }, store.error() && h(Alert, { type: 'error', showIcon: true, message: store.error() }), h(FlowStrip), h(Tabs, { className: 'pc12-tabs', activeKey: tab, onChange: key => { setTab(key); setRoute({ tab: key }); }, items }), tab === 'rules' ? h(RuleWorkspace, { initialSub: route.sub, initialVersion: route.versionId }) : tab === 'relations' ? h(RelationshipWorkspace, { requestedId: route.versionId }) : h(ParametersWorkspace, { requestedId: route.versionId }));
     return h(antd.ConfigProvider, { theme: { token: { fontSize: 14 }, components: { Table: { fontSize: 13 }, Form: { labelFontSize: 12 } } } }, body);
   }
-  window.ParentAsinModule = { ParentAsinWorkspace, navigate, getCurrentBasis() { const db = store.get(), current = db.versions.find(v => v.batch === (typeof currentBatch === 'string' ? currentBatch : '2026-10-21')) || db.versions.at(-1); return { batch: current.batch, forecast: current.forecastId, split: current.splitId, relation: current.id, params: current.paramId, status: current.status }; } };
+  window.ParentAsinModule = { ParentAsinWorkspace, navigate, getCurrentBasis() { const db = store.get(), current = db.versions.find(v => v.batch === (typeof currentBatch === 'string' ? currentBatch : '2026-09-29')) || db.versions.at(-1); return { batch: current.batch, forecast: current.forecastId, split: current.splitId, relation: current.id, params: current.paramId, status: current.status }; } };
 })();

@@ -22,7 +22,7 @@
     },
     {
       "file": "forecast-batch-model.js",
-      "sha256": "ef11a232859605de965d7b296afe47185abf815668767c51311c2ad56ce143a8"
+      "sha256": "ea3e03f3974e0db6127c7941c13a403c93c8426c88d695c0a22357afe63ada8b"
     },
     {
       "file": "forecast-plan-workspace.js",
@@ -34,7 +34,7 @@
     },
     {
       "file": "index.html",
-      "sha256": "8d931467691580d40aa818415a58672416a9334f86a40778b3c4133a5f515c8d"
+      "sha256": "27efc9236d20a47f08f72ffe0bc93858dfecccf9b5276f7235b80097e18952cc"
     },
     {
       "file": "parent-asin.css",
@@ -42,7 +42,7 @@
     },
     {
       "file": "parent-asin.js",
-      "sha256": "eed5311a31828853f95801fb9014a24b5d71ad857d37a09701ef0f586c70aaaa"
+      "sha256": "6aa486037587fff84a0a2feeaf65deb04d55fef9594499cec73434b9adfb432f"
     },
     {
       "file": "parent-asin-config12.css",
@@ -50,15 +50,15 @@
     },
     {
       "file": "parent-asin-config12.js",
-      "sha256": "f133bfc45501a95868518bd0fab9de894e75049aee95cffb16c9fbc89881e2ff"
+      "sha256": "b1400b2046c8810e4987a92919748d3c947d36acfb74524b9d3c2d68ea1ba5a8"
     },
     {
       "file": "planning-model.js",
-      "sha256": "2717106fc073220cef869afd753888344c312e6bef2595aa03c4da42f8ea6a12"
+      "sha256": "2b8667e310f769d77897583e665f4dc2d484ebe2c5b0cc24d2ce10d71a7e1728"
     },
     {
       "file": "pmc-workflow.js",
-      "sha256": "d8687984fed5287b7a4379fff15479734cbefd5a75b3e914ea7e26a3956b90f8"
+      "sha256": "66427358b2eb33e623a93ff941d3ff5fc72392afff378082ad10523a86389dd2"
     },
     {
       "file": "sales-freeze.css",
@@ -70,7 +70,7 @@
     },
     {
       "file": "submission-window.js",
-      "sha256": "af0f08d93d787c6f5e56b7c3c70b7c7743676e4fc13fdb984492f589bcec3fd1"
+      "sha256": "c7133fbd14d33bc59aae922487e1b9fff4a54631b07d1f4f0ccc83274ce798b3"
     },
     {
       "file": "v019.css",
@@ -86,7 +86,7 @@
     },
     {
       "file": "v021.js",
-      "sha256": "082bc74a1c0b0a53ac053489c03c5ea2cacc3c730c67f9d21851ad7ee66c0b68"
+      "sha256": "beee380ee57a0f82f9c48d6fb98c26fa9ee7d52029cb16118336d5242d3ce563"
     },
     {
       "file": "v022.css",
@@ -98,7 +98,7 @@
     },
     {
       "file": "v024-core.js",
-      "sha256": "46bcd13031aba773d38ab04df74b7aa27d9ec98c86d8a8e24fc63e8448439510"
+      "sha256": "aa56349f5247e618ce9ccc013fdce372c62c6b5dafcfde563327ec162a2ed513"
     },
     {
       "file": "v024.css",
@@ -114,7 +114,7 @@
     },
     {
       "file": "v026-insights.js",
-      "sha256": "3f162c5accb2e9cc10e9c07fc7bc0535b3e16953be3494d9dd2595031173cf2f"
+      "sha256": "89b065ba1950fb77ccc5d0417b0a5b208d3ea7e9cfbaecf3ff34a75a7483121d"
     },
     {
       "file": "v026.css",
@@ -209,6 +209,6 @@
       "sha256": "35f4f974f4b2bcd44da73963347f8952e341f83909e4498227d4e26b98f66f0d"
     }
   ],
-  "version": "0.3.5-sales-batch-sync1",
+  "version": "0.3.6-performance-date1",
   "status": "active"
 }

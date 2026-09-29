@@ -24,7 +24,7 @@
   const totalsValid = rows => rows.length > 0 && parentGroups(rows).every(siblings => siblings.every(r => Number.isInteger(r.final) && r.final >= 0 && r.final <= 10000) && sum(siblings.map(r => r.final)) === 10000);
   const params = { history: 84, recent: 14, historyWeight: 70, recentWeight: 30, adu: 2, sellingDays: 10, growthHistory: 30, growthRecent: 10, lateHistory: 45, lateRecent: 20, season: 1, listing: 1 };
   function newRule(kind, p = params) {
-    return { code: '', name: '', platform: 'Amazon', country: '全部', scope: '全部商品', tag: '', parent: '', scene: '普通父ASIN', priority: 100, enabled: true, effective: '2026-10-01', creator: 'PMC计划员', updatedAt: now(), method: '历史份额', history: p.history, recent: p.recent, historyWeight: p.historyWeight, recentWeight: p.recentWeight, abnormal: true, adu: p.adu, sellingDays: p.sellingDays, normalize: true, allowManual: true, floor: 5, fixed: '', changeDays: 30, lifecycle: '成长', forecastHistory: p.growthHistory, forecastRecent: p.growthRecent, forecastHistoryWeight: 40, forecastRecentWeight: 60, alpha: '0.10/0.20/0.35', season: p.season, listing: p.listing, clean: '剔除断货及活动异常日', kind };
+    return { code: '', name: '', platform: 'Amazon', country: '全部', scope: '全部商品', tag: '', parent: '', scene: '普通父ASIN', priority: 100, enabled: true, effective: '2026-09-29', creator: 'PMC计划员', updatedAt: now(), method: '历史份额', history: p.history, recent: p.recent, historyWeight: p.historyWeight, recentWeight: p.recentWeight, abnormal: true, adu: p.adu, sellingDays: p.sellingDays, normalize: true, allowManual: true, floor: 5, fixed: '', changeDays: 30, lifecycle: '成长', forecastHistory: p.growthHistory, forecastRecent: p.growthRecent, forecastHistoryWeight: 40, forecastRecentWeight: 60, alpha: '0.10/0.20/0.35', season: p.season, listing: p.listing, clean: '剔除断货及活动异常日', kind };
   }
   function parseFixed(text) {
     const map = {};
@@ -122,18 +122,18 @@
   function seed(source) {
     const base = newRule('split'), forecast = newRule('forecast');
     const splitRules = [{ ...base, code: 'S-DEFAULT', name: '普通父ASIN｜标准子体拆解', priority: 100 }, { ...base, code: 'S-CHANGE', name: '关系变更后30天特殊拆解', scene: '父子关系刚发生变化', priority: 10, history: 28, historyWeight: 50, recentWeight: 50, method: '历史+近期加权', abnormal: false }];
-    const db = { schema: 12, revision: 0, rules: [{ id: 'Forecast-V3', kind: 'forecast', createdAt: '2026-10-01T09:00:00+08:00', rules: [{ ...forecast, code: 'F-GROW', name: '成长款父体预测', priority: 10 }, { ...forecast, code: 'F-LATE', name: '后期父体预测', lifecycle: '后期', forecastHistory: 45, forecastRecent: 20, forecastHistoryWeight: 30, forecastRecentWeight: 70, priority: 20 }] }, { id: 'Split-V2', kind: 'split', createdAt: '2026-10-01T09:00:00+08:00', rules: splitRules }], params: [{ id: 'Param-V4', createdAt: '2026-10-01T09:00:00+08:00', ...params, basis: 'Clean销量' }], versions: [], changes: [] };
-    ['2026-09-30', '2026-10-07', '2026-10-14', '2026-10-21', '2026-10-28'].forEach((batch, bi) => {
+    const db = { schema: 12, revision: 0, rules: [{ id: 'Forecast-V3', kind: 'forecast', createdAt: '2026-09-01T09:00:00+08:00', rules: [{ ...forecast, code: 'F-GROW', name: '成长款父体预测', priority: 10 }, { ...forecast, code: 'F-LATE', name: '后期父体预测', lifecycle: '后期', forecastHistory: 45, forecastRecent: 20, forecastHistoryWeight: 30, forecastRecentWeight: 70, priority: 20 }] }, { id: 'Split-V2', kind: 'split', createdAt: '2026-09-01T09:00:00+08:00', rules: splitRules }], params: [{ id: 'Param-V4', createdAt: '2026-09-01T09:00:00+08:00', ...params, basis: 'Clean销量' }], versions: [], changes: [] };
+    ['2026-09-01', '2026-09-08', '2026-09-15', '2026-09-22', '2026-09-29', '2026-10-06'].forEach((batch, bi) => {
       const rows = source.flatMap((g, gi) => g.children.map((c, ci) => {
         const weights = g.children.length === 4 ? [40, 30, 20, 10] : g.children.length === 3 ? [46, 32, 22] : [58, 42];
         const facts = Array.from({ length: 180 }, (_, d) => Math.max(0, Math.round(weights[ci] / 3 + ((d + ci + bi) % 9 - 4))));
         if (ci === g.children.length - 1) facts.splice(-14, 14, ...Array.from({ length: 14 }, (_, i) => i % 3 === 0 ? 0 : 1));
-        return { id: [g.platform, g.market, g.account, c.asin].join('|'), platform: g.platform, country: g.market, store: g.account, spu: g.spu, productType: '服饰', parent: gi === 0 && bi < 2 ? 'B0OLDPOOL1' : g.parent, child: c.asin, sellerSku: c.businessCode || c.sku, tags: [...g.tags, ci === g.children.length - 1 ? '小众尺码' : '标准尺码'], isNew: false, changedDays: gi === 0 && bi >= 2 ? 7 + (bi - 2) * 7 : null, demandBasis: Math.round((1000 - gi * 60) * weights[ci] / 100), facts, relationState: '平台同步' };
+        return { id: [g.platform, g.market, g.account, c.asin].join('|'), platform: g.platform, country: g.market, store: g.account, spu: g.spu, productType: '服饰', parent: gi === 0 && bi < 4 ? 'B0OLDPOOL1' : g.parent, child: c.asin, sellerSku: c.businessCode || c.sku, tags: [...g.tags, ci === g.children.length - 1 ? '小众尺码' : '标准尺码'], isNew: false, changedDays: gi === 0 && bi >= 4 ? 7 + (bi - 4) * 7 : null, demandBasis: Math.round((1000 - gi * 60) * weights[ci] / 100), facts, relationState: '平台同步' };
       }));
-      const id = 'R' + batch.replaceAll('-', ''), status = bi < 3 ? '历史版本' : bi === 3 ? '已冻结' : '草稿';
-      const version = { id, batch, effective: batch, platform: 'Amazon', country: 'US / UK', status, forecastId: 'Forecast-V3', splitId: 'Split-V2', paramId: 'Param-V4', createdAt: batch + 'T09:00:00+08:00', rows: calculate(rows, splitRules, batch < '2026-10-01' ? '2026-10-01' : batch) };
+      const id = 'R' + batch.replaceAll('-', ''), status = bi < 4 ? '历史版本' : bi === 4 ? '已冻结' : '草稿';
+      const version = { id, batch, effective: batch, platform: 'Amazon', country: 'US / UK', status, forecastId: 'Forecast-V3', splitId: 'Split-V2', paramId: 'Param-V4', createdAt: batch + 'T09:00:00+08:00', rows: calculate(rows, splitRules, batch) };
       db.versions.push(version);
-      if (bi === 2) {
+      if (bi === 4) {
         const previous = db.versions[bi - 1];
         version.rows.filter(r => r.parent !== previous.rows.find(p => p.id === r.id)?.parent).forEach(r => {
           const old = previous.rows.find(p => p.id === r.id);

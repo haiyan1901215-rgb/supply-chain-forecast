@@ -46,8 +46,8 @@
   const normalizeRatio = value => Math.max(0, Math.min(10000, Math.round(Number(value) || 0)));
   const nextVersion = value => String(value || '').replace(/V(\d+)$/, (_, number) => `V${String(Number(number) + 1).padStart(number.length, '0')}`);
   const comboHistory = (code, version, lines) => [
-    { version, effectiveFrom: '2026-10-01', effectiveTo: '2026-10-31', lines: clone(lines) },
-    { version: 'V2', effectiveFrom: '2026-11-01', effectiveTo: null, lines: [{ sku: 'SKU-A', quantity: 1 }, { sku: 'SKU-C', quantity: 2 }] }
+    { version, effectiveFrom: '2026-09-01', effectiveTo: '2026-09-30', lines: clone(lines) },
+    { version: 'V2', effectiveFrom: '2026-10-01', effectiveTo: null, lines: [{ sku: 'SKU-A', quantity: 1 }, { sku: 'SKU-C', quantity: 2 }] }
   ].map(item => ({ ...item, code }));
   const businessObjectForRow = row => {
     const source = row.businessObjectType ? row : row.childRef;
@@ -65,7 +65,7 @@
         type: 'COMBO',
         code: 'COMB-001',
         version: 'V1',
-        snapshot: { code: 'COMB-001', version: 'V1', effectiveFrom: '2026-10-01', effectiveTo: '2026-10-31', lines: clone(lines) },
+        snapshot: { code: 'COMB-001', version: 'V1', effectiveFrom: '2026-09-01', effectiveTo: '2026-09-30', lines: clone(lines) },
         history: comboHistory('COMB-001', 'V1', lines)
       };
     }
@@ -130,7 +130,7 @@
     abnormalCondition: '14天 Clean ADU < 2 且 14天有销量天数 ≤ 10天',
     normalization: true,
     manualAllowed: true,
-    effectiveTime: (id.match(/(\d{4})(\d{2})(\d{2})/) || []).slice(1).join('-') || '2026-10-21'
+    effectiveTime: (id.match(/(\d{4})(\d{2})(\d{2})/) || []).slice(1).join('-') || '2026-09-29'
   });
   const defaultSplitRuleTemplates = () => ([
     { id: 'SPLIT-TPL-DEFAULT', name: '默认子体拆解', scope: '正常销售子体', conditionText: '商品标签 = 正常销售', historyWindow: 84, recentWindow: 14, historyWeight: 100, recentWeight: 0, status: '启用', priority: 10 },
@@ -510,39 +510,48 @@
     return batch;
   }
   function seed(services = {}) {
-    const previousDate = '2026-10-07';
-    const currentDate = '2026-10-21';
+    const historicalDates = ['2026-09-08', '2026-09-15', '2026-09-22'];
+    const currentDate = '2026-09-29';
+    const previousDate = historicalDates.at(-1);
     const previousRelations = rowsFromGroups(sourceGroups(services), previousDate, services).map(row => relationFromRow(row, previousDate));
     const supportsDemoMove = previousRelations.some(row => row.parentASIN === 'B0GRGFFVVN' && row.childASIN === 'B0GRG7J9MN') && previousRelations.some(row => row.parentASIN === 'B0H4QG3TLS');
     const currentRelations = rowsFromGroups(sourceGroups(services), currentDate, services).map(row => ({
       ...relationFromRow(row, currentDate),
       ...(supportsDemoMove && row.childASIN === 'B0GRG7J9MN' ? { parentASIN: 'B0H4QG3TLS', relationState: 'PMC本批次确认' } : {})
     }));
-    const currentRelationChanges = supportsDemoMove ? [{ id: 'REL-CHANGE-001', childASIN: 'B0GRG7J9MN', from: 'B0GRGFFVVN', to: 'B0H4QG3TLS', type: '父体变更', beforeShare: 3500, afterShare: 2700, reason: '父体Listing结构调整', actor: 'PMC计划员', at: '2026-10-21T10:30:00+08:00' }] : [];
-    const previous = createBatch({
-      id: 'FB-20261007-01', batchVersion: 'V20261007-01', name: '2026-10-07 第1批预测', batchDate: previousDate,
-      dataCutoffDate: '2026-10-06', status: '已完成', currentStep: 'review', submissionState: '已冻结', workflowState: '已完成', relationConfirmed: true, splitConfirmed: true, resultGenerated: true, resultVersion: 'RESULT-20261007-V01',
-      relationVersion: 'REL-20261007-V01', splitRuleVersion: 'SPLIT-20261007-V01', parameterVersion: 'PARAM-20261007-V01',
-      relations: previousRelations
-    }, services);
+    const currentRelationChanges = supportsDemoMove ? [{ id: 'REL-CHANGE-001', childASIN: 'B0GRG7J9MN', from: 'B0GRGFFVVN', to: 'B0H4QG3TLS', type: '父体变更', beforeShare: 3500, afterShare: 2700, reason: '父体Listing结构调整', actor: 'PMC计划员', at: '2026-09-29T10:30:00+08:00' }] : [];
+    const historical = historicalDates.reduce((batches, batchDate) => {
+      const suffix = batchDate.replaceAll('-', '');
+      const previous = batches.at(-1);
+      const relations = rowsFromGroups(sourceGroups(services), batchDate, services).map(row => relationFromRow(row, batchDate));
+      const batch = createBatch({
+        id: `FB-${suffix}-01`, batchVersion: `V${suffix}-01`, name: `${batchDate} 预测批次`, batchDate,
+        dataCutoffDate: shiftDate(batchDate, -1), status: '已完成', currentStep: 'review', submissionState: '已冻结', workflowState: '已完成', relationConfirmed: true, splitConfirmed: true, resultGenerated: true, resultVersion: `RESULT-${suffix}-V01`,
+        relationVersion: `REL-${suffix}-V01`, forecastRuleVersion: `FORECAST-${suffix}-V01`, splitRuleVersion: `SPLIT-${suffix}-V01`, parameterVersion: `PARAM-${suffix}-V01`,
+        relations
+      }, services, previous);
+      batches.push(batch);
+      return batches;
+    }, []);
+    const previous = historical.at(-1);
     const current = createBatch({
-      id: 'FB-20261021-01', batchVersion: 'V20261021-01', name: '2026-10-21 第1批预测', batchDate: currentDate,
-      dataCutoffDate: '2026-10-20', status: '评估中', currentStep: 'assessment', submissionState: '待发布', previousBatchId: previous.id, workflowState: '评估中', relationConfirmed: false, splitConfirmed: false, resultGenerated: false,
-      relationVersion: 'REL-20261021-V02', forecastRuleVersion: 'FORECAST-20261021-V01', splitRuleVersion: 'SPLIT-20261021-V01', parameterVersion: 'PARAM-20261021-V01',
+      id: 'FB-20260929-01', batchVersion: 'V20260929-01', name: '2026-09-29 预测批次', batchDate: currentDate,
+      dataCutoffDate: '2026-09-28', status: '评估中', currentStep: 'assessment', submissionState: '待发布', previousBatchId: previous.id, workflowState: '评估中', relationConfirmed: false, splitConfirmed: false, resultGenerated: false,
+      relationVersion: 'REL-20260929-V02', forecastRuleVersion: 'FORECAST-20260929-V01', splitRuleVersion: 'SPLIT-20260929-V01', parameterVersion: 'PARAM-20260929-V01',
       relations: currentRelations,
       relationChanges: currentRelationChanges,
       auditTimeline: [
-        { at: '2026-10-21T09:00:00+08:00', action: '创建预测批次', actor: 'PMC计划员', reason: '读取上一批次预测、实际与关系快照' },
-        { at: '2026-10-21T09:05:00+08:00', action: '识别评估异常', actor: '系统', reason: supportsDemoMove ? '检测到父子关系变化，等待PMC评估确认' : '检测上一批次预测与实际偏差' }
+        { at: '2026-09-29T09:00:00+08:00', action: '创建预测批次', actor: 'PMC计划员', reason: '读取上一批次预测、实际与关系快照' },
+        { at: '2026-09-29T09:05:00+08:00', action: '识别评估异常', actor: '系统', reason: supportsDemoMove ? '检测到父子关系变化，等待PMC评估确认' : '检测上一批次预测与实际偏差' }
       ]
     }, services, previous);
     current.relationSnapshot = current.relationSnapshot.map(relation => ({ ...relation, previousParentASIN: previous.relationSnapshot.find(old => old.childASIN === relation.childASIN && old.country === relation.country)?.parentASIN || relation.parentASIN }));
     if (current.relationChanges[0]) current.relationChanges[0].previousBatchId = previous.id;
     if (supportsDemoMove) current.relationVersions = [
-      { version: 'REL-20261021-V01', at: '2026-10-21T09:00:00+08:00', reason: '继承上一批次有效关系', relations: clone(previous.relationSnapshot), removedRelations: [] },
-      { version: current.relationVersion, at: '2026-10-21T10:30:00+08:00', reason: '确认父体变更', relations: clone(current.relationSnapshot), removedRelations: [] }
+      { version: 'REL-20260929-V01', at: '2026-09-29T09:00:00+08:00', reason: '继承上一批次有效关系', relations: clone(previous.relationSnapshot), removedRelations: [] },
+      { version: current.relationVersion, at: '2026-09-29T10:30:00+08:00', reason: '确认父体变更', relations: clone(current.relationSnapshot), removedRelations: [] }
     ];
-    return { schema: 4, revision: 1, currentBatchId: current.id, batches: [previous, current] };
+    return { schema: 4, revision: 1, currentBatchId: current.id, batches: [...historical, current] };
   }
   function validState(value) {
     return value && value.schema === 4 && Array.isArray(value.batches) && value.batches.length > 0 && value.batches.every(batch => batch.id && Array.isArray(batch.childForecastResults) && Array.isArray(batch.resultSnapshots) && Array.isArray(batch.relationVersions) && batch.relationVersion && batch.assessment && 'comparisonDays' in batch.assessment);
