@@ -48,11 +48,11 @@
       document.addEventListener('pointerdown',onPointerDown,true);
       return()=>{document.removeEventListener('keydown',escape);document.removeEventListener('scroll',onScroll,true);document.removeEventListener('pointerdown',onPointerDown,true);};
     },[open]);
-    const event=c.activity[date],manual=kind==='manual',values=manual?{qty:c.manual[date],reason:c.manualReasons[date]||''}:{qty:event?.qty,name:event?.name||'',date:dayjs(date),note:event?.note||''};
-    const change=[...(c.changes||[])].reverse().find(item=>item.date===date&&item.line===(manual?'人工预测':'活动预测'));
+    const draft=batchDraft(c,state.batch),event=draft.activity[date],manual=kind==='manual',values=manual?{qty:draft.manual[date],reason:draft.manualReasons[date]||''}:{qty:event?.qty,name:event?.name||'',date:dayjs(date),note:event?.note||''};
+    const change=[...(draft.changes||[])].reverse().find(item=>item.date===date&&item.line===(manual?'人工预测':'活动预测'));
     const changeTime=change?.at?dayjs(change.at).format('YYYY/MM/DD HH:mm'):'';
     const preview=h('div',{className:'reason-preview activity-preview-compact','aria-label':manual?'人工预测详情':'活动预测详情'},...(manual?[
-        ['预测日期',formatKey(date)],['人工预测销量',num(c.manual[date])],['调整原因',c.manualReasons[date]||'']
+        ['预测日期',formatKey(date)],['人工预测销量',num(draft.manual[date])],['调整原因',draft.manualReasons[date]||'']
       ]:[
         ['活动日期',formatKey(date)],['活动预测销量',num(event?.qty??0)],['活动名称',event?.name||''],['备注',event?.note||'']
       ]).concat([['调整人',change?.by||''],['调整时间',changeTime]]).map(([label,value])=>h('div',{key:label,className:'activity-preview-field'},h('span',null,label),h('div',null,value))));
@@ -107,8 +107,8 @@
 
   function ForecastEditor({edit,onClose}){
     const [form]=antd.Form.useForm(),[error,setError]=useState('');
-    const {modal}=App.useApp(),c=findChild(edit.id),isNote=edit.kind==='note',isManual=edit.kind==='manual',event=c.activity[edit.key];
-    const initial=isNote?{note:notes[c.id]||''}:isManual?{qty:c.manual[edit.key],reason:c.manualReasons[edit.key]||''}:{qty:event?.qty,name:event?.name||'',date:dayjs(edit.key),note:event?.note||''};
+    const {modal}=App.useApp(),c=findChild(edit.id),draft=batchDraft(c,state.batch),isNote=edit.kind==='note',isManual=edit.kind==='manual',event=draft.activity[edit.key];
+    const initial=isNote?{note:notes[c.id]||''}:isManual?{qty:draft.manual[edit.key],reason:draft.manualReasons[edit.key]||''}:{qty:event?.qty,name:event?.name||'',date:dayjs(edit.key),note:event?.note||''};
     const close=()=>{if(form.isFieldsTouched())modal.confirm({title:'放弃未保存的填写？',okText:'放弃修改',cancelText:'继续填写',onOk:onClose});else onClose();};
     const commit=(values,clear=false)=>{
       setError('');
@@ -120,19 +120,19 @@
       }else{
         const key=isManual?edit.key:values.date?.format('YYYY-MM-DD')||edit.key;
         if(!canEdit(key)){form.setFields([{name:'date',errors:['日期需在当前预测范围内']}]);return;}
-        if(!isManual&&!clear&&key!==edit.key&&c.activity[key]){form.setFields([{name:'date',errors:['该日期已有活动预测，请选择其他日期']}]);return;}
-        const previous={manual:{...c.manual},manualReasons:{...c.manualReasons},activity:{...c.activity},changes:[...c.changes]};
+        if(!isManual&&!clear&&key!==edit.key&&draft.activity[key]){form.setFields([{name:'date',errors:['该日期已有活动预测，请选择其他日期']}]);return;}
+        const previous={manual:{...draft.manual},manualReasons:{...draft.manualReasons},activity:{...draft.activity},changes:[...draft.changes]};
         if(isManual){
-          if(clear){delete c.manual[edit.key];delete c.manualReasons[edit.key];}
-          else{c.manual[edit.key]=values.qty;c.manualReasons[edit.key]=values.reason.trim();}
-          c.changes.push({date:edit.key,line:'人工预测',before:previous.manual[edit.key]??null,after:clear?null:values.qty,reason:clear?'清除人工预测':values.reason.trim()});
+          if(clear){delete draft.manual[edit.key];delete draft.manualReasons[edit.key];}
+          else{draft.manual[edit.key]=values.qty;draft.manualReasons[edit.key]=values.reason.trim();}
+          draft.changes.push({date:edit.key,line:'人工预测',before:previous.manual[edit.key]??null,after:clear?null:values.qty,reason:clear?'清除人工预测':values.reason.trim()});
         }else{
-          if(clear||key!==edit.key)delete c.activity[edit.key];
-          if(!clear)c.activity[key]={qty:values.qty,name:values.name.trim(),date:key,note:(values.note||'').trim()};
-          c.changes.push({date:key,line:'活动预测',before:event?.qty??null,after:clear?null:values.qty,reason:clear?'清除活动预测':values.name.trim()});
+          if(clear||key!==edit.key)delete draft.activity[edit.key];
+          if(!clear)draft.activity[key]={qty:values.qty,name:values.name.trim(),date:key,note:(values.note||'').trim()};
+          draft.changes.push({date:key,line:'活动预测',before:event?.qty??null,after:clear?null:values.qty,reason:clear?'清除活动预测':values.name.trim()});
         }
-        Object.assign(c.changes[c.changes.length-1],{by:groups.find(g=>g.children.some(child=>child.id===c.id))?.owner||'',at:new Date().toISOString()});
-        if(!persistCurrent()){Object.assign(c,previous);setError('保存失败，填写内容仍保留，请重试');return;}
+        Object.assign(draft.changes[draft.changes.length-1],{by:groups.find(g=>g.children.some(child=>child.id===c.id))?.owner||'',at:new Date().toISOString()});
+        if(!persistCurrent()){Object.assign(draft,previous);setError('保存失败，填写内容仍保留，请重试');return;}
       }
       onClose();renderTable();toast(clear?'已清除预测':'已保存');
     };
@@ -140,7 +140,7 @@
     if(isNote)return h('div',{className:'inline-note-editor'},h(antd.Form,{form,initialValues:initial,onFinish:values=>commit(values),validateTrigger:['onChange','onBlur']},
       h(antd.Form.Item,{name:'note',className:'forecast-note-field',rules:[{max:200,message:'最多200字'}]},h(Input.TextArea,{...count,'aria-label':'商品备注',autoFocus:true}))),
       error?h(Alert,{type:'error',message:error}):null,h('div',{className:'forecast-editor-footer'},h('span'),h(Space,null,h(Button,{onClick:close},'取消'),h(Button,{type:'primary',onClick:()=>form.submit()},'保存'))));
-    return h(antd.Modal,{open:true,title:isNote?'商品备注':isManual?'人工预测':'活动预测',width:440,onCancel:close,maskClosable:false,destroyOnHidden:true,footer:h('div',{className:'forecast-editor-footer'},!isNote&&(isManual?c.manual[edit.key]!=null:Boolean(event))?h(Button,{danger:true,onClick:()=>commit({},true)},'清除预测'):h('span'),h(Space,null,h(Button,{onClick:close},'取消'),h(Button,{type:'primary',onClick:()=>form.submit()},'保存')))},
+    return h(antd.Modal,{open:true,title:isNote?'商品备注':isManual?'人工预测':'活动预测',width:440,onCancel:close,maskClosable:false,destroyOnHidden:true,footer:h('div',{className:'forecast-editor-footer'},!isNote&&(isManual?draft.manual[edit.key]!=null:Boolean(event))?h(Button,{danger:true,onClick:()=>commit({},true)},'清除预测'):h('span'),h(Space,null,h(Button,{onClick:close},'取消'),h(Button,{type:'primary',onClick:()=>form.submit()},'保存')))},
       h('div',{className:'forecast-editor-context'},c.asin+(edit.key?' · '+formatKey(edit.key):'')),
       h(antd.Form,{form,layout:'vertical',initialValues:initial,onFinish:values=>commit(values),scrollToFirstError:true,validateTrigger:['onChange','onBlur']},...fields),error?h(Alert,{type:'error',message:error,showIcon:true}):null);
   }
@@ -231,7 +231,7 @@
       portals.push(ReactDOM.createPortal(h(Tooltip,{title:(expanded?'收起':'展开')+'当前页填报明细'},h(Button,{type:'text',size:'small',disabled:!children.length,className:'forecast-toggle-action',style:{width:20,minWidth:20,height:22,padding:0,color:enterpriseThemeV020.token.colorTextSecondary},icon:h(expanded?icons.UpOutlined:icons.DownOutlined),'aria-label':label,'aria-expanded':expanded,'data-forecast-toggle-button':id,onClick:()=>{children.forEach(c=>expanded?state.expandedChildren.delete(c.id):state.expandedChildren.add(c.id));renderTable();requestAnimationFrame(()=>document.querySelector('[data-forecast-toggle-button="'+id+'"]')?.focus({preventScroll:true}));}})),host,'forecast-'+id));
     });
     $$('[data-reason-host]').forEach(host=>{
-      const c=findChild(host.dataset.reasonHost),key=host.dataset.reasonDate,content=host.dataset.reasonKind==='manual'?c.manualReasons[key]:[c.activity[key]?.name,c.activity[key]?.note].filter(Boolean).join('\n');
+      const c=findChild(host.dataset.reasonHost),key=host.dataset.reasonDate,draft=batchDraft(c,state.batch),content=host.dataset.reasonKind==='manual'?draft.manualReasons[key]:[draft.activity[key]?.name,draft.activity[key]?.note].filter(Boolean).join('\n');
       portals.push(ReactDOM.createPortal(h(ReasonPopover,{content,label:host.dataset.reasonLabel,c,date:key,kind:host.dataset.reasonKind}),host,'reason-'+c.id+'-'+host.dataset.reasonKind+'-'+key));
     });
     $$('[data-history-preview-host]').forEach(host=>{

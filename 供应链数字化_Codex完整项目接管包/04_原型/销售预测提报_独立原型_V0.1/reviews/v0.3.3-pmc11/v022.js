@@ -8,7 +8,7 @@ dateCells=function(c,line){
   const template=document.createElement('template');template.innerHTML='<table><tbody><tr>'+v022Cells(c,line)+'</tr></tbody></table>';
   template.content.querySelectorAll('td').forEach((td,i)=>{
     const col=visibleColumns()[i];if(col.type!=='day')return;
-    const key=dateKey(col.days[0]),reason=line==='manual'?c.manualReasons[key]:[c.activity[key]?.name,c.activity[key]?.note].filter(Boolean).join('\n');
+    const key=dateKey(col.days[0]),draft=batchDraft(c,state.batch),reason=line==='manual'?draft.manualReasons[key]:[draft.activity[key]?.name,draft.activity[key]?.note].filter(Boolean).join('\n');
     if(reason)td.insertAdjacentHTML('beforeend',`<span class="reason-host" data-reason-host="${c.id}" data-reason-kind="${line}" data-reason-date="${key}"></span>`);
   });
   return template.content.querySelector('tr').innerHTML;

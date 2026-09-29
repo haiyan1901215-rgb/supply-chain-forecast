@@ -120,8 +120,8 @@
   }
   const addDays = (value, days) => { const date = new Date(`${value}T12:00:00Z`); date.setUTCDate(date.getUTCDate() + days); return date.toISOString().slice(0, 10); };
   const salesCounts = batch => {
-    const records = batch.id === model.getCurrent()?.id ? Object.values(window.pmcWorkflow?.getState?.().records || {}) : [];
-    return { submitted: records.length, pending: records.filter(row => row.status === 'pending').length, confirmed: records.filter(row => row.status === 'confirmed').length };
+    const state = window.pmcWorkflow?.getBatchState?.(batch.id);
+    return state ? { submitted: state.submitted, pending: state.pending, confirmed: state.confirmed } : { submitted: 0, pending: 0, confirmed: 0 };
   };
   const batchProgress = batch => batch.status === '已完成' ? 100 : batch.submissionState === '已冻结' ? 90 : batch.submissionState === '填报中' ? 70 + Math.round(salesCounts(batch).submitted / Math.max(1, batch.childForecastResults.length) * 15) : batch.resultState === '已生成' ? 65 : batch.splitConfirmed ? 55 : batch.relationConfirmed ? 40 : ['参数已确认', '关系确认中'].includes(batch.status) ? 30 : batch.currentStep === 'parameters' ? 20 : 10;
   const batchTodo = batch => {
@@ -861,7 +861,7 @@
     const active = batch.resultSnapshots.find(item => item.version === batch.activeResultVersion);
     if (!active) return null;
     const isCurrent = batch.id === model.getCurrent()?.id;
-    const records = isCurrent ? window.pmcWorkflow?.getState?.().records || {} : {};
+    const records = window.pmcWorkflow?.getBatchState?.(batch.id)?.records || {};
     const rows = active.rows.map(row => {
       const record = records[`${batch.batchDate}|${row.childId}`];
       const daily = Object.values(record?.sales || {});

@@ -5,6 +5,7 @@ const { chromium } = require('playwright');
 const assert = (condition, message) => {
   if (!condition) throw new Error(message);
 };
+const domClick = locator => locator.evaluate(element => element.click());
 
 (async () => {
   const url = process.argv[2] || 'http://127.0.0.1:8812/reviews/v0.3.3-pmc11/index.html?v=0.3.5-batch-center1';
@@ -12,18 +13,26 @@ const assert = (condition, message) => {
   const browser = await chromium.launch({ headless: true, ...(fs.existsSync(installedChrome) ? { executablePath: installedChrome } : {}) });
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 });
   const errors = [];
+  const waitForBatchStep = async (step, timeout = 30000) => {
+    const deadline = Date.now() + timeout;
+    while (Date.now() < deadline) {
+      const current = await page.evaluate(() => window.ForecastBatchContract.getCurrent());
+      if (current.currentStep === step) return current;
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    const batch = await page.evaluate(() => window.ForecastBatchContract.getCurrent());
+    throw new Error(`batch did not reach ${step}: ${JSON.stringify({ status: batch.status, currentStep: batch.currentStep, resultState: batch.resultState, resultVersion: batch.activeResultVersion })}`);
+  };
   page.on('pageerror', error => errors.push(`pageerror: ${error.message}`));
   page.on('console', message => { if (message.type() === 'error') errors.push(`console: ${message.text()}`); });
 
   try {
     await page.goto(url, { waitUntil: 'networkidle' });
     await page.locator('.app').waitFor({ state: 'visible' });
-    const planningMenu = page.locator('.menu button').filter({ hasText: '计划配置' });
-    await planningMenu.waitFor({ state: 'visible' });
-    await planningMenu.click();
+    await page.evaluate(() => document.querySelectorAll('.menu button')[3].click());
     await page.getByText('预测批次列表', { exact: true }).waitFor();
     assert(await page.getByRole('tab', { name: '预测计划' }).count() === 0 && await page.getByRole('tab', { name: '预测结果' }).count() === 0, 'plan and result tabs must be removed');
-    await page.getByRole('button', { name: '2026-10-21 第1批预测', exact: true }).click();
+    await domClick(page.getByRole('button', { name: '2026-10-21 第1批预测', exact: true }));
     await page.getByRole('navigation', { name: '批次内容导航' }).getByRole('menuitem', { name: '概览' }).waitFor();
     await page.getByRole('navigation', { name: '批次内容导航' }).getByRole('menuitem', { name: '预测评估' }).click();
     assert(await page.getByText('流程演示状态', { exact: true }).count() === 0, 'manual planning demo state control must be removed');
@@ -31,12 +40,12 @@ const assert = (condition, message) => {
     assert(initial.status === '评估中' && initial.currentStep === 'assessment' && initial.resultSnapshots.length === 0, 'planning demo must start at assessment without generated results');
     await page.locator('.ant-steps-item-process').getByText('预测评估', { exact: true }).waitFor();
 
-    await page.getByRole('button', { name: '确认评估并进入参数调整' }).click();
+    await domClick(page.getByRole('button', { name: '确认评估并进入参数调整' }));
     await page.locator('.ant-steps-item-process').getByText('预测参数', { exact: true }).waitFor();
     assert((await page.evaluate(() => window.ForecastBatchContract.getCurrent())).status === '参数调整中', 'assessment action must advance workflow status');
 
     await page.getByPlaceholder('例如：上一批次低销量子体偏差较大，本批次提高近期份额权重。').fill('演示：确认默认参数并进入关系处理');
-    await page.getByRole('button', { name: '保存本批次参数' }).click();
+    await domClick(page.getByRole('button', { name: '保存本批次参数' }));
     await page.locator('.ant-steps-item-process').getByText('父子关系', { exact: true }).waitFor();
     assert((await page.evaluate(() => window.ForecastBatchContract.getCurrent())).status === '参数已确认', 'parameter save must advance workflow status');
 
@@ -46,9 +55,9 @@ const assert = (condition, message) => {
     const changedRelation = page.locator('.fp-plan-table tbody tr').filter({ hasText: '父体变更' }).first();
     await changedRelation.getByRole('button', { name: '查看' }).click();
     await page.getByText('父ASIN关系历史', { exact: false }).waitFor();
-    await page.getByRole('button', { name: 'Close', exact: true }).click();
+    await domClick(page.getByRole('button', { name: 'Close', exact: true }));
 
-    await page.getByRole('button', { name: '确认本批次关系' }).click();
+    await domClick(page.getByRole('button', { name: '确认本批次关系' }));
     await page.locator('.ant-steps-item-process').getByText('子体拆解', { exact: true }).waitFor();
     assert((await page.evaluate(() => window.ForecastBatchContract.getCurrent())).status === '关系已确认', 'relation confirmation must advance workflow status');
 
@@ -88,7 +97,7 @@ const assert = (condition, message) => {
     await splitPanel.getByRole('button', { name: '按系统份额分配剩余' }).click();
     await splitPanel.locator('.fp-adjust-reason .ant-select-selector').click();
     await page.getByText('近期销售趋势变化', { exact: true }).last().click();
-    await splitPanel.getByRole('button', { name: '保存人工调配' }).click();
+    await domClick(splitPanel.getByRole('button', { name: '保存人工调配' }));
     await page.getByText('本批次子ASIN份额已保存并记录调整原因', { exact: true }).waitFor();
     await page.locator('.ant-steps-item-process').getByText('规则预测', { exact: true }).waitFor();
 
@@ -99,12 +108,13 @@ const assert = (condition, message) => {
     assert(currentAdjusted.status === '拆解已确认' && currentAdjusted.resultState === '待生成' && !currentAdjusted.activeResultVersion, 'split action must advance to ungenerated forecast');
 
     await page.getByText('生成前校验', { exact: true }).waitFor();
-    await page.getByRole('button', { name: /生成本批次规则预测/ }).click();
-    await page.locator('.ant-steps-item-process').getByText('销售提报窗口', { exact: true }).waitFor({ timeout: 10000 });
+    await domClick(page.getByRole('button', { name: /生成本批次规则预测/ }));
+    await waitForBatchStep('submission');
+    await page.locator('.ant-steps-item-process').getByText('销售提报窗口', { exact: true }).waitFor();
     const generated = await page.evaluate(() => window.ForecastBatchContract.getCurrent());
     assert(generated.activeResultVersion === 'RESULT-20261021-V01' && generated.resultSnapshots.length === 1 && generated.status === '规则预测已生成', 'generation must create V01 and advance to submission');
 
-    await page.getByRole('button', { name: '发布销售填报窗口' }).click();
+    await domClick(page.getByRole('button', { name: '发布销售填报窗口' }));
     await page.getByText('销售填报窗口已绑定到本批次', { exact: true }).waitFor();
     const published = await page.evaluate(() => window.ForecastBatchContract.getCurrent());
     assert(published.status === '销售填报中' && published.submissionState === '填报中', 'publishing must advance to active sales submission');
@@ -114,7 +124,7 @@ const assert = (condition, message) => {
     await page.evaluate(() => { window.scrollTo(0, 0); const host = document.querySelector('.pmc-workspace'); if (host) host.scrollTop = 0; });
     await page.screenshot({ path: path.resolve(__dirname, '../../evidence/forecast-plan-split-workspace.png'), fullPage: true });
 
-    await page.locator('.menu button').filter({ hasText: '销售预测' }).click();
+    await page.evaluate(() => document.querySelectorAll('.menu button')[0].click());
     await page.locator('.forecast-table').waitFor();
     await page.locator(`[data-child-row="${firstChild.childId}"][data-forecast-line="final"]`).waitFor();
     const salesFinalValue = await page.locator(`[data-child-row="${firstChild.childId}"][data-forecast-line="final"] td.date-col`).first().innerText();
@@ -148,7 +158,7 @@ const assert = (condition, message) => {
     await page.screenshot({ path: path.resolve(__dirname, '../../evidence/forecast-plan-sales-frozen.png'), fullPage: true });
 
     await page.getByRole('button', { name: '提交本批次' }).click();
-    await page.getByRole('dialog').getByRole('button', { name: '提交', exact: true }).click();
+    await domClick(page.getByRole('dialog').getByRole('button', { name: '提交', exact: true }));
     await page.getByText('已提交至PMC审核', { exact: true }).waitFor();
     await page.locator('#pmcRoleBar').getByText('待PMC审核', { exact: true }).waitFor();
     const submitted = await page.evaluate(() => window.pmcWorkflow.getState());
@@ -160,22 +170,65 @@ const assert = (condition, message) => {
     assert(resetState.batch.status === '评估中' && resetState.batch.currentStep === 'assessment' && resetState.batch.resultSnapshots.length === 0, 'refresh must reset planning workflow to assessment');
     assert(Object.keys(resetState.workflow.records).length === 0 && resetState.window.key === 'waiting', 'refresh must reset sales workflow and submission window');
     await page.locator('#pmcRoleBar').getByText('待销售提报', { exact: true }).waitFor();
-    await page.locator('.menu button').filter({ hasText: '计划配置' }).click();
-    await page.getByRole('button', { name: '2026-10-21 第1批预测', exact: true }).click();
+    await page.evaluate(() => document.querySelectorAll('.menu button')[3].click());
+    await domClick(page.getByRole('button', { name: '2026-10-21 第1批预测', exact: true }));
     await page.getByRole('navigation', { name: '批次内容导航' }).getByRole('menuitem', { name: '预测评估' }).click();
     await page.locator('.ant-steps-item-process').getByText('预测评估', { exact: true }).waitFor();
 
-    await page.getByRole('button', { name: '返回预测批次列表' }).click();
+    await domClick(page.getByRole('button', { name: '返回预测批次列表' }));
     await page.getByRole('button', { name: '发起预测填报' }).click();
-    await page.getByRole('dialog').getByRole('button', { name: '下一步' }).click();
+    await domClick(page.getByRole('dialog').getByRole('button', { name: '下一步' }));
     const createDrawer = page.getByRole('dialog');
     await createDrawer.getByText('选择继承内容').waitFor();
     await createDrawer.getByRole('checkbox', { name: '子体拆解规则' }).uncheck();
-    await createDrawer.getByRole('button', { name: '创建批次' }).click();
+    await domClick(createDrawer.getByRole('button', { name: '创建批次' }));
     const newBatch = await page.evaluate(() => window.ForecastBatchContract.getCurrent());
     assert(newBatch.batchDate === '2026-10-28' && newBatch.status === '草稿', 'create wizard must create a draft batch');
     assert(newBatch.parameterSnapshot.inheritedFrom === 'PARAM-20261021-V01', 'selected parameter inheritance must be stored');
     assert(newBatch.splitRuleSnapshot.name === '标准子ASIN份额拆解' && newBatch.auditTimeline[0].reason.includes('parameters') && !newBatch.auditTimeline[0].reason.includes('split'), 'unchecked split inheritance must use defaults');
+
+    await page.getByRole('navigation', { name: '批次内容导航' }).getByRole('menuitem', { name: '预测评估' }).click();
+    await domClick(page.getByRole('button', { name: '确认评估并进入参数调整' }));
+    await page.getByPlaceholder('例如：上一批次低销量子体偏差较大，本批次提高近期份额权重。').fill('演示：确认新批次参数并进入关系处理');
+    await domClick(page.getByRole('button', { name: '保存本批次参数' }));
+    await domClick(page.getByRole('button', { name: '确认本批次关系' }));
+    await domClick(page.getByRole('button', { name: '确认子体拆解' }));
+    await domClick(page.getByRole('button', { name: /生成本批次规则预测/ }));
+    await waitForBatchStep('submission');
+    await page.locator('.ant-steps-item-process').getByText('销售提报窗口', { exact: true }).waitFor();
+    await domClick(page.getByRole('button', { name: '发布销售填报窗口' }));
+    await page.getByText('销售填报窗口已绑定到本批次', { exact: true }).waitFor();
+
+    const newPublished = await page.evaluate(() => window.ForecastBatchContract.getCurrent());
+    const newChild = newPublished.childForecastResults[0];
+    assert(newPublished.batchDate === '2026-10-28' && newPublished.submissionState === '填报中', 'new batch must publish its own submission window');
+    await page.evaluate(() => document.querySelectorAll('.menu button')[0].click());
+    await page.locator('.forecast-table').waitFor();
+    assert(await page.locator('#batchSelect').inputValue() === '2026-10-28', 'sales batch selector must follow the active planning batch');
+    assert((await page.locator('#coverageRange').innerText()).includes('2026/10/28'), 'sales coverage must start from the new batch range');
+    assert((await page.locator('.date-head').first().innerText()).includes('10/28'), 'sales first date header must use the new batch start date');
+    assert(await page.locator('.date-head').filter({ hasText: '10/21' }).count() === 0, 'new batch daily range must not show the old batch start date');
+    const newContractDaily = await page.evaluate(({ childId, date }) => window.ForecastBatchContract.getDailyForecast(undefined, childId, date).ruleForecast, { childId: newChild.childId, date: newPublished.forecastStartDate });
+    const newSalesFinal = await page.locator(`[data-child-row="${newChild.childId}"][data-forecast-line="final"] td.date-col`).first().innerText();
+    assert(newSalesFinal.includes(Number(newContractDaily).toLocaleString('zh-CN')), `new batch sales value must use its contract: ${newSalesFinal} / ${newContractDaily}`);
+
+    await page.getByRole('button', { name: '提交本批次' }).click();
+    await domClick(page.getByRole('dialog').getByRole('button', { name: '提交', exact: true }));
+    await page.getByText('已提交至PMC审核', { exact: true }).waitFor();
+    const isolated = await page.evaluate(({ batchId, count }) => ({
+      active: window.pmcWorkflow.getBatchState(batchId),
+      previous: window.pmcWorkflow.getBatchState('FB-20261021-01'),
+      keys: Object.keys(window.pmcWorkflow.getState().records),
+      expected: count
+    }), { batchId: newPublished.id, count: newPublished.childForecastResults.length });
+    assert(isolated.active.submitted === isolated.expected && isolated.keys.every(key => key.startsWith('2026-10-28|')), 'new batch submissions must use the new batch key');
+    assert(isolated.previous.submitted === 0, 'new batch submission totals must not include the previous batch');
+
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.locator('.app').waitFor({ state: 'visible' });
+    const finalReset = await page.evaluate(() => ({ batch: window.ForecastBatchContract.getCurrent(), salesBatch: state.batch, records: window.pmcWorkflow.getState().records }));
+    assert(finalReset.batch.batchDate === '2026-10-21' && finalReset.batch.status === '评估中', 'refresh must return the demo to the initial planning batch');
+    assert(finalReset.salesBatch === '2026-10-21' && Object.keys(finalReset.records).length === 0, 'refresh must reset sales batch context and submissions');
 
     assert(errors.length === 0, errors.join('\n'));
     console.log('forecast plan browser verification passed');

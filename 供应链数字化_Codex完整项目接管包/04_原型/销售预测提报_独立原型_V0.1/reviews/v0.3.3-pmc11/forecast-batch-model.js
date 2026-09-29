@@ -741,6 +741,7 @@
       contract: {
         getCurrent: () => api.getCurrent(),
         getBatch: batchId => api.getBatch(batchId),
+        listBatches: () => api.list(),
         getWindow: batchId => api.getWindow(batchId),
         getDailyForecast: (batchId, childId, date) => {
           // Contract reads are frequent during table rendering. Keep the batch snapshot

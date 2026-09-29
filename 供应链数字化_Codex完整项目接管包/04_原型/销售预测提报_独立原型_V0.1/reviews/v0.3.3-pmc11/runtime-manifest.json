@@ -22,11 +22,11 @@
     },
     {
       "file": "forecast-batch-model.js",
-      "sha256": "a353eb322d44bf760964753c62bd0ada98533b14a9edd936bce2b71db1099c2b"
+      "sha256": "ef11a232859605de965d7b296afe47185abf815668767c51311c2ad56ce143a8"
     },
     {
       "file": "forecast-plan-workspace.js",
-      "sha256": "3d5355bbeb1c7d684349c967b8fd9ce4e6dc0568207be8ac350d6769565d13be"
+      "sha256": "8f943477a320591735f970eab720457d0710c4058b783962c3b3a6fce0488f3b"
     },
     {
       "file": "forecast-plan.css",
@@ -34,7 +34,7 @@
     },
     {
       "file": "index.html",
-      "sha256": "e51ecb530ccffe9012c6de1fc8b2876be7bcb903645bb989c3463ec42883fa85"
+      "sha256": "8d931467691580d40aa818415a58672416a9334f86a40778b3c4133a5f515c8d"
     },
     {
       "file": "parent-asin.css",
@@ -58,7 +58,7 @@
     },
     {
       "file": "pmc-workflow.js",
-      "sha256": "6492133f545cbc37df35d8bba750fc45029619ab384135eed5e4b99e016416c2"
+      "sha256": "d8687984fed5287b7a4379fff15479734cbefd5a75b3e914ea7e26a3956b90f8"
     },
     {
       "file": "sales-freeze.css",
@@ -66,7 +66,7 @@
     },
     {
       "file": "sales-freeze.js",
-      "sha256": "05dd67cace47b408f5d184cfdcb08785ce51678886ac54d044a6a2386f33f6ae"
+      "sha256": "436f53235361c0cd78a3746ed845b0ca9fb6f6bd325e5d75198727c007d5fc20"
     },
     {
       "file": "submission-window.js",
@@ -94,11 +94,11 @@
     },
     {
       "file": "v022.js",
-      "sha256": "2caf0c1dfbe2a76f32df702674e9291fe768cb3dafe3bfa825cd3c7b4533572d"
+      "sha256": "a245075334b557a7db7af960e2157a1a44e38491857d27fb4b31fbe9acbfd7d0"
     },
     {
       "file": "v024-core.js",
-      "sha256": "c7d0b6e87ebb8612933ae8f4cd37614be77f6991b452001a6d959c9bf0dd778a"
+      "sha256": "46bcd13031aba773d38ab04df74b7aa27d9ec98c86d8a8e24fc63e8448439510"
     },
     {
       "file": "v024.css",
@@ -126,7 +126,7 @@
     },
     {
       "file": "v027.js",
-      "sha256": "80e1a259bce49b24045fb8f2cd696366dc2e7b41b9969d6bae694b11c6a21ade"
+      "sha256": "8948ee938114829e8f6e52867b2edffabbb3f7d97278396b04f8801ad5ee2871"
     },
     {
       "file": "v028.css",
@@ -162,7 +162,7 @@
     },
     {
       "file": "v032-timeline.js",
-      "sha256": "d15b687aae401e407ba5926f2a572e9850b9b871689418173621aafaf1eca222"
+      "sha256": "6a6662e14411d6e58b5d575724fa09aff990cf76438846e1de3433882108c778"
     },
     {
       "file": "v032.css",
@@ -174,7 +174,7 @@
     },
     {
       "file": "v033-controls.js",
-      "sha256": "8c65d2a498907ab6abc49da6160345d6114d48e443f29d81da1c07d43ace1a68"
+      "sha256": "ead612d9509d9c6eeea82cc749ee8af60f315c97f9e36715384c5d2749cea830"
     },
     {
       "file": "v033.css",
@@ -209,6 +209,6 @@
       "sha256": "35f4f974f4b2bcd44da73963347f8952e341f83909e4498227d4e26b98f66f0d"
     }
   ],
-  "version": "0.3.5-batch-center1",
+  "version": "0.3.5-sales-batch-sync1",
   "status": "active"
 }

@@ -1,14 +1,14 @@
 /* V0.2.6: independent browse dates, header forecast toggle, in-record history tools. */
 (() => {
   const h=React.createElement,{useState,useEffect}=React,{ConfigProvider,App,DatePicker}=antd;
-  const firstKey='2023-01-01',lastKey=shiftDay(currentBatch,181),today=dayjs(currentBatch),cutoff=today.subtract(1,'day');
+  const firstKey='2023-01-01',activeDate=()=>activeForecastBatchDate(),activeRange=()=>forecastRange(state.batch||activeDate());
   const format=d=>d.format('YYYY-MM-DD');
-  const presets=()=>[...[7,14,30,60,90].map(n=>({label:'过去'+n+'天',value:[today.subtract(n,'day'),cutoff]})),
+  const presets=()=>{const today=dayjs(activeDate()),cutoff=today.subtract(1,'day');return [...[7,14,30,60,90].map(n=>({label:'过去'+n+'天',value:[today.subtract(n,'day'),cutoff]})),
     {label:'本月',value:[today.startOf('month'),cutoff]},{label:'上月',value:[today.subtract(1,'month').startOf('month'),today.subtract(1,'month').endOf('month')]},
-    {label:'今年',value:[today.startOf('year'),cutoff]},{label:'去年',value:[today.subtract(1,'year').startOf('year'),today.subtract(1,'year').endOf('year')]}];
+    {label:'今年',value:[today.startOf('year'),cutoff]},{label:'去年',value:[today.subtract(1,'year').startOf('year'),today.subtract(1,'year').endOf('year')]}];};
   window.forecastBrowsePresets=presets;
   const startKey=dateKey(visibleDays()[0]),endKey=dateKey(visibleDays().at(-1));
-  allDays=Array.from({length:dayDistance(lastKey,firstKey)+1},(_,i)=>parseDay(shiftDay(firstKey,i)));
+  allDays=Array.from({length:dayDistance(activeRange().end,firstKey)+1},(_,i)=>parseDay(shiftDay(firstKey,i)));
   firstMonth=monthIndex(allDays[0]);lastMonth=monthIndex(allDays.at(-1));syncWindow(indexForDate(startKey),indexForDate(endKey));
   actualAt=function(c,k){const g=groups.find(g=>g.children.includes(c));return g?forecastInsights.salesAt(c,g,k):null;};
   historyRows=function(c){return v023HistoryRows(c);};
@@ -33,17 +33,17 @@
     window.refreshForecastControls?.();syncHorizontalScrollbar();positionForecastDivider();
   };
   const baseRender=render;
-  render=function(){baseRender();$('.range-title > span').textContent='预测范围';$('#coverageRange').textContent=formatKey(currentBatch)+' ~ '+formatKey(lastKey);window.refreshBrowseRange?.();};
+  render=function(){baseRender();const range=activeRange();$('.range-title > span').textContent='预测范围';$('#coverageRange').textContent=formatKey(range.start)+' ~ '+formatKey(range.end);window.refreshBrowseRange?.();};
   const baseSyncWindow=syncWindow;
   syncWindow=function(start=state.windowStart,end=null){
     baseSyncWindow(start,end);state.collapsedWeeks.clear();if(visibleDays().length>31)visibleDays().forEach(d=>state.collapsedWeeks.add(isoWeekKey(d)));
-    if(dateKey(visibleDays()[0])<currentBatch)allChildren().forEach(c=>state.historyOpen.add(c.id));
+    if(dateKey(visibleDays()[0])<activeRange().start)allChildren().forEach(c=>state.historyOpen.add(c.id));
   };
   const host=document.createElement('span');host.className='forecast-range-picker-host';$('#rangeDisplay').after(host);
   function BrowseRange(){
     const [value,setValue]=useState(visibleDays().filter((_,i,a)=>i===0||i===a.length-1).map(d=>dayjs(dateKey(d))));
     useEffect(()=>{window.refreshBrowseRange=()=>setValue([dayjs(dateKey(visibleDays()[0])),dayjs(dateKey(visibleDays().at(-1)))]);return()=>delete window.refreshBrowseRange;},[]);
-    return h(DatePicker.RangePicker,{value,format:'YYYY/MM/DD',separator:'~',locale:forecastInsights.calendarLocale,allowClear:false,inputReadOnly:true,presets:presets(),minDate:dayjs(firstKey),maxDate:dayjs(lastKey),variant:'borderless',id:{start:'browse-range-start',end:'browse-range-end'},'aria-label':'当前查看窗口',style:{width:184,fontWeight:400,paddingInline:0},onChange:range=>{if(!range?.every(Boolean))return;syncWindow(indexForDate(format(range[0])),indexForDate(format(range[1])));state.editing=null;$('#workbench').scrollTo(0,0);render();}});
+    return h(DatePicker.RangePicker,{value,format:'YYYY/MM/DD',separator:'~',locale:forecastInsights.calendarLocale,allowClear:false,inputReadOnly:true,presets:presets(),minDate:dayjs(firstKey),maxDate:dayjs(activeRange().end),variant:'borderless',id:{start:'browse-range-start',end:'browse-range-end'},'aria-label':'当前查看窗口',style:{width:184,fontWeight:400,paddingInline:0},onChange:range=>{if(!range?.every(Boolean))return;syncWindow(indexForDate(format(range[0])),indexForDate(format(range[1])));state.editing=null;$('#workbench').scrollTo(0,0);render();}});
   }
   ReactDOM.createRoot(host).render(h(ConfigProvider,{theme:{...enterpriseThemeV020,token:{...enterpriseThemeV020.token,fontSize:12},components:{...enterpriseThemeV020.components,DatePicker:{...enterpriseThemeV020.components.DatePicker,inputFontSize:12,inputFontSizeSM:12}}},componentSize:'small'},h(App,null,h(BrowseRange))));
   render();

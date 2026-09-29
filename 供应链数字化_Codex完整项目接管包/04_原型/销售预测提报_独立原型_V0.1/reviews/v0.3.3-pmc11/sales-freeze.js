@@ -87,7 +87,7 @@
       const entry=editing
         ? `<div class="entry-input"><input class="cell-number" type="number" min="0" step="1" value="${entryValue??''}" data-manual="${c.id}" data-index="${index}" aria-label="${c.asin} ${dateLabel(d)} 人工预测"/></div>`
         : `<div class="forecast-entry-wrap"><button class="${entryValue==null?'entry-icon':'entry-value'}" type="button" ${attrs} aria-label="${field==='manual'?'人工预测':'活动预测'} ${c.asin} ${dateLabel(d)}"><span class="entry-number">${entryValue==null?'':num(entryValue)}</span>${antEditIcon}</button>${adjustmentEntry(c,key,field,f,entryValue)}</div>`;
-      const readonly=col.type==='day'&&state.batch===currentBatch?`<div class="forecast-entry-wrap"><span class="entry-number">${numberOrBlank(entryValue)}</span>${adjustmentEntry(c,key,field,f,entryValue)}</div>`:numberOrBlank(value);
+      const readonly=col.type==='day'&&state.batch===activeForecastBatchDate()?`<div class="forecast-entry-wrap"><span class="entry-number">${numberOrBlank(entryValue)}</span>${adjustmentEntry(c,key,field,f,entryValue)}</div>`:numberOrBlank(value);
       return `<td class="date-col num ${cls} ${field==='manual'?'line-manual':'line-event'} ${entryValue!=null?'has-forecast':''} ${editable?'entry-cell':''}" ${focus} data-entry="${field}">${editable?entry:readonly}</td>`;
     }
     const attrs=col.type==='week'?`data-week-detail="${col.week.key}" data-asin="${c.id}"`:`data-final="${c.id}" data-index="${index}"`;

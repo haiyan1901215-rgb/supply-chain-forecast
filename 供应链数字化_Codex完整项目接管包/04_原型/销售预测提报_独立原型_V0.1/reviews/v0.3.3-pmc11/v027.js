@@ -17,7 +17,7 @@
   const previousWeekHeaders=weekHeaders;
   weekHeaders=function(){
     const template=document.createElement('template');template.innerHTML='<table><thead><tr>'+previousWeekHeaders()+'</tr></thead></table>';
-    const now=isoWeekKey(parseDay(currentBatch));
+    const now=isoWeekKey(parseDay(activeForecastBatchDate()));
     const button=template.content.querySelector(`[data-week-toggle="${now}"]`);
     if(button){const cell=button.closest('th');cell.classList.add('current-forecast-week');cell.querySelector('.week-heading').insertAdjacentHTML('beforeend','<span class="current-week-label">当前周</span>');}
     return template.content.querySelector('tr').innerHTML;
