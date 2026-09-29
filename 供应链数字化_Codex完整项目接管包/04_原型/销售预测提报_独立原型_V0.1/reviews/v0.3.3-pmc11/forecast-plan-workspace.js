@@ -885,7 +885,7 @@
   }
   function PlanDetail({ batchId, onBack, initialStep }) {
     const revision = useStoreRevision();
-    const batch = model.getBatch(batchId);
+    const batch = model.getBatch(batchId, { materialize: true });
     const [step, setStep] = useState(initialStep || 'overview');
     const workflowStepRef = useRef(batch?.currentStep);
     useEffect(() => { workflowStepRef.current = batch?.currentStep; setStep(initialStep || 'overview'); }, [batchId, initialStep]);
@@ -923,8 +923,8 @@
       window.dispatchEvent(new CustomEvent('forecast-plan-route', { detail: pendingRoute }));
     },
     getCurrentBasis() {
-      const batch = contract.getCurrent();
-      return { batch: batch.batchDate, forecast: batch.forecastRuleSnapshot.version, split: batch.splitRuleSnapshot.version, relation: batch.relationVersion, params: batch.parameterSnapshot.version, status: batch.status };
+      const batch = contract.getCurrentMeta ? contract.getCurrentMeta() : contract.getCurrent();
+      return { batch: batch.batchDate, forecast: batch.forecastRuleVersion || batch.forecastRuleSnapshot?.version, split: batch.splitRuleVersion || batch.splitRuleSnapshot?.version, relation: batch.relationVersion, params: batch.parameterVersion || batch.parameterSnapshot?.version, status: batch.status };
     }
   };
 })();

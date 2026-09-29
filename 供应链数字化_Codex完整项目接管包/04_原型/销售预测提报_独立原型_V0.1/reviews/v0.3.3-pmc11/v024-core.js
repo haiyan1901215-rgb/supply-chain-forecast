@@ -5,9 +5,9 @@ const parseDay = key => new Date(...key.split('-').map((n,i)=>Number(n)-(i===1?1
 const shiftDay = (key,n) => {const d=parseDay(key);d.setDate(d.getDate()+n);return dateKey(d);};
 const dayDistance = (a,b) => Math.round((Date.parse(a)-Date.parse(b))/86400000);
 const formatKey = key => key.replaceAll('-','/');
-const activeForecastBatch = () => window.ForecastBatchContract?.getCurrent?.() || null;
+const activeForecastBatch = () => window.ForecastBatchContract?.getCurrentMeta?.() || window.ForecastBatchContract?.getCurrent?.() || null;
 const activeForecastBatchDate = () => activeForecastBatch()?.batchDate || currentBatch;
-const forecastBatch = batch => window.ForecastBatchContract?.getBatch?.(batch) || null;
+const forecastBatch = batch => window.ForecastBatchContract?.getBatchMeta?.(batch) || window.ForecastBatchContract?.getBatch?.(batch) || null;
 const forecastRange = batch => {
   const model=forecastBatch(batch);
   return {start:model?.forecastStartDate||batch,end:model?.forecastEndDate||shiftDay(batch,181)};

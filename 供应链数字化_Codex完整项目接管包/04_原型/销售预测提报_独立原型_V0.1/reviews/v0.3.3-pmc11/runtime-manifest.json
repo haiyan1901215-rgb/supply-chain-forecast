@@ -22,11 +22,11 @@
     },
     {
       "file": "forecast-batch-model.js",
-      "sha256": "ea3e03f3974e0db6127c7941c13a403c93c8426c88d695c0a22357afe63ada8b"
+      "sha256": "40f1ec333cf3ea48365581f438c54ae13ff290ba6711ce6b0e63fe6ed9778d64"
     },
     {
       "file": "forecast-plan-workspace.js",
-      "sha256": "8f943477a320591735f970eab720457d0710c4058b783962c3b3a6fce0488f3b"
+      "sha256": "bfc26b399b4629cd47641c460517397b1584f11ed12f5f23fdcdafec1f1aa6e8"
     },
     {
       "file": "forecast-plan.css",
@@ -34,7 +34,7 @@
     },
     {
       "file": "index.html",
-      "sha256": "27efc9236d20a47f08f72ffe0bc93858dfecccf9b5276f7235b80097e18952cc"
+      "sha256": "52bd09352a35674337b4a997b1d793f6f14b898ad2f5343b9d76379cf9ba0868"
     },
     {
       "file": "parent-asin.css",
@@ -58,7 +58,7 @@
     },
     {
       "file": "pmc-workflow.js",
-      "sha256": "66427358b2eb33e623a93ff941d3ff5fc72392afff378082ad10523a86389dd2"
+      "sha256": "0395de86b6d01aab5c7521e3036d21ac7d62b552202c3317cd0d325429ebe105"
     },
     {
       "file": "sales-freeze.css",
@@ -70,7 +70,7 @@
     },
     {
       "file": "submission-window.js",
-      "sha256": "c7133fbd14d33bc59aae922487e1b9fff4a54631b07d1f4f0ccc83274ce798b3"
+      "sha256": "afede32c036e185cb78865e116f6b7f47d1c60b02778663478bb5d421e032e2b"
     },
     {
       "file": "v019.css",
@@ -98,7 +98,7 @@
     },
     {
       "file": "v024-core.js",
-      "sha256": "aa56349f5247e618ce9ccc013fdce372c62c6b5dafcfde563327ec162a2ed513"
+      "sha256": "f944af229ad2569b2eaf398693bafa21297a4144e1cfccc17f336cd750185dc9"
     },
     {
       "file": "v024.css",
@@ -209,6 +209,6 @@
       "sha256": "35f4f974f4b2bcd44da73963347f8952e341f83909e4498227d4e26b98f66f0d"
     }
   ],
-  "version": "0.3.6-performance-date1",
+  "version": "0.3.7-performance-init1",
   "status": "active"
 }

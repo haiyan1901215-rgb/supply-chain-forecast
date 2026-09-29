@@ -195,7 +195,9 @@
     const reader = sourceForecast(services);
     if (reader && row.childRef) {
       const value = reader(row.childRef, batch, date);
-      if (value) return clone(value);
+      // The seed builder only reads forecast values. Avoid cloning the same
+      // daily object thousands of times during the initial batch snapshot.
+      if (value) return value;
     }
     const base = Math.max(1, Number(row.childRef?.base) || 8);
     const distance = Math.max(0, Math.round((Date.parse(date) - Date.parse(batch)) / 86400000));
@@ -208,20 +210,23 @@
       (map[relationKey(row)] ||= []).push(row);
       return map;
     }, {});
+    const forecastCache = new Map();
+    const forecastFor = (relation, date) => {
+      const cacheKey = `${relation.childId}|${date}`;
+      if (!forecastCache.has(cacheKey)) forecastCache.set(cacheKey, legacyForecast(relation, batch, date, services));
+      return forecastCache.get(cacheKey);
+    };
+    const historyDays = dateRange(shiftDate(batch, -83), batch);
+    const recentDays = dateRange(shiftDate(batch, -13), batch);
+    const historyTotals = new Map(relations.map(relation => [relation.childId, sum(historyDays.map(date => Number(forecastFor(relation, date)?.ai) || 0))]));
+    const recentTotals = new Map(relations.map(relation => [relation.childId, (relation.tags || []).includes('低销') ? 22 : sum(recentDays.map(date => Number(forecastFor(relation, date)?.ai) || 0))]));
     const rows = relations.map(relation => {
-      const legacy = Object.fromEntries(dates.map(date => [date, legacyForecast(relation, batch, date, services)]));
-      const historyDays = dateRange(shiftDate(batch, -83), batch);
-      const recentDays = dateRange(shiftDate(batch, -13), batch);
-      const historyTotal = sum(historyDays.map(date => Number(legacyForecast(relation, batch, date, services)?.ai) || 0));
-      const siblingHistoryTotal = sum((groups[relationKey(relation)] || []).map(sibling => {
-        return sum(historyDays.map(date => Number(legacyForecast(sibling, batch, date, services)?.ai) || 0));
-      }));
+      const legacy = Object.fromEntries(dates.map(date => [date, forecastFor(relation, date)]));
+      const historyTotal = historyTotals.get(relation.childId) || 0;
+      const siblingHistoryTotal = sum((groups[relationKey(relation)] || []).map(sibling => historyTotals.get(sibling.childId) || 0));
       const lowSalesDemo = (relation.tags || []).includes('低销');
-      const recentTotal = lowSalesDemo ? 22 : sum(recentDays.map(date => Number(legacyForecast(relation, batch, date, services)?.ai) || 0));
-      const siblingRecentTotal = sum((groups[relationKey(relation)] || []).map(sibling => {
-        if ((sibling.tags || []).includes('低销')) return 22;
-        return sum(recentDays.map(date => Number(legacyForecast(sibling, batch, date, services)?.ai) || 0));
-      }));
+      const recentTotal = recentTotals.get(relation.childId) || 0;
+      const siblingRecentTotal = sum((groups[relationKey(relation)] || []).map(sibling => recentTotals.get(sibling.childId) || 0));
       const historyShare = siblingHistoryTotal ? Math.round(historyTotal / siblingHistoryTotal * 10000) : 0;
       const recentShare = siblingRecentTotal ? Math.round(recentTotal / siblingRecentTotal * 10000) : historyShare;
       const recentCleanAdu = Number((recentTotal / 14).toFixed(2));
@@ -388,6 +393,15 @@
       }))
     };
   }
+  function materializeResultSnapshot(batch) {
+    if (!batch?.resultSnapshotDeferred || !batch.activeResultVersion) return;
+    if (batch.resultSnapshots?.some(snapshot => snapshot.version === batch.activeResultVersion)) {
+      batch.resultSnapshotDeferred = false;
+      return;
+    }
+    batch.resultSnapshots.push(makeResultSnapshot(batch, batch.activeResultVersion, batch.resultGeneratedAt || batch.updatedAt));
+    batch.resultSnapshotDeferred = false;
+  }
   function invalidateResult(batch, workflowState) {
     batch.resultState = batch.resultSnapshots.length ? '需重新生成' : '待生成';
     batch.workflowState = workflowState;
@@ -493,6 +507,8 @@
       resultState: input.resultGenerated ? '已生成' : '待生成',
       activeResultVersion: input.resultVersion || null,
       resultSnapshots: [],
+      resultSnapshotDeferred: Boolean(input.deferResultSnapshot),
+      resultGeneratedAt: input.resultGeneratedAt || null,
       workflowState: input.workflowState || '草稿',
       submissionWindow: input.submissionWindow || defaultWindow(batchDate),
       submissionState: input.submissionState || '待发布',
@@ -503,7 +519,7 @@
     };
     rebuildPools(batch, true);
     batch.relationVersions = input.relationVersions || [{ version: batch.relationVersion, at: batch.createdAt, reason: '创建本批次关系快照', relations: clone(batch.relationSnapshot), removedRelations: [] }];
-    if (input.resultGenerated) batch.resultSnapshots.push(makeResultSnapshot(batch, input.resultVersion || `RESULT-${batchDate.replaceAll('-', '')}-V01`, input.resultGeneratedAt || batch.updatedAt));
+    if (input.resultGenerated && !input.deferResultSnapshot) batch.resultSnapshots.push(makeResultSnapshot(batch, input.resultVersion || `RESULT-${batchDate.replaceAll('-', '')}-V01`, input.resultGeneratedAt || batch.updatedAt));
     const comparison = buildForecastComparison(batch, previous);
     batch.assessment = assessment(batch, previous, comparison);
     batch.forecastVsActual = comparison.rows;
@@ -527,7 +543,7 @@
       const batch = createBatch({
         id: `FB-${suffix}-01`, batchVersion: `V${suffix}-01`, name: `${batchDate} 预测批次`, batchDate,
         dataCutoffDate: shiftDate(batchDate, -1), status: '已完成', currentStep: 'review', submissionState: '已冻结', workflowState: '已完成', relationConfirmed: true, splitConfirmed: true, resultGenerated: true, resultVersion: `RESULT-${suffix}-V01`,
-        relationVersion: `REL-${suffix}-V01`, forecastRuleVersion: `FORECAST-${suffix}-V01`, splitRuleVersion: `SPLIT-${suffix}-V01`, parameterVersion: `PARAM-${suffix}-V01`,
+        relationVersion: `REL-${suffix}-V01`, forecastRuleVersion: `FORECAST-${suffix}-V01`, splitRuleVersion: `SPLIT-${suffix}-V01`, parameterVersion: `PARAM-${suffix}-V01`, deferResultSnapshot: true,
         relations
       }, services, previous);
       batches.push(batch);
@@ -614,9 +630,18 @@
       key: STORAGE_KEY,
       getState,
       getCurrent: () => { const raw = getBatchRaw(); return raw ? clone(raw) : null; },
-      getBatch: batchId => { const raw = getBatchRaw(batchId); return raw ? clone(raw) : null; },
-      getWindow: batchId => { const batch = api.getBatch(batchId); if (!batch) return null; return { ...clone(batch.submissionWindow), batchId: batch.id, batchVersion: batch.batchVersion, status: batch.status, submissionStartTime: batch.submissionWindow.submissionStartTime, submissionDeadlineTime: batch.submissionWindow.submissionDeadlineTime, submissionFreezeTime: batch.submissionWindow.submissionFreezeTime }; },
-      getSnapshot: batchId => api.getBatch(batchId),
+      getBatch: (batchId, options = {}) => { const raw = getBatchRaw(batchId); if (options.materialize) materializeResultSnapshot(raw); return raw ? clone(raw) : null; },
+      getBatchMeta: batchId => {
+        const raw = getBatchRaw(batchId);
+        if (!raw) return null;
+        return { id: raw.id, batchId: raw.id, batchVersion: raw.batchVersion, name: raw.name, batchDate: raw.batchDate, forecastStartDate: raw.forecastStartDate, forecastEndDate: raw.forecastEndDate, dataCutoffDate: raw.dataCutoffDate, status: raw.status, currentStep: raw.currentStep, submissionState: raw.submissionState, resultState: raw.resultState, activeResultVersion: raw.activeResultVersion, relationVersion: raw.relationVersion, parameterVersion: raw.parameterSnapshot.version, forecastRuleVersion: raw.forecastRuleSnapshot.version, splitRuleVersion: raw.splitRuleSnapshot.version, childForecastResults: raw.childForecastResults.map(row => ({ childId: row.childId, childASIN: row.childASIN })) };
+      },
+      getCurrentMeta: () => {
+        const raw = getBatchRaw();
+        return raw ? api.getBatchMeta(raw.id) : null;
+      },
+      getWindow: batchId => { const raw = getBatchRaw(batchId); if (!raw) return null; return { ...clone(raw.submissionWindow), batchId: raw.id, batchVersion: raw.batchVersion, status: raw.status, submissionStartTime: raw.submissionWindow.submissionStartTime, submissionDeadlineTime: raw.submissionWindow.submissionDeadlineTime, submissionFreezeTime: raw.submissionWindow.submissionFreezeTime }; },
+      getSnapshot: batchId => { const raw = getBatchRaw(batchId); materializeResultSnapshot(raw); return raw ? clone(raw) : null; },
       list: () => state.batches.slice().sort((a, b) => b.batchDate.localeCompare(a.batchDate)).map(clone),
       createNextBatch: input => {
         const previous = getBatchRaw(input?.inheritFromBatchId) || getBatchRaw();
@@ -749,24 +774,34 @@
       subscribe: listener => { listeners.add(listener); return () => listeners.delete(listener); },
       contract: {
         getCurrent: () => api.getCurrent(),
+        getCurrentMeta: () => api.getCurrentMeta(),
         getBatch: batchId => api.getBatch(batchId),
+        getBatchMeta: batchId => api.getBatchMeta(batchId),
         listBatches: () => api.list(),
         getWindow: batchId => api.getWindow(batchId),
         getDailyForecast: (batchId, childId, date) => {
           // Contract reads are frequent during table rendering. Keep the batch snapshot
           // immutable to callers without cloning the entire 182-day batch per cell.
           const raw = getBatchRaw(batchId);
-          const batch = raw ? { ...raw } : null;
-          const result = getActiveResult(batch);
-          if (!result) return null;
-          const row = result.rows.find(item => item.childId === childId || item.childASIN === childId || [item.country, item.store, item.childASIN].join('|') === childId);
+          if (!raw) return null;
+          const result = getActiveResult(raw);
+          const deferred = Boolean(raw.resultSnapshotDeferred && raw.activeResultVersion);
+          const row = result
+            ? result.rows.find(item => item.childId === childId || item.childASIN === childId || [item.country, item.store, item.childASIN].join('|') === childId)
+            : deferred
+              ? raw.childForecastResults.find(item => item.childId === childId || item.childASIN === childId || [item.country, item.store, item.childASIN].join('|') === childId)
+              : null;
           if (!row) return null;
-          const parent = result.parents.find(item => item.key === relationKey(row));
-          const ruleForecast = row.daily[date] ?? null;
-          return { batchId: batch.id, batchVersion: batch.batchVersion, resultVersion: result.version, dataCutoffDate: batch.dataCutoffDate, forecastStartDate: batch.forecastStartDate, forecastEndDate: batch.forecastEndDate, submissionStartTime: batch.submissionWindow.submissionStartTime, submissionDeadlineTime: batch.submissionWindow.submissionDeadlineTime, submissionFreezeTime: batch.submissionWindow.submissionFreezeTime, status: batch.status, parentASIN: row.parentASIN, childASIN: row.childASIN, country: row.country, site: row.country, store: row.store, salesOwner: row.salesOwner, tags: [...(row.tags || [])], businessObjectType: row.businessObjectType, businessObjectCode: row.businessObjectCode, businessObjectVersion: row.businessObjectVersion, forecastDate: date, parentRuleForecast: parent?.daily?.[date] ?? null, systemSplitForecast: row.ruleDaily[date] ?? null, ai: ruleForecast, manual: null, activity: null, final: ruleForecast, ruleForecast, forecastSource: '规则预测', forecastRuleVersion: result.forecastRuleVersion, splitRuleVersion: result.splitRuleVersion, relationVersion: result.relationVersion, parameterVersion: result.parameterVersion, reason: row.manualAdjustment ? 'PMC已完成本批次子ASIN份额调配' : row.dailyReason?.[date] || '沿用本批次拆解规则' };
+          const batch = raw;
+          const parent = (result?.parents || batch.parentForecastResults).find(item => item.key === relationKey(row));
+          const daily = result ? row.daily : row.dailyFinalForecast;
+          const ruleDaily = result ? row.ruleDaily : row.dailyRuleForecast;
+          const ruleForecast = daily?.[date] ?? null;
+          return { batchId: batch.id, batchVersion: batch.batchVersion, resultVersion: result?.version || batch.activeResultVersion, dataCutoffDate: batch.dataCutoffDate, forecastStartDate: batch.forecastStartDate, forecastEndDate: batch.forecastEndDate, submissionStartTime: batch.submissionWindow.submissionStartTime, submissionDeadlineTime: batch.submissionWindow.submissionDeadlineTime, submissionFreezeTime: batch.submissionWindow.submissionFreezeTime, status: batch.status, parentASIN: row.parentASIN, childASIN: row.childASIN, country: row.country, site: row.country, store: row.store, salesOwner: row.salesOwner, tags: [...(row.tags || [])], businessObjectType: row.businessObjectType, businessObjectCode: row.businessObjectCode, businessObjectVersion: row.businessObjectVersion, forecastDate: date, parentRuleForecast: parent?.daily?.[date] ?? null, systemSplitForecast: ruleDaily?.[date] ?? null, ai: ruleForecast, manual: null, activity: null, final: ruleForecast, ruleForecast, forecastSource: '规则预测', forecastRuleVersion: result?.forecastRuleVersion || batch.forecastRuleSnapshot.version, splitRuleVersion: result?.splitRuleVersion || batch.splitRuleSnapshot.version, relationVersion: result?.relationVersion || batch.relationVersion, parameterVersion: result?.parameterVersion || batch.parameterSnapshot.version, reason: row.manualAdjustment ? 'PMC已完成本批次子ASIN份额调配' : row.dailyReason?.[date] || '沿用本批次拆解规则' };
         },
         getForecastIndex: batchId => {
           const batch = getBatchRaw(batchId);
+          materializeResultSnapshot(batch);
           if (!batch) return null;
           const result = getActiveResult(batch);
           if (!result) return null;
@@ -797,6 +832,7 @@
           return { batchId: batch.id, batchVersion: batch.batchVersion, resultVersion: result.version, relationVersion: result.relationVersion, splitRuleVersion: result.splitRuleVersion, forecastRuleVersion: result.forecastRuleVersion, parameterVersion: result.parameterVersion, forecastStartDate: batch.forecastStartDate, forecastEndDate: batch.forecastEndDate, children, parents };
         },
         getSubmissionRows: batchId => {
+          materializeResultSnapshot(getBatchRaw(batchId));
           const batch = api.getBatch(batchId); if (!batch) return [];
           const result = getActiveResult(getBatchRaw(batchId)); if (!result) return [];
           return result.rows.flatMap(row => {

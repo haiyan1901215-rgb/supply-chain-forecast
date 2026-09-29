@@ -2,7 +2,7 @@
 (() => {
   const fallback=Object.freeze({title:'2026年9月销售预测',startsAt:'2026-09-29T09:00:00+08:00',deadlineAt:'2026-10-03T18:00:00+08:00',freezesAt:'2026-10-04T00:00:00+08:00'});
   const resolveConfig=()=>{
-    const contract=window.ForecastBatchContract,batchWindow=contract?.getWindow?.(),batch=contract?.getCurrent?.();
+    const contract=window.ForecastBatchContract,batchWindow=contract?.getWindow?.(),batch=contract?.getCurrentMeta?.()||contract?.getCurrent?.();
     return Object.freeze({title:batch?.name||fallback.title,startsAt:batchWindow?.submissionStartTime||fallback.startsAt,deadlineAt:batchWindow?.submissionDeadlineTime||fallback.deadlineAt,freezesAt:batchWindow?.submissionFreezeTime||fallback.freezesAt,batchId:batchWindow?.batchId||null,batchVersion:batchWindow?.batchVersion||null});
   };
   function statusAt(now=Date.now(),locked=false,config=resolveConfig()){
@@ -13,7 +13,7 @@
   }
   const states={waiting:{key:'waiting',label:'待发布',badge:'default',editable:false},open:{key:'open',label:'填报中',badge:'processing',editable:true},closed:{key:'closed',label:'已截止',badge:'warning',editable:false},frozen:{key:'frozen',label:'已冻结',badge:'default',editable:false}};
   const current=()=>{
-    const submissionState=window.ForecastBatchContract?.getCurrent?.()?.submissionState;
+    const submissionState=(window.ForecastBatchContract?.getCurrentMeta?.()||window.ForecastBatchContract?.getCurrent?.())?.submissionState;
     if(submissionState==='已冻结')return states.frozen;
     if(submissionState==='已截止')return states.closed;
     if(submissionState==='填报中')return states.open;

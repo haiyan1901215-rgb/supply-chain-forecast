@@ -226,6 +226,7 @@ const domClick = locator => locator.evaluate(element => element.click());
 
     await page.reload({ waitUntil: 'networkidle' });
     await page.locator('.app').waitFor({ state: 'visible' });
+    await page.waitForFunction(() => window.ForecastBatchContract && window.pmcWorkflow);
     const finalReset = await page.evaluate(() => ({ batch: window.ForecastBatchContract.getCurrent(), salesBatch: state.batch, records: window.pmcWorkflow.getState().records }));
     assert(finalReset.batch.batchDate === '2026-09-29' && finalReset.batch.status === '评估中', 'refresh must return the demo to the initial planning batch');
     assert(finalReset.salesBatch === '2026-09-29' && Object.keys(finalReset.records).length === 0, 'refresh must reset sales batch context and submissions');

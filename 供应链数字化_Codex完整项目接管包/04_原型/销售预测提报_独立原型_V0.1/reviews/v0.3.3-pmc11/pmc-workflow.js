@@ -4,9 +4,9 @@
   const {ConfigProvider,App,Tabs,Table,Button,Space,Tag,Input,InputNumber,Form,Switch,Tooltip,Alert,Select,DatePicker,Modal,Popover}=antd;
   let db={schema:1,locked:false,records:{},demands:{}};
   let active='sales',refresh=()=>{},dirtyReview=false,guard=action=>action(),planningSystemTab={active:'base',batchId:null};
-  const salesBatch=()=>window.ForecastBatchContract?.getCurrent?.()||null;
+  const salesBatch=()=>window.ForecastBatchContract?.getCurrentMeta?.()||window.ForecastBatchContract?.getCurrent?.()||null;
   const salesBatchDate=()=>salesBatch()?.batchDate||currentBatch;
-  const salesRange=(batchId=salesBatchDate())=>{const batch=window.ForecastBatchContract?.getBatch?.(batchId);return {start:batch?.forecastStartDate||batchId,end:batch?.forecastEndDate||shiftDay(batchId,181)};};
+  const salesRange=(batchId=salesBatchDate())=>{const batch=window.ForecastBatchContract?.getBatchMeta?.(batchId)||window.ForecastBatchContract?.getBatch?.(batchId);return {start:batch?.forecastStartDate||batchId,end:batch?.forecastEndDate||shiftDay(batchId,181)};};
   const salesDays=(batchId=salesBatchDate())=>{const range=salesRange(batchId);return Array.from({length:dayDistance(range.end,range.start)+1},(_,i)=>shiftDay(range.start,i));};
   const key=(c,batchId=salesBatchDate())=>batchId+'|'+c.id,statusOf=(c,batchId=salesBatchDate())=>db.records[key(c,batchId)]?.status||'draft';
   const statuses={draft:'待销售提报',pending:'待PMC审核',confirmed:'已确认',returned:'销售退回'};
@@ -131,7 +131,7 @@
   submit=()=>{active='sales';refresh();};
   document.addEventListener('click',e=>{const close=e.target.closest('[data-planning-system-close]');if(close){e.preventDefault();e.stopPropagation();planningSystemTab={active:'base',batchId:null};showPlanningBaseTab();return;}const tab=e.target.closest('[data-planning-system-tab]');if(!tab)return;if(tab.dataset.planningSystemTab==='detail')showPlanningDetailTab();else showPlanningBaseTab();});
   const getBatchState=batchId=>{
-    const batch=window.ForecastBatchContract?.getBatch?.(batchId),batchDate=batch?.batchDate||batchId||salesBatchDate(),records=batchRecords(batchDate),values=Object.values(records);
+    const batch=window.ForecastBatchContract?.getBatchMeta?.(batchId)||window.ForecastBatchContract?.getBatch?.(batchId),batchDate=batch?.batchDate||batchId||salesBatchDate(),records=batchRecords(batchDate),values=Object.values(records);
     return {batchId:batch?.id||batchId||null,batchDate,records:JSON.parse(JSON.stringify(records)),submitted:values.length,pending:values.filter(record=>record.status==='pending').length,confirmed:values.filter(record=>record.status==='confirmed').length,returned:values.filter(record=>record.status==='returned').length};
   };
   window.pmcWorkflow={getState:()=>JSON.parse(JSON.stringify(db)),getBatchState,selectView,openPlanning,openForecastResultBatch,showPlanningBaseTab};
