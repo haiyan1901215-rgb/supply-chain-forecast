@@ -3,7 +3,7 @@
   const compactDateWidth = 72;
   const compactWeekWidth = 112;
   const compactLineWidth = 96;
-  const compactIdentityWidth = 306;
+  const compactIdentityWidth = 290;
   const inheritedWidth = columnWidth;
   const savedWidths = (() => {
     try {

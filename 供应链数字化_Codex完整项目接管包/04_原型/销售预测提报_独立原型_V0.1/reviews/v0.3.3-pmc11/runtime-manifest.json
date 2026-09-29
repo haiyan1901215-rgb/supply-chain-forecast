@@ -154,7 +154,7 @@
     },
     {
       "file": "v031.js",
-      "sha256": "e84bab3d18d2351d005c8d80305c18b299afa3625120e9ea8877d62b15382905"
+      "sha256": "ce725116ea4b347d13ef36a93d9f30ce6888f4c1befd340eb3462609e1f1e092"
     },
     {
       "file": "v032-presentation.js",
@@ -209,6 +209,6 @@
       "sha256": "35f4f974f4b2bcd44da73963347f8952e341f83909e4498227d4e26b98f66f0d"
     }
   ],
-  "version": "0.3.7-performance-init1",
+  "version": "0.3.8-product-divider1",
   "status": "active"
 }
