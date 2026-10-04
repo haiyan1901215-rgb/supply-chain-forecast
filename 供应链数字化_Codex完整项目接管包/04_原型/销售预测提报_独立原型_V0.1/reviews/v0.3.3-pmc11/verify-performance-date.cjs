@@ -6,7 +6,7 @@ const assert = (condition, message) => {
 };
 
 (async () => {
-  const url = process.argv[2] || 'http://127.0.0.1:8814/reviews/v0.3.3-pmc11/index.html?v=0.3.6-performance-date1';
+  const url = process.argv[2] || 'http://127.0.0.1:8816/index.html?v=0.3.26-portal-shell-menu';
   const installedChrome = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
   const browser = await chromium.launch({ headless: true, ...(fs.existsSync(installedChrome) ? { executablePath: installedChrome } : {}) });
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
@@ -52,15 +52,16 @@ const assert = (condition, message) => {
     assert(historyText.includes('2026/09/22') && historyText.includes('2026/09/15'), 'historical submissions are missing 2026/09/22 or 2026/09/15');
 
     const planningStarted = Date.now();
-    await page.evaluate(() => document.querySelectorAll('.menu button')[3].click());
-    await page.getByText('预测批次列表', { exact: true }).waitFor();
+    await page.locator('[data-menu-toggle="planning"]').click();
+    await page.locator('[data-view="decomposition"][data-menu-origin="plan-batches"]').click();
+    await page.getByRole('button', { name: '2026-09-29 预测批次', exact: true }).waitFor();
     const planningMs = Date.now() - planningStarted;
     const planText = await page.locator('.fp-batch-row').allInnerTexts();
     assert(['2026-09-29', '2026-09-22', '2026-09-15', '2026-09-08'].every(date => planText.some(text => text.includes(date))), 'planning list does not show all mock batches');
     assert(planningMs < 2500, `planning menu switch took ${planningMs}ms`);
 
     const salesStarted = Date.now();
-    await page.evaluate(() => document.querySelectorAll('.menu button')[0].click());
+    await page.locator('[data-view="sales"][data-menu-origin="top-sales"]').click();
     await page.locator('.content').waitFor({ state: 'visible' });
     const salesMs = Date.now() - salesStarted;
     assert(salesMs < 1200, `sales menu switch took ${salesMs}ms`);

@@ -11,12 +11,13 @@
     if(now<Date.parse(config.startsAt))return {key:'waiting',label:'尚未开始',badge:'default',editable:false};
     return {key:'open',label:'填报中',badge:'processing',editable:true};
   }
-  const states={waiting:{key:'waiting',label:'待发布',badge:'default',editable:false},open:{key:'open',label:'填报中',badge:'processing',editable:true},closed:{key:'closed',label:'已截止',badge:'warning',editable:false},frozen:{key:'frozen',label:'已冻结',badge:'default',editable:false}};
+  const states={initial:{key:'initial',label:'初始填报',badge:'processing',editable:true},waiting:{key:'waiting',label:'待发布',badge:'default',editable:false},open:{key:'open',label:'填报中',badge:'processing',editable:true},closed:{key:'closed',label:'已截止',badge:'warning',editable:false},frozen:{key:'frozen',label:'已冻结',badge:'default',editable:false}};
   const current=()=>{
     const submissionState=(window.ForecastBatchContract?.getCurrentMeta?.()||window.ForecastBatchContract?.getCurrent?.())?.submissionState;
     if(submissionState==='已冻结')return states.frozen;
     if(submissionState==='已截止')return states.closed;
-    if(submissionState==='填报中')return states.open;
+    if(submissionState==='填报中')return states.initial;
+    if(!submissionState||submissionState==='待发布')return states.initial;
     return states.waiting;
   };
   const windowApi={statusAt,current,isOpen:()=>current().editable};

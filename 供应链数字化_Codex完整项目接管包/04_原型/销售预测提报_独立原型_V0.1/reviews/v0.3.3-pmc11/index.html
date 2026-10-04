@@ -42,11 +42,11 @@
     .brand-mark { width: 28px; height: 28px; display: grid; place-items: center; border: 1px solid #718aff; color: #d8e1ff; border-radius: 8px; font-size: 13px; font-weight: 800; letter-spacing: -.04em; }
     .brand strong { font-size: 15px; letter-spacing: .02em; }
     .brand small { display: block; margin-top: 2px; color: #94a1c4; font-size: 10px; }
-    .sider-toggle { position: absolute; top: 17px; right: 10px; width: 24px; height: 24px; border: 1px solid rgba(255,255,255,.15); border-radius: 4px; color: #c6d0ec; background: rgba(255,255,255,.05); line-height: 1; }
+    .sider-toggle { position: absolute; top: auto; right: 12px; bottom: 12px; width: 24px; height: 24px; border: 1px solid rgba(255,255,255,.15); border-radius: 4px; color: #c6d0ec; background: rgba(255,255,255,.05); line-height: 1; }
     .sider-toggle:hover { color: #fff; background: rgba(255,255,255,.12); }
     .app.sidebar-collapsed .brand { justify-content: center; padding: 0; }
     .app.sidebar-collapsed .brand-copy, .app.sidebar-collapsed .sider-section, .app.sidebar-collapsed .menu button span:not(.icon), .app.sidebar-collapsed .sider-foot { display: none; }
-    .app.sidebar-collapsed .sider-toggle { right: 23px; transform: translateX(50%); }
+    .app.sidebar-collapsed .sider-toggle { right: 24px; transform: translateX(50%); }
     .sider-section { padding: 18px 12px 8px; color: #7180a7; font-size: 11px; }
     .menu { padding: 0 8px; display: grid; gap: 4px; }
     .menu button { width: 100%; border: 0; border-radius: 5px; background: transparent; color: #b8c2df; padding: 10px 12px; display: flex; align-items: center; gap: 10px; text-align: left; }
@@ -434,29 +434,63 @@
   <link rel="stylesheet" href="v031.css?v=0.3.1" />
   <link rel="stylesheet" href="v032.css?v=0.3.2" />
   <link rel="stylesheet" href="v033.css?v=0.3.3-pmc5" />
-  <link rel="stylesheet" href="sales-freeze.css?v=0.3.9-product-layout2" />
+  <link rel="stylesheet" href="sales-freeze.css?v=0.3.38-time-window-parity" />
+  <link rel="stylesheet" href="forecast-ledger-values.css?v=0.3.32-pmc-refinement" />
   <link rel="stylesheet" href="parent-asin.css?v=0.3.3-pmc11" />
   <link rel="stylesheet" href="parent-asin-config12.css?v=0.3.3-config12" />
-  <link rel="stylesheet" href="forecast-plan.css?v=0.3.5-batch-center1" />
+  <link rel="stylesheet" href="forecast-plan.css?v=0.3.32-pmc-refinement" />
+  <link rel="stylesheet" href="portal-shell.css?v=0.3.26-portal-shell-menu" />
+  <link rel="stylesheet" href="forecast-workbench.css?v=0.3.40-forecast-lines" />
 </head>
 <body>
-  <div class="app">
+  <div class="app portal-shell">
     <aside class="sider" aria-label="主导航">
-      <div class="brand"><div class="brand-mark">PMC</div><div class="brand-copy"><strong>供应链计划</strong><small>Planning Control Center</small></div><button class="sider-toggle" type="button" aria-label="折叠侧边菜单" data-action="toggle-sidebar">‹</button></div>
+      <div class="brand">
+        <button class="brand-home" type="button" aria-label="返回统一业务门户" title="返回统一业务门户" data-shell-action="home">
+          <img src="chaoyang-logo-full.png" alt="潮洋科技" class="brand-logo-full" />
+          <img src="chaoyang-icon-only.png" alt="潮洋科技" class="brand-logo-icon" />
+        </button>
+      </div>
+      <div class="sider-system" aria-label="当前系统">
+        <div class="system-mark">PMC</div>
+        <div class="system-copy"><strong>供应链计划</strong><small>需求预测与备货协同</small></div>
+      </div>
       <div class="sider-section">计划工作台</div>
       <nav class="menu">
-        <button class="active" type="button"><span class="icon">◫</span><span>销售预测</span></button>
-        <button type="button"><span class="icon">▤</span><span>备货计划</span></button>
-        <button type="button"><span class="icon">↔</span><span>调拨计划</span></button>
-        <button type="button"><span class="icon">⚙</span><span>计划配置</span></button>
+        <button class="active" type="button" data-view="forecast-workbench" data-menu-origin="top-forecast-workbench"><span class="icon" data-shell-icon="DashboardOutlined" aria-hidden="true">▦</span><span>预测工作台</span></button>
+        <button type="button" data-view="sales" data-menu-origin="top-sales"><span class="icon" data-shell-icon="FundOutlined" aria-hidden="true">⌁</span><span>销售预测</span></button>
+        <button type="button" data-view="plans" data-menu-origin="top-plans"><span class="icon" data-shell-icon="ContainerOutlined" aria-hidden="true">▤</span><span>备货计划</span></button>
+        <button type="button" data-view="transfer" data-menu-origin="top-transfer"><span class="icon" data-shell-icon="SwapOutlined" aria-hidden="true">↔</span><span>调拨计划</span></button>
+        <div class="menu-group" data-menu-group="planning">
+          <button class="menu-group-toggle" type="button" data-menu-toggle="planning" aria-expanded="false" aria-controls="planning-submenu"><span class="icon" data-shell-icon="SettingOutlined" aria-hidden="true">⚙</span><span>计划配置</span><span class="menu-chevron" data-shell-icon="RightOutlined" aria-hidden="true">›</span></button>
+          <div class="menu-submenu" id="planning-submenu" hidden>
+            <button type="button" data-view="decomposition" data-menu-origin="plan-batches"><span class="submenu-dot" aria-hidden="true"></span><span>预测批次列表</span></button>
+          </div>
+        </div>
       </nav>
+      <button class="sider-toggle" type="button" aria-label="折叠侧边菜单" data-action="toggle-sidebar">‹</button>
     </aside>
     <main class="main">
-      <header class="topbar">
-        <div class="crumb">计划工作台 <span> / </span> <b>销售预测</b></div>
-        <div class="top-actions"><button class="text-button" type="button">帮助中心</button><button class="text-button" type="button">操作日志</button><div class="user"><span class="avatar">李</span>李敏 · 销售运营</div></div>
+      <header class="topbar" aria-label="全局导航">
+        <div class="topbar-workspace">
+          <div class="workspace-tabs" role="tablist" aria-label="工作页签"><button class="workspace-tab active" type="button" role="tab" aria-selected="true">预测工作台</button></div>
+          <span class="topbar-route-label" hidden>计划配置</span>
+        </div>
+        <div class="top-actions">
+          <button class="shell-icon-button" type="button" aria-label="刷新当前页面" title="刷新当前页面" data-shell-action="refresh"><span data-shell-icon="ReloadOutlined" aria-hidden="true">↻</span></button>
+          <button class="shell-icon-button" type="button" aria-label="退出登录" title="退出登录" data-shell-action="logout"><span data-shell-icon="LogoutOutlined" aria-hidden="true">⇥</span></button>
+          <div class="user-menu-wrap">
+            <button class="user" type="button" aria-expanded="false" aria-haspopup="menu" data-shell-action="toggle-user"><span class="avatar">李</span><span class="user-copy"><strong>李敏</strong><small>销售运营</small></span><span class="user-chevron" data-shell-icon="DownOutlined" aria-hidden="true">⌄</span></button>
+            <div class="user-menu" role="menu" hidden>
+              <div class="user-menu-head"><strong>李敏</strong><small>供应链中心 · 销售运营</small></div>
+              <button type="button" role="menuitem" data-shell-action="profile">个人中心</button>
+              <button type="button" role="menuitem" data-shell-action="preferences">偏好设置</button>
+              <button type="button" role="menuitem" data-shell-action="logout">退出登录</button>
+            </div>
+          </div>
+        </div>
       </header>
-      <div class="workspace-tabs" role="tablist" aria-label="工作页签"><button class="workspace-tab active" type="button" role="tab" aria-selected="true">销售预测 <span class="tab-close" aria-hidden="true">×</span></button><button class="workspace-add" type="button" aria-label="新开工作页签">+</button></div>
+      <div class="crumbbar"><div class="crumb"><span class="crumb-home" data-shell-icon="HomeOutlined" aria-hidden="true">⌂</span><span>统一业务门户</span><span class="crumb-separator" data-shell-icon="RightOutlined" aria-hidden="true">›</span><span>供应链计划</span><span class="crumb-separator" data-shell-icon="RightOutlined" aria-hidden="true">›</span><b>销售预测</b></div></div>
       <div class="content">
         <section class="filter-panel" aria-label="筛选区">
           <div class="filter-row">
@@ -477,7 +511,6 @@
             <div class="range-nav"><button class="icon-button" type="button" aria-label="向前切换窗口" data-action="previous">‹</button><button class="icon-button" type="button" aria-label="向后切换窗口" data-action="next">›</button></div>
             <div class="range-tabs" role="group" aria-label="窗口天数"><button class="active" type="button" data-range-size="14">14天</button><button type="button" data-range-size="30">30天</button></div>
           </div>
-          <span class="range-meta">数据更新时间：2026/09/28 08:30</span>
         </section>
         <div class="workbench-shell"><div class="workbench" id="workbench" aria-label="日级预测台账"></div><div class="horizontal-scrollbar" id="horizontalScrollbar" role="scrollbar" aria-label="列表横向滚动" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="horizontal-scroll-track"><div class="horizontal-scroll-thumb"></div></div></div><div class="list-footer"><div class="pagination" aria-label="列表分页"><span class="page-total">共 50 条</span><button type="button" aria-label="上一页">‹</button><button class="active" type="button">1</button><button type="button">2</button><button type="button">3</button><button type="button">4</button><button type="button">5</button><button type="button" aria-label="下一页">›</button><select class="control" style="width:82px;height:28px" aria-label="每页条数"><option>20 / 页</option><option>50 / 页</option></select></div></div></div>
       </div>
@@ -955,7 +988,7 @@
         return;
       }
       if (t.dataset.parentCheck) {
-        const group = groups.find(g => g.id === t.dataset.parentCheck);
+        const group = displayGroups().find(g => g.id === t.dataset.parentCheck);
         group?.children.filter(c=>matches(c,group)).forEach(c => t.checked ? state.selected.add(c.id) : state.selected.delete(c.id));
         renderTable();
         e.stopImmediatePropagation();
@@ -1080,7 +1113,8 @@
       if(e.key==='Enter' && e.target.matches('[data-manual]')) { e.preventDefault(); e.target.blur(); }
     });
   </script>
-  <script src="v024-core.js?v=0.3.7-performance-init1"></script>
+    <script src="forecast-ledger-values.js?v=0.3.32-pmc-refinement"></script>
+    <script src="v024-core.js?v=0.3.32-pmc-refinement"></script>
   <script src="vendor/react-18.3.1.min.js"></script>
   <script src="vendor/react-dom-18.3.1.min.js"></script>
   <script src="vendor/dayjs-1.11.13.min.js"></script>
@@ -1090,23 +1124,25 @@
   <script src="v021.js?v=0.3.6-performance-date1"></script>
   <script src="v022.js?v=0.3.5-sales-batch-sync1"></script>
   <script src="v024.js?v=0.2.4"></script>
-  <script src="v033-controls.js?v=0.3.5-sales-batch-sync1"></script>
+    <script src="v033-controls.js?v=0.3.40-forecast-lines"></script>
   <script src="v026-insights.js?v=0.3.6-performance-date1"></script>
   <script src="v032-timeline.js?v=0.3.5-sales-batch-sync1"></script>
   <script src="v027.js?v=0.3.5-sales-batch-sync1"></script>
-  <script src="v031-workspace.js?v=0.3.4-plan-layout1"></script>
-  <script src="v032-presentation.js?v=0.3.2"></script>
+  <script src="v031-workspace.js?v=0.3.39-interaction-parity"></script>
+  <script src="v032-presentation.js?v=0.3.38-time-window-parity"></script>
   <script src="v030.js?v=0.3.0"></script>
   <script src="v031.js?v=0.3.9-product-layout2"></script>
   <script src="v032.js?v=0.3.2"></script>
   <script src="v033.js?v=0.3.3"></script>
-  <script src="sales-freeze.js?v=0.3.5-sales-batch-sync1"></script>
+    <script src="sales-freeze.js?v=0.3.38-time-window-parity"></script>
   <script src="planning-model.js?v=0.3.6-performance-date1"></script>
   <script src="parent-asin.js?v=0.3.6-performance-date1"></script>
   <script src="parent-asin-config12.js?v=0.3.6-performance-date1"></script>
-  <script src="forecast-batch-model.js?v=0.3.7-performance-init1"></script>
-  <script src="forecast-plan-workspace.js?v=0.3.7-performance-init1"></script>
-  <script src="pmc-workflow.js?v=0.3.7-performance-init1"></script>
-  <script src="submission-window.js?v=0.3.7-performance-init1"></script>
+    <script src="forecast-batch-model.js?v=0.3.32-pmc-refinement"></script>
+  <script src="forecast-source-import.js?v=0.3.20-pmc-same-ledger"></script>
+    <script src="forecast-plan-workspace.js?v=0.3.32-pmc-refinement"></script>
+    <script src="forecast-workbench.js?v=0.3.40-forecast-lines"></script>
+    <script src="pmc-workflow.js?v=0.3.39-interaction-parity"></script>
+    <script src="submission-window.js?v=0.3.32-pmc-refinement"></script>
 </body>
 </html>

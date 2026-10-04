@@ -4,7 +4,7 @@
   const previousProduct=productCell;
   productCell=function(g,c,span){
     const template=document.createElement('template');template.innerHTML='<table><tbody><tr>'+previousProduct(g,c,span)+'</tr></tbody></table>';
-    const cell=template.content.querySelector('td'),info=cell.querySelector('.product-info'),tags=cell.querySelector('.product-tags');
+    const cell=template.content.querySelector('td'),info=cell.querySelector('.product-info');let tags=cell.querySelector('.product-tags');
     const listing=Array.from(cell.querySelectorAll('.product-meta')).find(el=>el.textContent.trim().startsWith('上架'));
     const line=cell.querySelector('.child-asin-line'),store=cell.querySelector('.child-store'),asin=line?.querySelector(':scope > .code-value');
     if(line&&store&&asin){
@@ -12,6 +12,7 @@
       line.insertBefore(store,asin);
       store.insertAdjacentHTML('afterend',separator());
     }
+    if(!tags&&g.tags?.length){tags=document.createElement('div');tags.className='product-tags';tags.innerHTML=productTags(g);}
     if(info){if(listing){listing.classList.add('sales-listing');listing.textContent=`上架时间：${formatKey(g.listedAt)} · ${num(g.listingDays)} 天`;info.append(listing);}if(tags){tags.classList.add('sales-tags');info.append(tags);}}
     return cell.outerHTML;
   };
@@ -79,10 +80,12 @@
   };
   dateCells=function(c,line){return visibleColumns().map((col,i)=>{
     const d=col.days[0],key=dateKey(d),index=indexForDate(key),f=forecastAt(c,state.batch,key),focus=`data-focus-index="${i}" data-time-column="${col.key}"`,cls=col.boundary?'week-boundary':'',field=line==='summary'?'final':line;
-    const value=weekValue(c,col,field).value,kind=col.type==='week'?'mixed':source(c,d)[0],label={system:'规则',manual:'人工',activity:'活动',mixed:'混合',none:'未覆盖'}[kind];
-    if(field==='system')return `<td class="date-col num line-system ${cls}" ${focus}>${numberOrBlank(value)}</td>`;
+    const value=weekValue(c,col,field).value,kind=col.type==='week'?'mixed':source(c,d)[0],label={system:'系统',pmc:'PMC',manual:'人工',activity:'活动',mixed:'混合',none:'未覆盖'}[kind];
+    const statuses=col.days.map(day=>forecastAt(c,state.batch,dateKey(day))?.forecastStatus).filter(Boolean);
+    if(statuses.length && ['system','pmc','final'].includes(field))return `<td class="date-col num line-${field==='pmc'?'system':field} ${cls}" ${focus}>${value==null?'':numberOrBlank(value)}<span class="forecast-state" tabindex="0" data-hint="${esc([...new Set(statuses)].join('；'))}；${statuses.length}天不纳入数值合计">${col.type==='day'||value==null?esc([...new Set(statuses)].join('；')):`${statuses.length}天待实际销量`}</span></td>`;
+    if(field==='system'||field==='pmc')return `<td class="date-col num line-system ${cls}" ${focus}>${numberOrBlank(value)}${field==='pmc'&&value!=null?'<span class="source-tag system">(PMC)</span>':''}</td>`;
     if(field==='manual'||field==='activity'){
-      const editable=canEdit(key)&&(!window.canEditForecastRecord||window.canEditForecastRecord(c.id))&&col.type==='day',entryValue=field==='manual'?f?.manual:f?.activity?.qty,editing=editable&&field==='manual'&&state.editing===`${c.id}:${index}`;
+      const editable=canEdit(key)&&window.canEditForecastDate?.(c.id,key)!==false&&(!window.canEditForecastRecord||window.canEditForecastRecord(c.id))&&col.type==='day',entryValue=field==='manual'?f?.manual:f?.activity?.qty,editing=editable&&field==='manual'&&state.editing===`${c.id}:${index}`;
       const attrs=field==='manual'?`data-edit-manual="${c.id}" data-index="${index}"`:`data-event="${c.id}" data-date="${key}"`;
       const entry=editing
         ? `<div class="entry-input"><input class="cell-number" type="number" min="0" step="1" value="${entryValue??''}" data-manual="${c.id}" data-index="${index}" aria-label="${c.asin} ${dateLabel(d)} 人工预测"/></div>`

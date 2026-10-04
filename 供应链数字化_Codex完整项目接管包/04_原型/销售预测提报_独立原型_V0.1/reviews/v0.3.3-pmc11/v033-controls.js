@@ -107,41 +107,60 @@
 
   function ForecastEditor({edit,onClose}){
     const [form]=antd.Form.useForm(),[error,setError]=useState('');
-    const {modal}=App.useApp(),c=findChild(edit.id),draft=batchDraft(c,state.batch),isNote=edit.kind==='note',isManual=edit.kind==='manual',event=draft.activity[edit.key];
-    const initial=isNote?{note:notes[c.id]||''}:isManual?{qty:draft.manual[edit.key],reason:draft.manualReasons[edit.key]||''}:{qty:event?.qty,name:event?.name||'',date:dayjs(edit.key),note:event?.note||''};
+    const {modal}=App.useApp(),targets=(edit.ids||[edit.id]).map(findChild).filter(Boolean),c=targets[0],isAggregate=targets.length>1,drafts=targets.map(child=>batchDraft(child,state.batch)),draft=drafts[0],isNote=edit.kind==='note',isManual=edit.kind==='manual';
+    if(!c||!draft)return null;
+    const events=drafts.map(item=>item.activity[edit.key]).filter(Boolean),event=events[0],manualValues=drafts.map(item=>item.manual[edit.key]).filter(value=>value!=null);
+    const aggregateManual=isAggregate&&manualValues.length?manualValues.reduce((sum,value)=>sum+value,0):draft.manual[edit.key];
+    const aggregateActivity=isAggregate&&events.length?events.reduce((sum,item)=>sum+(Number(item.qty)||0),0):event?.qty;
+    const commonActivityName=events.length&&events.every(item=>item.name===event?.name)?event?.name:(isAggregate?`${edit.label||'父ASIN'}活动`:event?.name);
+    const commonActivityNote=events.length&&events.every(item=>item.note===event?.note)?event?.note:'';
+    const initial=isNote?{note:notes[c.id]||''}:isManual?{qty:aggregateManual,reason:isAggregate?(drafts.map(item=>item.manualReasons[edit.key]).find(Boolean)||''):(draft.manualReasons[edit.key]||'')}:{qty:aggregateActivity,name:commonActivityName||'',date:dayjs(edit.key),note:commonActivityNote||''};
+    const distribute=value=>{
+      if(!isAggregate)return[value];
+      const weights=targets.map((child,index)=>Math.max(0,Number(edit.weights?.[index])||Number(child.base)||0)),sum=weights.reduce((total,weight)=>total+weight,0)||targets.length;
+      const exact=weights.map(weight=>(sum===targets.length&&!weights.some(Boolean)?1:weight)/sum*value),result=exact.map(Math.floor);
+      let remainder=value-result.reduce((total,item)=>total+item,0);
+      exact.map((item,index)=>({index,fraction:item-result[index]})).sort((a,b)=>b.fraction-a.fraction||a.index-b.index).forEach(item=>{if(remainder>0){result[item.index]+=1;remainder-=1;}});
+      return result;
+    };
     const close=()=>{if(form.isFieldsTouched())modal.confirm({title:'放弃未保存的填写？',okText:'放弃修改',cancelText:'继续填写',onOk:onClose});else onClose();};
     const commit=(values,clear=false)=>{
       setError('');
       if(!isNote&&window.ForecastWindow&&!window.ForecastWindow.isOpen()){setError('当前'+window.ForecastWindow.current().label+'，无法保存预测');return;}
-      if(!isNote&&window.canEditForecastRecord&&!window.canEditForecastRecord(edit.id)){setError('该记录已冻结或提交，无法修改');return;}
+      if(!isNote&&window.canEditForecastRecord&&targets.some(child=>!window.canEditForecastRecord(child.id))){setError('该记录已冻结或提交，无法修改');return;}
       if(isNote){
         const next={...notes,[c.id]:(values.note||'').trim()};if(!next[c.id])delete next[c.id];
         try{localStorage.setItem(notesStorageKey,JSON.stringify(next));}catch{setError('保存失败，请检查浏览器存储权限');return;}notes=next;
       }else{
         const key=isManual?edit.key:values.date?.format('YYYY-MM-DD')||edit.key;
+        if(targets.some(child=>window.canEditForecastDate?.(child.id,key)===false)){setError('人工启动（待实际销量），当前日期不可填报或活动覆盖');return;}
         if(!canEdit(key)){form.setFields([{name:'date',errors:['日期需在当前预测范围内']}]);return;}
-        if(!isManual&&!clear&&key!==edit.key&&draft.activity[key]){form.setFields([{name:'date',errors:['该日期已有活动预测，请选择其他日期']}]);return;}
-        const previous={manual:{...draft.manual},manualReasons:{...draft.manualReasons},activity:{...draft.activity},changes:[...draft.changes]};
-        if(isManual){
-          if(clear){delete draft.manual[edit.key];delete draft.manualReasons[edit.key];}
-          else{draft.manual[edit.key]=values.qty;draft.manualReasons[edit.key]=values.reason.trim();}
-          draft.changes.push({date:edit.key,line:'人工预测',before:previous.manual[edit.key]??null,after:clear?null:values.qty,reason:clear?'清除人工预测':values.reason.trim()});
-        }else{
-          if(clear||key!==edit.key)delete draft.activity[edit.key];
-          if(!clear)draft.activity[key]={qty:values.qty,name:values.name.trim(),date:key,note:(values.note||'').trim()};
-          draft.changes.push({date:key,line:'活动预测',before:event?.qty??null,after:clear?null:values.qty,reason:clear?'清除活动预测':values.name.trim()});
-        }
-        Object.assign(draft.changes[draft.changes.length-1],{by:groups.find(g=>g.children.some(child=>child.id===c.id))?.owner||'',at:new Date().toISOString()});
-        if(!persistCurrent()){Object.assign(draft,previous);setError('保存失败，填写内容仍保留，请重试');return;}
+        if(!isManual&&!clear&&key!==edit.key&&drafts.some(item=>item.activity[key])){form.setFields([{name:'date',errors:['该日期已有活动预测，请选择其他日期']}]);return;}
+        const previous=drafts.map(item=>({manual:{...item.manual},manualReasons:{...item.manualReasons},activity:{...item.activity},changes:[...item.changes]}));
+        const allocated=clear?targets.map(()=>null):distribute(values.qty);
+        drafts.forEach((item,index)=>{
+          if(isManual){
+            if(clear){delete item.manual[edit.key];delete item.manualReasons[edit.key];}
+            else{item.manual[edit.key]=allocated[index];item.manualReasons[edit.key]=values.reason.trim();}
+            item.changes.push({date:edit.key,line:'人工预测',before:previous[index].manual[edit.key]??null,after:clear?null:allocated[index],reason:clear?'清除人工预测':values.reason.trim()});
+          }else{
+            if(clear||key!==edit.key)delete item.activity[edit.key];
+            if(!clear)item.activity[key]={qty:allocated[index],name:values.name.trim(),date:key,note:(values.note||'').trim()};
+            item.changes.push({date:key,line:'活动预测',before:previous[index].activity[edit.key]?.qty??null,after:clear?null:allocated[index],reason:clear?'清除活动预测':values.name.trim()});
+          }
+          Object.assign(item.changes[item.changes.length-1],{by:groups.find(g=>g.children.some(child=>child.id===targets[index].id))?.owner||'',at:new Date().toISOString()});
+        });
+        if(!persistCurrent()){drafts.forEach((item,index)=>Object.assign(item,previous[index]));setError('保存失败，填写内容仍保留，请重试');return;}
       }
-      onClose();renderTable();toast(clear?'已清除预测':'已保存');
+      onClose();renderTable();window.dispatchEvent(new Event('forecast-values-change'));toast(clear?'已清除预测':'已保存');
     };
     const count=forecastCountProps,fields=forecastFields(edit.kind);
     if(isNote)return h('div',{className:'inline-note-editor'},h(antd.Form,{form,initialValues:initial,onFinish:values=>commit(values),validateTrigger:['onChange','onBlur']},
       h(antd.Form.Item,{name:'note',className:'forecast-note-field',rules:[{max:200,message:'最多200字'}]},h(Input.TextArea,{...count,'aria-label':'商品备注',autoFocus:true}))),
       error?h(Alert,{type:'error',message:error}):null,h('div',{className:'forecast-editor-footer'},h('span'),h(Space,null,h(Button,{onClick:close},'取消'),h(Button,{type:'primary',onClick:()=>form.submit()},'保存'))));
-    return h(antd.Modal,{open:true,title:isNote?'商品备注':isManual?'人工预测':'活动预测',width:440,onCancel:close,maskClosable:false,destroyOnHidden:true,footer:h('div',{className:'forecast-editor-footer'},!isNote&&(isManual?draft.manual[edit.key]!=null:Boolean(event))?h(Button,{danger:true,onClick:()=>commit({},true)},'清除预测'):h('span'),h(Space,null,h(Button,{onClick:close},'取消'),h(Button,{type:'primary',onClick:()=>form.submit()},'保存')))},
-      h('div',{className:'forecast-editor-context'},c.asin+(edit.key?' · '+formatKey(edit.key):'')),
+    const hasExisting=isManual?manualValues.length>0:events.length>0;
+    return h(antd.Modal,{open:true,title:isNote?'商品备注':isManual?'人工预测':'活动预测',width:440,onCancel:close,maskClosable:false,destroyOnHidden:true,footer:h('div',{className:'forecast-editor-footer'},!isNote&&hasExisting?h(Button,{danger:true,onClick:()=>commit({},true)},'清除预测'):h('span'),h(Space,null,h(Button,{onClick:close},'取消'),h(Button,{type:'primary',onClick:()=>form.submit()},'保存')))},
+      h('div',{className:'forecast-editor-context'},(isAggregate?(edit.label||'父ASIN'):c.asin)+(edit.key?' · '+formatKey(edit.key):'')),
       h(antd.Form,{form,layout:'vertical',initialValues:initial,onFinish:values=>commit(values),scrollToFirstError:true,validateTrigger:['onChange','onBlur']},...fields),error?h(Alert,{type:'error',message:error,showIcon:true}):null);
   }
   function Controls(){

@@ -39,6 +39,12 @@
   const content=$('.content'),skuHost=document.createElement('section');skuHost.className='sku-workspace';skuHost.hidden=true;skuHost.setAttribute('aria-label','SKU详情列表');content.after(skuHost);
   const tabsRoot=ReactDOM.createRoot(tabs),skuRoot=ReactDOM.createRoot(skuHost);
   let skuOpen=false,currentSku='',active='forecast',returnTarget=null;
+  function renderWorkspaceTabs({activeKey,items,onChange,onEdit}){
+    tabs.classList.remove('planning-system-tabs');
+    tabs.style.display='';
+    tabsRoot.render(wrap(h(Tabs,{type:'editable-card',size:'small',hideAdd:true,activeKey,tabBarStyle:{margin:0},items,onChange,onEdit})));
+  }
+  window.portalWorkspaceTabsRender=renderWorkspaceTabs;
   const skuRows=()=>{const seen=new Set();return groups.flatMap(g=>g.children.map(c=>({key:c.sku,sku:c.sku,businessCode:c.businessCode,name:g.name,spu:g.spu,skc:g.skc,color:c.color,size:c.size}))).filter(r=>{if(seen.has(r.sku))return false;seen.add(r.sku);return true;});};
   function SkuList({sku}){
     const [draft,setDraft]=React.useState(sku),[query,setQuery]=React.useState(sku);
@@ -51,7 +57,7 @@
   function drawRoute(){
     tabs.classList.remove('planning-system-tabs');
     const isSku=active==='sku';document.body.dataset.workspace=active;content.classList.toggle('is-route-hidden',isSku);skuHost.hidden=!isSku;$('.crumb b').textContent=isSku?'SKU详情列表':'销售预测';
-    tabsRoot.render(wrap(h(Tabs,{type:'editable-card',size:'small',hideAdd:true,activeKey:active,tabBarStyle:{margin:0},items:[{key:'forecast',label:'销售预测',closable:false},...(skuOpen?[{key:'sku',label:'SKU详情列表',closable:true}]:[])],onChange:key=>{location.hash=key==='sku'?'sku='+encodeURIComponent(currentSku):'forecast';},onEdit:(key,action)=>{if(action==='remove'&&key==='sku'){skuOpen=false;location.hash='forecast';if(active==='forecast')drawRoute();}}})));
+    renderWorkspaceTabs({activeKey:active,items:[{key:'forecast',label:'销售预测',closable:false},...(skuOpen?[{key:'sku',label:'SKU详情列表',closable:true}]:[])],onChange:key=>{location.hash=key==='sku'?'sku='+encodeURIComponent(currentSku):'forecast';},onEdit:(key,action)=>{if(action==='remove'&&key==='sku'){skuOpen=false;location.hash='forecast';if(active==='forecast')drawRoute();}}});
     if(isSku)skuRoot.render(wrap(h(SkuList,{key:currentSku,sku:currentSku})));else requestAnimationFrame(()=>{syncHorizontalScrollbar();positionForecastDivider();returnTarget?.isConnected&&returnTarget.focus({preventScroll:true});});
   }
   function route(){const m=location.hash.match(/^#sku=(.*)$/);if(m){try{currentSku=decodeURIComponent(m[1]);}catch{currentSku='';}active='sku';skuOpen=true;hideCodeTooltip();hideImagePreview();}else active='forecast';drawRoute();}
