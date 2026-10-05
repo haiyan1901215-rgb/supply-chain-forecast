@@ -697,132 +697,120 @@
 
     const drawerBatchRows = drawerRow ? (batchSnapshot?.childForecastResults || []).filter(item => item.parentASIN === drawerRow.group.parent && item.country === drawerRow.group.market && item.store === drawerRow.group.account) : [];
     const drawerBatchRow = drawerRow?.type === 'child' ? drawerBatchRows.find(item => item.childId === drawerRow.child.id || item.childASIN === drawerRow.child.asin) : null;
-    const fallbackShareTotal = drawerRow ? drawerRow.group.children.reduce((sum, child) => sum + Math.max(0, Number(child.base || 0)), 0) : 0;
-    const splitRows = drawerRow ? drawerRow.group.children.map(child => {
-      const source = drawerBatchRows.find(item => item.childId === child.id || item.childASIN === child.asin);
-      const adjustment = shareAdjustments[`child:${drawerRow.group.id}|${child.id}`];
-      const fallbackShare = fallbackShareTotal ? Math.round(Math.max(0, Number(child.base || 0)) / fallbackShareTotal * 10000) : Math.round(10000 / drawerRow.group.children.length);
-      return {
-        key: child.id,
-        childASIN: child.asin,
-        systemShare: source?.systemShare ?? fallbackShare,
-        finalShare: adjustment?.share ?? source?.finalShare ?? fallbackShare,
-        relationState: source?.relationState || '平台同步',
-        current: drawerRow.type === 'child' && child.id === drawerRow.child.id
-      };
-    }) : [];
-    if (drawerRow && !drawerBatchRows.length && splitRows.length) {
-      const drift = 10000 - splitRows.reduce((sum, item) => sum + item.systemShare, 0);
-      splitRows.at(-1).systemShare += drift;
-    }
-
-    const drawerForecastTotal = drawerRow ? total(dates.map(date => drawerRow.daily[dateKey(date)]?.value)) : null;
+    const drawerLineTotals = drawerRow ? Object.fromEntries(['system', 'manual', 'activity', 'final'].map(line => [line, total(dates.map(date => drawerRow.forecast[dateKey(date)]?.[line]))])) : {};
+    const drawerLineDays = drawerRow ? Object.fromEntries(['manual', 'activity'].map(line => [line, dates.filter(date => drawerRow.forecast[dateKey(date)]?.[line] != null).length])) : {};
+    const drawerSourceCounts = drawerRow ? dates.reduce((counts, date) => {
+      const forecast = drawerRow.forecast[dateKey(date)];
+      if (forecast?.final == null || !forecast.source) return counts;
+      counts[forecast.source] = (counts[forecast.source] || 0) + 1;
+      return counts;
+    }, {}) : {};
+    const drawerStatuses = drawerRow ? [...new Set(dates.map(date => drawerRow.forecast[dateKey(date)]?.status).filter(Boolean))] : [];
+    const sourceOrder = ['system', 'manual', 'activity'];
+    const sourceSummary = sourceOrder.filter(source => drawerSourceCounts[source]).map(source => `${({ system: '规则', manual: '人工', activity: '活动' })[source]} ${drawerSourceCounts[source]} 天`).join(' / ') || drawerStatuses.join('；') || '—';
+    const currentWindowStart = dates[0] ? dateKey(dates[0]) : coverageStart;
+    const currentWindowEnd = dates.at(-1) ? dateKey(dates.at(-1)) : coverageEnd;
+    const formatDateTime = value => value ? dayjs(value).format('YYYY/MM/DD HH:mm') : '—';
+    const currentShare = drawerRow?.type === 'child'
+      ? shareAdjustments[`child:${drawerRow.group.id}|${drawerRow.child.id}`]?.share ?? drawerBatchRow?.finalShare ?? drawerRow.share
+      : null;
+    const drawerTags = drawerRow ? [...new Set(drawerRow.type === 'parent' ? drawerRow.group.tags || [] : drawerBatchRow?.tags || drawerRow.group.tags || [])] : [];
+    const drawerResultLines = drawerRow ? [
+      { key: 'system', label: '规则预测', value: drawerLineTotals.system, note: '本批次规则结果' },
+      { key: 'manual', label: '人工预测', value: drawerLineTotals.manual, note: drawerLineDays.manual ? `已填写 ${drawerLineDays.manual} 天` : '未填写' },
+      { key: 'activity', label: '活动预测', value: drawerLineTotals.activity, note: drawerLineDays.activity ? `已填写 ${drawerLineDays.activity} 天` : '未填写' },
+      { key: 'final', label: '最终预测', value: drawerLineTotals.final, note: sourceSummary }
+    ] : [];
+    const drawerNavigationContext = drawerRow ? {
+      batchDate,
+      entity: {
+        type: drawerRow.type,
+        entityKey: drawerRow.entityKey || drawerRow.key,
+        parentEntityKey: `parent:${drawerRow.group.id}`,
+        groupId: drawerRow.group.id,
+        parentAsin: drawerRow.group.parent,
+        childId: drawerRow.type === 'child' ? drawerRow.child.id : null,
+        childAsin: drawerRow.type === 'child' ? drawerRow.child.asin : null,
+        label: drawerRow.type === 'child' ? drawerRow.child.asin : drawerRow.group.parent
+      },
+      workbench: {
+        filters: { ...filters },
+        filterDraft: { ...filterDraft },
+        page,
+        pageSize,
+        windowStart,
+        windowSize,
+        collapsedWeeks: [...collapsedWeeks],
+        selectedKey: drawerRow.entityKey || drawerRow.key,
+        expandedRowKeys: [...new Set([...expandedRowKeys, `parent:${drawerRow.group.id}`])],
+        expandedForecastKeys: [...new Set([...expandedForecastKeys, drawerRow.entityKey || drawerRow.key])],
+        treeExpandedKeys: [...treeExpandedKeys],
+        treeCheckedKeys: [...treeCheckedKeys],
+        treeExcludedKeys: [...treeExcludedKeys],
+        treePanelCollapsed
+      }
+    } : null;
     const forecastBasisPanel = drawerRow && h('div', { className: 'fpw-drawer-content' },
-      h('section', { className: 'fpw-drawer-section' },
-        h('h3', null, '预测关键参数'),
+      h('section', { className: 'fpw-drawer-section', 'aria-labelledby': 'fpw-batch-heading' },
+        h('div', { className: 'fpw-drawer-section-head' }, h('h3', { id: 'fpw-batch-heading' }, '批次信息'), h(Tag, { color: 'processing' }, batchSnapshot?.status || meta.status || '当前批次')),
         h(Descriptions, {
-          bordered: true,
           size: 'small',
-          column: 1,
+          column: 2,
           items: [
-            { key: 'adu', label: 'Clean ADU', children: formatNumber(drawerRow.dailySales) },
-            { key: 'alpha', label: '动态 Alpha', children: batchSnapshot?.forecastRuleSnapshot?.dynamicAlpha || batchSnapshot?.parameterSnapshot?.dynamicAlpha || '0.10' },
-            { key: 'season', label: '季节因子', children: formatNumber(batchSnapshot?.forecastRuleSnapshot?.seasonIndex ?? batchSnapshot?.parameterSnapshot?.seasonIndex ?? 1) },
-            { key: 'listing', label: 'Listing适配系数', children: formatNumber(batchSnapshot?.forecastRuleSnapshot?.listingFactor ?? batchSnapshot?.parameterSnapshot?.listingFactor ?? 1) },
-            { key: 'forecast', label: '当前窗口预测', children: `${formatNumber(drawerForecastTotal)} 件` }
+            { key: 'batch', label: '预测批次', span: 2, children: batchSnapshot?.name || `${dateText(batchDate)} 预测批次` },
+            { key: 'batch-version', label: '批次版本', children: batchSnapshot?.batchVersion || meta.batchVersion || '—' },
+            { key: 'result-version', label: '结果版本', children: batchSnapshot?.activeResultVersion || meta.activeResultVersion || '—' },
+            { key: 'period', label: '预测周期', span: 2, children: `${dateText(coverageStart)} ~ ${dateText(coverageEnd)}` },
+            { key: 'window', label: '当前查看窗口', span: 2, children: `${dateText(currentWindowStart)} ~ ${dateText(currentWindowEnd)}（${dates.length} 天）` },
+            { key: 'cutoff', label: '数据截至', children: dateText(batchSnapshot?.dataCutoffDate || meta.dataCutoffDate) },
+            { key: 'updated', label: '数据更新时间', children: formatDateTime(batchSnapshot?.dataUpdatedAt || meta.dataUpdatedAt) }
           ]
         })
       ),
-      h('section', { className: 'fpw-drawer-section' },
-        h('h3', null, '当前对象'),
+      h('section', { className: 'fpw-drawer-section', 'aria-labelledby': 'fpw-object-heading' },
+        h('h3', { id: 'fpw-object-heading' }, '当前预测对象'),
         h(Descriptions, {
           size: 'small',
-          column: 1,
+          column: 2,
           items: [
-            { key: 'type', label: '对象类型', children: drawerRow.type === 'parent' ? '父ASIN预测池' : '子ASIN拆分结果' },
+            { key: 'entry', label: '进入路径', span: 2, children: `预测工作台 / ${drawerRow.type === 'parent' ? '父ASIN' : '子ASIN'}` },
+            { key: 'type', label: '对象类型', children: drawerRow.type === 'parent' ? '父ASIN' : '子ASIN' },
+            { key: 'asin', label: drawerRow.type === 'parent' ? '父ASIN' : '子ASIN', children: drawerRow.type === 'parent' ? drawerRow.group.parent : drawerRow.child.asin },
+            { key: 'parent', label: '所属父ASIN', children: drawerRow.group.parent },
+            { key: 'sku', label: drawerRow.type === 'parent' ? 'SPU' : 'SKU', children: drawerRow.type === 'parent' ? drawerRow.group.spu : drawerRow.child.sku },
             { key: 'site', label: '平台 / 站点', children: `${drawerRow.group.platform} / ${drawerRow.group.market}` },
             { key: 'store', label: '账号 / 店铺', children: drawerRow.group.account },
-            { key: 'owner', label: '销售负责人', children: drawerRow.group.owner }
-          ]
-        })
-      )
-    );
-
-    const splitPanel = drawerRow && h('div', { className: 'fpw-drawer-content' },
-      h('section', { className: 'fpw-drawer-section' },
-        h('h3', null, `子体拆分 · ${drawerRow.group.parent}`),
-        h(Table, {
-          className: 'fpw-drawer-table',
-          size: 'small',
-          rowKey: 'key',
-          pagination: false,
-          dataSource: splitRows,
-          columns: [
-            { title: '子ASIN', dataIndex: 'childASIN', key: 'childASIN', render: (value, record) => h('span', { className: 'fpw-drawer-asin' }, value, record.current && h(Tag, { color: 'processing' }, '当前')) },
-            { title: '系统份额', dataIndex: 'systemShare', key: 'systemShare', width: 88, render: formatShare },
-            { title: '最终份额', dataIndex: 'finalShare', key: 'finalShare', width: 88, render: formatShare }
+            { key: 'owner', label: '销售负责人', children: drawerRow.group.owner },
+            { key: 'scope', label: '预测范围', span: 2, children: `${dateText(currentWindowStart)} ~ ${dateText(currentWindowEnd)}` }
           ]
         })
       ),
-      h('p', { className: 'fpw-drawer-note' }, `当前父体共 ${splitRows.length} 个子体，最终份额合计 ${formatShare(splitRows.reduce((sum, item) => sum + item.finalShare, 0))}。`)
-    );
-
-    const relationPanel = drawerRow && h('div', { className: 'fpw-drawer-content' },
-      h('section', { className: 'fpw-drawer-section' },
-        h('h3', null, '当前父子关系'),
+      h('section', { className: 'fpw-drawer-section', 'aria-labelledby': 'fpw-result-heading' },
+        h('div', { className: 'fpw-drawer-section-head' }, h('h3', { id: 'fpw-result-heading' }, '预测结果形成'), h('span', { className: 'fpw-result-unit' }, '当前窗口 · 件')),
+        h('div', { className: 'fpw-result-formation' }, drawerResultLines.map(line => h('div', { key: line.key, className: `fpw-result-line is-${line.key}` },
+          h('span', null, line.label),
+          h('strong', null, formatNumber(line.value)),
+          h('small', null, line.note)
+        ))),
+        h('div', { className: 'fpw-formation-rule' }, h('strong', null, '最终值形成'), h('span', null, '按日期取值：活动预测 > 人工预测 > 规则预测。'))
+      ),
+      h('section', { className: 'fpw-drawer-section', 'aria-labelledby': 'fpw-basis-heading' },
+        h('h3', { id: 'fpw-basis-heading' }, '预测依据'),
         h(Descriptions, {
-          bordered: true,
           size: 'small',
-          column: 1,
+          column: 2,
           items: [
-            { key: 'parent', label: '父ASIN', children: drawerRow.group.parent },
-            { key: 'child', label: '当前子ASIN', children: drawerRow.type === 'child' ? drawerRow.child.asin : `${drawerRow.group.children.length} 个子ASIN` },
-            { key: 'state', label: '关系状态', children: drawerBatchRow?.relationState || '平台同步' },
-            { key: 'effective', label: '本批次动作', children: '保留' }
-          ]
-        })
-      ),
-      h('section', { className: 'fpw-drawer-section' },
-        h('h3', null, '关系内子体'),
-        h(Table, {
-          className: 'fpw-drawer-table',
-          size: 'small',
-          rowKey: 'key',
-          pagination: false,
-          dataSource: splitRows,
-          columns: [
-            { title: '子ASIN', dataIndex: 'childASIN', key: 'childASIN' },
-            { title: '当前状态', dataIndex: 'relationState', key: 'relationState', width: 100 }
+            { key: 'recent-sales', label: '近30天销量', children: `${formatNumber(drawerRow.recentSales)} 件` },
+            { key: 'daily-sales', label: '近30天日均', children: `${formatNumber(drawerRow.dailySales)} 件` },
+            { key: 'share', label: drawerRow.type === 'child' ? '子ASIN份额占比' : '子ASIN范围', children: drawerRow.type === 'child' ? formatShare(currentShare) : `${drawerRow.group.children.length} 个子ASIN` },
+            { key: 'tags', label: '商品标签', children: h('span', { className: 'fpw-drawer-tags' }, drawerTags.length ? drawerTags.map(tag => h(Tag, { key: tag }, tag)) : '—') },
+            { key: 'forecast-rule', label: '预测规则快照', children: batchSnapshot?.forecastRuleSnapshot?.version || meta.forecastRuleVersion || '—' },
+            { key: 'season-rule', label: '季节规则快照', children: batchSnapshot?.seasonRuleVersion || meta.seasonRuleVersion || '—' },
+            { key: 'relation-rule', label: '父子关系快照', children: batchSnapshot?.relationVersion || meta.relationVersion || '—' },
+            { key: 'split-rule', label: '拆分规则快照', children: batchSnapshot?.splitRuleSnapshot?.version || meta.splitRuleVersion || '—' }
           ]
         })
       )
-    );
-
-    const comboRows = drawerRow ? drawerBatchRows
-      .filter(item => drawerRow.type === 'parent' || item.childId === drawerRow.child.id || item.childASIN === drawerRow.child.asin)
-      .flatMap(item => (item.comboLines || []).map(line => ({ ...line, key: `${item.childASIN}-${line.sku}`, childASIN: item.childASIN }))) : [];
-    const comboPanel = drawerRow && h('div', { className: 'fpw-drawer-content' },
-      comboRows.length
-        ? h('section', { className: 'fpw-drawer-section' },
-            h('h3', null, '本批次销售组合拆解'),
-            h(Table, {
-              className: 'fpw-drawer-table',
-              size: 'small',
-              rowKey: 'key',
-              pagination: false,
-              scroll: { x: 560 },
-              dataSource: comboRows,
-              columns: [
-                { title: '子ASIN', dataIndex: 'childASIN', key: 'childASIN', width: 128 },
-                { title: '组成SKU', dataIndex: 'sku', key: 'sku', width: 100 },
-                { title: '数量比例', dataIndex: 'defaultRatio', key: 'defaultRatio', width: 86, render: formatShare },
-                { title: '系统拆解', dataIndex: 'systemSuggested', key: 'systemSuggested', width: 82, render: formatNumber },
-                { title: '人工调整', dataIndex: 'pmcAdjustment', key: 'pmcAdjustment', width: 82, render: value => Number(value) ? `${Number(value) > 0 ? '+' : ''}${formatNumber(value)}` : '—' },
-                { title: '最终需求', dataIndex: 'finalForecast', key: 'finalForecast', width: 82, render: formatNumber }
-              ]
-            })
-          )
-        : h(Empty, { image: Empty.PRESENTED_IMAGE_SIMPLE, description: '当前对象无销售组合拆解' })
     );
 
     const metricHints = {

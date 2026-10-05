@@ -1,0 +1,25 @@
+版本：V3，新增静态设计稿；原图及其他版本保留。
+工具：内置 imagegen，基于用户所附图片编辑。
+用途：静态布局评审，数据为示例；不代表页面交互已经实现。
+修正：父/子 ASIN 行结构保留；W41、W42 分组表头下各展示七天日期、每日销售预测数值及独立周合计。关闭详情抽屉，优先展示日预测矩阵。
+视觉核验：生成图中可见两组 W 周表头、14 个日期列、逐行日预测值及周合计列。
+
+最终生成提示词：
+Use case: precise-object-edit / ui-mockup. Edit the attached Chinese enterprise supply chain planning UI into a corrected V3 static design. The defect to fix is missing WEEK -> DAY COLUMN HIERARCHY and missing DAILY SALES FORECAST VALUES. This is the dominant requirement.
+Preserve the reference's Ant Design white and blue visual style, navy left navigation, country/parent/child ASIN navigation tree, compact batch identity/actions/filters, and parent rows followed by indented child rows. Preserve prediction basis detail as an on-demand drawer; show it CLOSED in this main screenshot with a small '预测详情' button to maximize daily column space. No extra dashboard panels. One beautiful crisp landscape screenshot, approximately 2400x1350 or higher resolution. No explanatory inset strips.
+Main title '2026-W41 销售预测批次', version label 'V3 · 周日层级修正版'. Smaller metadata '预测周期 2026-10-01 ~ 2026-12-29', '示例数据'. Controls 重新计算, 预测参数, 父子关系, 子体拆分, 销售组合拆解, 打开销售填报.
+The PRIMARY TABLE must fill the main content width with frozen object columns on left, and 14 DAY columns visibly populated on right. Table horizontal scrollbar at bottom. Compact fixed columns '父ASIN / 子ASIN', '近30天销量 / 日均', 'FBA / 在途', 'DOS'. Keep these narrow so daily grid dominates.
+Just above table, a selected pill '周内展开到日' with '收起全部周', metric selector '当前指标：最终销售预测'. A small helper reads '周合计 = 本周每日预测之和'. Weekly totals MUST NOT replace daily columns.
+CRITICAL EXACT TABLE HEADER ANATOMY: TWO ROWS. Row 1: merged pale blue group '⊟ W41  10/05–10/11' spanning precisely 8 subcolumns; merged group '⊟ W42  10/12–10/18' spanning precisely 8 subcolumns. Row 2 beneath W41: '10/05 一','10/06 二','10/07 三','10/08 四','10/09 五','10/10 六','10/11 日','周合计'. Row 2 beneath W42: '10/12 一','10/13 二','10/14 三','10/15 四','10/16 五','10/17 六','10/18 日','周合计'. Weekend date headers light warm tint; week total cells pale blue. Every daily column has a distinct numerical daily forecast value for EVERY parent and child row. This MUST be a real visible dense matrix of dates and numbers, never just a W41/W42 weekly-summary table. Do not create source subrows, one object per row.
+Exact first group data, using reference ASIN identity and pastel tags:
+Parent B01A1B2C3D4, tags 新品 增长 F10, daily W41 [104,108,112,110,118,125,123], total 800; W42 [110,114,118,116,124,131,127], total 840.
+Indented B01A1B2C3D4-BLACK-M: W41 [36,38,39,38,41,44,43], total279; W42 [38,40,41,40,43,46,44],total292.
+Indented B01A1B2C3D4-BLACK-L: W41 [32,33,34,34,36,38,37], total244; W42 [34,35,36,36,38,40,39], total258.
+Indented B01A1B2C3D4-WHITE-M: W41 [30,31,32,31,34,35,35],total228; W42 [32,33,34,33,36,37,36],total241.
+Indented COMB-001: W41 [6,6,7,7,7,8,8],total49; W42 [6,6,7,7,7,8,8],total49.
+Second Parent B07HQGX677 with tags 成熟 F10, followed by three indented child rows BLACK-S, WHITE-M, WHITE-L.
+Second parent daily W41 [76,79,81,80,84,90,90], total580; W42 [80,82,84,83,88,94,94],total605.
+Its first child W41 [26,27,28,27,29,31,31],total199; W42 [27,28,29,28,30,32,32],total206.
+Its second child W41 [30,31,32,32,33,36,36],total230; W42 [32,32,33,33,35,37,37],total239.
+Its third child W41 [20,21,21,21,22,23,23],total151; W42 [21,22,22,22,23,25,25],total160.
+Rows comfortable 42-48px height, parent rows blue tinted with bold figures, child rows white. Use reference left tree, search and expand/collapse controls, enough whitespace. Bottom pagination and count 128 Parent / 486 Child; footnote '示例数据 · 周汇总不替代日预测'. Small table footer note '点击 W 周标题可展开 / 收起日期列'. Never substitute 90-day aggregate forecast columns for this requested week/day matrix. Preserve parent-child hierarchy simultaneously with week-day hierarchy. Prioritize legible exact date headers and daily numbers.
