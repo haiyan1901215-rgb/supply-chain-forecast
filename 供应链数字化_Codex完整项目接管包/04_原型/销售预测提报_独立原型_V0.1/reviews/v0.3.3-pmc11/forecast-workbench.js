@@ -77,16 +77,20 @@
     );
   }
 
+  const workbenchMetricColumnKeys = ['recentSales', 'dailySales', 'fbaAvailable', 'fbaInbound', 'dos'];
   const workbenchColumnCatalog = [
+    { key: 'share', label: '占比', group: '列表字段', reorderable: false },
     { key: 'recentSales', label: '近30天销量', group: '销量 / 库存' },
     { key: 'dailySales', label: '近30天日均', group: '销量 / 库存' },
     { key: 'fbaAvailable', label: 'FBA在库', group: '销量 / 库存' },
     { key: 'fbaInbound', label: 'FBA在途', group: '销量 / 库存' },
-    { key: 'dos', label: 'FBA DOS', group: '销量 / 库存' }
+    { key: 'dos', label: 'FBA DOS', group: '销量 / 库存' },
+    { key: 'forecastLine', label: '预测线', group: '列表字段', reorderable: false },
+    { key: 'forecastPeriods', label: '日期预测', group: '列表字段', reorderable: false }
   ];
   const defaultWorkbenchColumns = workbenchColumnCatalog.map(field => field.key);
-  const compactWorkbenchColumns = ['dailySales', 'fbaAvailable', 'dos'];
-  const workbenchColumnStorageKey = 'pmc-forecast-workbench-columns-v1';
+  const compactWorkbenchColumns = ['dailySales', 'fbaAvailable', 'dos', 'forecastLine', 'forecastPeriods'];
+  const workbenchColumnStorageKey = 'pmc-forecast-workbench-columns-v2';
   const workbenchShareStorageKey = 'pmc-forecast-workbench-shares-v1';
 
   function loadStoredList(key, fallback) {
@@ -326,7 +330,7 @@
     const [treeExcludedKeys, setTreeExcludedKeys] = useState(() => new Set(restoredWorkbench.treeExcludedKeys || []));
     const [treePanelCollapsed, setTreePanelCollapsed] = useState(Boolean(restoredWorkbench.treePanelCollapsed));
     const [expandedRowKeys, setExpandedRowKeys] = useState(restoredWorkbench.expandedRowKeys || []);
-    const [expandedForecastKeys, setExpandedForecastKeys] = useState(() => new Set(restoredWorkbench.expandedForecastKeys || []));
+    const [expandedForecastKeys, setExpandedForecastKeys] = useState(() => Array.isArray(restoredWorkbench.expandedForecastKeys) ? new Set(restoredWorkbench.expandedForecastKeys) : null);
     const [hoveredColumn, setHoveredColumn] = useState(null);
     const [hoveredRow, setHoveredRow] = useState(null);
     const [page, setPage] = useState(restoredWorkbench.page || 1);
@@ -567,7 +571,7 @@
     const pageRows = useMemo(() => rows.slice((page - 1) * pageSize, page * pageSize), [page, pageSize, rows]);
     const tableRows = useMemo(() => {
       const lineRows = entity => {
-        const lines = expandedForecastKeys.has(entity.key) ? ['system', 'manual', 'activity', 'final'] : ['final'];
+        const lines = expandedForecastKeys == null || expandedForecastKeys.has(entity.key) ? ['system', 'manual', 'activity', 'final'] : ['final'];
         const { children: variantChildren, ...entityFields } = entity;
         return lines.map((forecastLine, lineIndex) => ({
           ...entityFields,
@@ -604,7 +608,11 @@
       };
     };
     const headerEvents = (columnKey, extra = '') => ({ className: columnClass(columnKey, null, extra), style: gridBorderStyle });
-    const fixedBoundaryEvents = events => ({ ...events, style: { ...events.style, borderInlineEnd: `1px solid ${uiStandards.colors?.borderStrong || '#d1d9e7'}` } });
+    const fixedBoundaryEvents = events => ({
+      ...events,
+      className: `${events.className || ''} fpw-fixed-boundary`.trim(),
+      style: { ...events.style, borderInlineEnd: `1px solid ${uiStandards.colors?.borderStrong || '#d1d9e7'}` }
+    });
 
     const defaultColumnWidth = key => key.startsWith('date:') ? forecastTableStandards.dayWidth : key.startsWith('collapsed:') ? forecastTableStandards.weekTotalWidth : ({ identity: 310, share: 82, context: 188, forecastLine: 108 }[key] || 68);
     const resizeLimits = key => key === 'identity' ? [0, 640] : key.startsWith('date:') ? [0, 180] : [0, 240];
@@ -749,7 +757,7 @@
         collapsedWeeks: [...collapsedWeeks],
         selectedKey: drawerRow.entityKey || drawerRow.key,
         expandedRowKeys: [...new Set([...expandedRowKeys, `parent:${drawerRow.group.id}`])],
-        expandedForecastKeys: [...new Set([...expandedForecastKeys, drawerRow.entityKey || drawerRow.key])],
+        expandedForecastKeys: expandedForecastKeys == null ? null : [...new Set([...expandedForecastKeys, drawerRow.entityKey || drawerRow.key])],
         treeExpandedKeys: [...treeExpandedKeys],
         treeCheckedKeys: [...treeCheckedKeys],
         treeExcludedKeys: [...treeExcludedKeys],
@@ -827,26 +835,40 @@
       dos: 'FBA可售库存按当前日均销量折算的可售天数'
     };
     const fieldTitle = (title, key) => h(Tooltip, { title: metricHints[key], mouseEnterDelay: 0.2 }, h('span', { className: 'fpw-field-title', tabIndex: 0 }, title));
-    const visibleColumnKeys = columnConfig.keys;
+    const visibleMetricKeys = columnConfig.keys.filter(key => workbenchMetricColumnKeys.includes(key));
     const forecastLineKeys = ['system', 'manual', 'activity', 'final'];
     const forecastLineLabels = { system: '规则预测', manual: '人工预测', activity: '活动预测', final: '最终预测' };
     const forecastSourceLabels = window.ForecastLedgerValues?.sourceLabels || { system: '规则', manual: '人工', activity: '活动' };
     const metricDefinitions = {
       recentSales: { label: '近30天销量', value: row => formatNumber(row.recentSales) },
       dailySales: { label: '近30天日均', value: row => formatNumber(row.dailySales) },
-      fbaAvailable: { label: 'FBA在库', value: row => formatNumber(row.fbaAvailable), tone: 'stock' },
-      fbaInbound: { label: 'FBA在途', value: row => formatNumber(row.fbaInbound), tone: 'stock' },
-      dos: { label: 'FBA DOS', value: row => row.dos == null ? '—' : `${formatNumber(row.dos)} 天`, tone: row => Number(row.dos) < 20 ? 'warn' : '' }
+      fbaAvailable: { label: 'FBA在库', value: row => formatNumber(row.fbaAvailable) },
+      fbaInbound: { label: 'FBA在途', value: row => formatNumber(row.fbaInbound) },
+      dos: { label: 'FBA DOS', value: row => row.dos == null ? '—' : `${formatNumber(row.dos)} 天` }
     };
-    const contextContent = row => h('div', { className: 'fpw-metric-grid metric-grid' }, visibleColumnKeys.map(key => {
-      const definition = metricDefinitions[key];
-      if (!definition) return null;
-      const tone = typeof definition.tone === 'function' ? definition.tone(row) : definition.tone || '';
-      return h('div', { className: 'fpw-metric metric', key },
-        h(Tooltip, { title: metricHints[key], mouseEnterDelay: 0.2 }, h('label', { tabIndex: 0 }, definition.label)),
-        h('strong', { className: tone }, definition.value(row))
-      );
-    }));
+    const contextContent = row => {
+      const sections = [];
+      visibleMetricKeys.forEach(key => {
+        const sectionKey = ['recentSales', 'dailySales'].includes(key) ? 'sales' : 'stock';
+        const sectionLabel = sectionKey === 'sales' ? '销量' : '库存';
+        if (sections.at(-1)?.key !== sectionKey) sections.push({ key: sectionKey, label: sectionLabel, fields: [] });
+        sections.at(-1).fields.push(key);
+      });
+      return h(React.Fragment, null, ...sections.map((section, sectionIndex) => h('section', {
+        className: 'fpw-context-section context-section',
+        'data-section': section.key,
+        key: `${section.key}-${sectionIndex}`
+      },
+      h('div', { className: 'fpw-context-section-title context-section-title' }, section.label),
+      h('div', { className: 'fpw-metric-grid metric-grid' }, section.fields.map(key => {
+        const definition = metricDefinitions[key];
+        return h('div', { className: 'fpw-metric metric', 'data-field': key, key },
+          h(Tooltip, { title: metricHints[key], mouseEnterDelay: 0.2 }, h('label', { tabIndex: 0 }, definition.label)),
+          h('strong', null, definition.value(row))
+        );
+      }))
+      )));
+    };
 
     const openSharedForecastEditor = (row, line, date, event) => {
       event?.stopPropagation?.();
@@ -991,7 +1013,7 @@
     );
 
     const allForecastKeys = rows.flatMap(parent => [parent.key, ...parent.children.map(child => child.key)]);
-    const allForecastExpanded = allForecastKeys.length > 0 && allForecastKeys.every(key => expandedForecastKeys.has(key));
+    const allForecastExpanded = expandedForecastKeys == null || (allForecastKeys.length > 0 && allForecastKeys.every(key => expandedForecastKeys.has(key)));
     const forecastHeaderAction = h(Tooltip, { title: allForecastExpanded ? '收起全部预测线' : '展开全部预测线' }, h(Button, {
       type: 'text', size: 'small', className: 'forecast-state-toggle fpw-forecast-toggle', icon: stateToggleGlyph(allForecastExpanded),
       'aria-label': allForecastExpanded ? '收起全部预测线' : '展开全部预测线',
@@ -1059,13 +1081,26 @@
       onHeaderCell: () => headerEvents('share', 'fpw-header-cell fpw-share-header')
     };
 
-    const columns = [
-      { title: resizableTitle('变体', 'identity', variantHeaderAction), key: 'identity', width: columnWidths.identity, fixed: 'left', render: (_, row) => identity(row), onCell: row => ({ ...cellEvents('identity', row.key, 'fpw-identity-cell'), rowSpan: row.lineIndex === 0 ? row.lineCount : 0 }), onHeaderCell: () => headerEvents('identity', 'fpw-header-cell fpw-identity-header') },
-      shareColumn,
-      visibleColumnKeys.length && { title: resizableTitle('销量 / 库存', 'context'), key: 'context', width: columnWidths.context, fixed: 'left', render: (_, row) => contextContent(row), onCell: row => ({ ...cellEvents('context', row.key, 'fpw-context-cell'), rowSpan: row.lineIndex === 0 ? row.lineCount : 0 }), onHeaderCell: () => headerEvents('context', 'fpw-header-cell fpw-context-header') },
-      { title: resizableTitle('预测线', 'forecastLine', forecastHeaderAction), key: 'forecastLine', width: columnWidths.forecastLine, fixed: 'left', render: (_, row) => forecastLineContent(row), onCell: row => fixedBoundaryEvents(cellEvents('forecastLine', row.key, 'fpw-line-cell fpw-fixed-boundary')), onHeaderCell: () => fixedBoundaryEvents(headerEvents('forecastLine', 'fpw-header-cell fpw-line-header fpw-fixed-boundary')) },
-      ...weekColumns
+    const identityColumn = { title: resizableTitle('变体', 'identity', variantHeaderAction), key: 'identity', width: columnWidths.identity, fixed: 'left', render: (_, row) => identity(row), onCell: row => ({ ...cellEvents('identity', row.key, 'fpw-identity-cell'), rowSpan: row.lineIndex === 0 ? row.lineCount : 0 }), onHeaderCell: () => headerEvents('identity', 'fpw-header-cell fpw-identity-header') };
+    const contextColumn = visibleMetricKeys.length && { title: resizableTitle('销量 / 库存', 'context'), key: 'context', width: columnWidths.context, fixed: 'left', render: (_, row) => contextContent(row), onCell: row => ({ ...cellEvents('context', row.key, 'fpw-context-cell'), rowSpan: row.lineIndex === 0 ? row.lineCount : 0 }), onHeaderCell: () => headerEvents('context', 'fpw-header-cell fpw-context-header') };
+    const forecastLineColumn = columnConfig.keys.includes('forecastLine') && { title: resizableTitle('预测线', 'forecastLine', forecastHeaderAction), key: 'forecastLine', width: columnWidths.forecastLine, fixed: 'left', render: (_, row) => forecastLineContent(row), onCell: row => cellEvents('forecastLine', row.key, 'fpw-line-cell'), onHeaderCell: () => headerEvents('forecastLine', 'fpw-header-cell fpw-line-header') };
+    const fixedColumns = [
+      identityColumn,
+      columnConfig.keys.includes('share') && shareColumn,
+      contextColumn,
+      forecastLineColumn
     ].filter(Boolean);
+    const lastFixedColumn = fixedColumns.at(-1);
+    if (lastFixedColumn) {
+      const onCell = lastFixedColumn.onCell;
+      const onHeaderCell = lastFixedColumn.onHeaderCell;
+      lastFixedColumn.onCell = row => fixedBoundaryEvents(onCell(row));
+      lastFixedColumn.onHeaderCell = () => fixedBoundaryEvents(onHeaderCell());
+    }
+    const columns = [
+      ...fixedColumns,
+      ...(columnConfig.keys.includes('forecastPeriods') ? weekColumns : [])
+    ];
     const tableScrollWidth = 40 + columns.reduce((sum, column) => sum + (column.children
       ? column.children.reduce((childSum, child) => childSum + Number(child.width || 0), 0)
       : Number(column.width || 0)), 0);
@@ -1090,7 +1125,7 @@
       setCollapsedWeeks(new Set(restored.collapsedWeeks || []));
       setSelectedKey(restored.selectedKey || navigationContext.entity.entityKey);
       setExpandedRowKeys(restored.expandedRowKeys || []);
-      setExpandedForecastKeys(new Set(restored.expandedForecastKeys || []));
+      setExpandedForecastKeys(Array.isArray(restored.expandedForecastKeys) ? new Set(restored.expandedForecastKeys) : null);
       setTreeExpandedKeys(restored.treeExpandedKeys || []);
       setTreeCheckedKeys(restored.treeCheckedKeys || []);
       setTreeExcludedKeys(new Set(restored.treeExcludedKeys || []));
@@ -1261,7 +1296,8 @@
     const templateOptions = [{ value: 'default', label: '默认配置' }, { value: 'compact', label: '精简查看' }, ...(columnDraft?.templates || []).map((template, index) => ({ value: `saved-${index}`, label: template.name }))];
     const selectedColumnRow = (field, index, firstKey) => {
       const pinned = columnDraft.pinned.includes(field.key);
-      const movable = !pinned;
+      const supportsPositioning = field.reorderable !== false;
+      const movable = supportsPositioning && !pinned;
       const quickAction = (label, iconName, onClick, disabled = false, pressed = undefined) => h(Button, { type: 'text', size: 'small', className: `column-quick-action ${pressed ? 'is-pinned' : ''}`, icon: icon(iconName), 'aria-label': `${label}${field.label}`, 'aria-pressed': pressed, disabled, onClick });
       return h('div', {
         className: `antd-selected-field-row ${columnDropKey === field.key ? 'is-drop-target' : ''}`,
@@ -1280,13 +1316,13 @@
           if (target) reorderColumn(field.key, target.key, event.key === 'ArrowDown');
         }
       },
-      h('span', { className: 'antd-selected-field-drag', 'aria-hidden': true }, icon('HolderOutlined')),
+      h('span', { className: `antd-selected-field-drag ${supportsPositioning ? '' : 'is-locked'}`.trim(), 'aria-hidden': true }, icon(supportsPositioning ? 'HolderOutlined' : 'MinusOutlined')),
       h('span', { className: 'antd-selected-field-number' }, index + 1),
       h('span', { className: 'antd-selected-field-name' }, field.label),
       h('span', { className: `antd-selected-field-tools ${pinned ? 'has-pin' : ''}` },
         quickAction('移除', 'CloseCircleOutlined', () => toggleColumn(field.key, false)),
-        quickAction('置顶', 'VerticalAlignTopOutlined', () => moveColumnToTop(field), !movable || field.key === firstKey),
-        h(Tooltip, { title: pinned ? '取消组内位置固定' : '固定组内位置' }, quickAction(pinned ? '取消固定' : '固定', 'PushpinOutlined', () => toggleColumnPin(field), false, pinned))
+        supportsPositioning && quickAction('置顶', 'VerticalAlignTopOutlined', () => moveColumnToTop(field), !movable || field.key === firstKey),
+        supportsPositioning && h(Tooltip, { title: pinned ? '取消组内位置固定' : '固定组内位置' }, quickAction(pinned ? '取消固定' : '固定', 'PushpinOutlined', () => toggleColumnPin(field), false, pinned))
       ));
     };
     const columnDrawerBody = columnDraft && h(React.Fragment, null,
@@ -1316,9 +1352,9 @@
           ))
         ),
         h('section', { className: 'antd-column-selected', 'aria-label': '已选字段' },
-          h('div', { className: 'antd-column-selected-header' }, h('strong', null, `已选（${selectedColumnFields.length + 4}）`), h('span', null, '最多可固定7项 · 组内位置')),
+          h('div', { className: 'antd-column-selected-header' }, h('strong', null, `已选（${selectedColumnFields.length + 1}）`), h('span', null, '最多可固定7项 · 组内位置')),
           h('div', { className: 'antd-selected-scroll' },
-            h('div', { className: 'antd-selected-group' }, h('div', { className: 'antd-selected-group-title' }, '固定字段'), ['变体', '占比', '预测线', '日期预测'].map((label, index) => h('div', { className: 'antd-selected-field-row', key: label }, h('span', { className: 'antd-selected-field-drag is-locked', 'aria-hidden': true }, icon('LockOutlined')), h('span', { className: 'antd-selected-field-number' }, index + 1), h('span', { className: 'antd-selected-field-name' }, label), h(Tooltip, { title: '结构固定' }, h('span', { className: 'column-fixed-icon' }, icon('LockOutlined')))))),
+            h('div', { className: 'antd-selected-group' }, h('div', { className: 'antd-selected-group-title' }, '必备字段'), h('div', { className: 'antd-selected-field-row', key: 'identity' }, h('span', { className: 'antd-selected-field-drag is-locked', 'aria-hidden': true }, icon('LockOutlined')), h('span', { className: 'antd-selected-field-number' }, 1), h('span', { className: 'antd-selected-field-name' }, '变体'), h(Tooltip, { title: '不可移除' }, h('span', { className: 'column-fixed-icon' }, icon('LockOutlined'))))),
             columnGroups.map(group => {
               const fields = selectedColumnFields.filter(field => field.group === group);
               const first = fields.find(field => !columnDraft.pinned.includes(field.key))?.key;

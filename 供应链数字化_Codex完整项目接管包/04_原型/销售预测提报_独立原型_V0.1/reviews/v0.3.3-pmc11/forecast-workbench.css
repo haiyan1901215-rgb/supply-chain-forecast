@@ -239,6 +239,12 @@ body:has(.pmc-workspace.forecast-workbench-view:not([hidden])) { overflow-x: cli
 .forecast-workbench-root .fpw-table .ant-table-tbody > tr.fpw-parent-row:hover > td { background-color: var(--forecast-parent-row-bg); }
 .forecast-workbench-root .fpw-table .ant-table-tbody > tr.fpw-child-row:hover > td:not(.fpw-forecast-cell) { background-color: var(--surface); }
 .forecast-workbench-root .fpw-table .ant-table-tbody > tr.fpw-child-row:hover > td.fpw-forecast-cell { background-color: inherit; }
+.forecast-workbench-root .fpw-table .ant-table-tbody > tr.fpw-child-row > td.fpw-identity-cell.ant-table-cell-row-hover,
+.forecast-workbench-root .fpw-table .ant-table-tbody > tr.fpw-child-row > td.fpw-share-cell.ant-table-cell-row-hover,
+.forecast-workbench-root .fpw-table .ant-table-tbody > tr.fpw-child-row > td.fpw-context-cell.ant-table-cell-row-hover { background-color: var(--ui-color-bg-container, #fff); }
+.forecast-workbench-root .fpw-table .ant-table-tbody > tr.fpw-parent-row > td.fpw-identity-cell.ant-table-cell-row-hover,
+.forecast-workbench-root .fpw-table .ant-table-tbody > tr.fpw-parent-row > td.fpw-share-cell.ant-table-cell-row-hover,
+.forecast-workbench-root .fpw-table .ant-table-tbody > tr.fpw-parent-row > td.fpw-context-cell.ant-table-cell-row-hover { background-color: var(--forecast-parent-row-bg); }
 .fpw-table .fpw-cross-row > td.fpw-line-cell,
 .fpw-table .fpw-cross-row > td.fpw-forecast-cell { --cross-row: var(--forecast-cross-color); }
 .fpw-table .fpw-cross-column { --cross-column: var(--forecast-cross-color); }
@@ -335,11 +341,16 @@ body.fpw-is-resizing { cursor: col-resize; user-select: none; }
 .fpw-share-warning svg { width: 14px; height: 14px; }
 .fpw-share-reason { display: grid; gap: 4px; max-width: 300px; font-size: 12px; }
 .fpw-share-reason strong { margin-bottom: 2px; color: var(--ink); }
-.fpw-context-cell { min-width: 0; padding: 8px 10px; }
-.fpw-metric-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px 8px; }
-.fpw-metric { min-width: 0; }
-.fpw-metric label { display: block; overflow: hidden; color: var(--muted); font-size: 11px; font-weight: 400; line-height: 14px; text-overflow: ellipsis; white-space: nowrap; cursor: help; }
-.fpw-metric strong { display: block; overflow: hidden; margin-top: 1px; color: var(--ink); font-size: 12px; font-weight: 600; line-height: 15px; text-overflow: ellipsis; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.fpw-context-cell { min-width: 0; padding: 4px 6px; }
+.fpw-context-section { padding: 6px; border-radius: 3px; }
+.fpw-context-section + .fpw-context-section { margin-top: 3px; }
+.fpw-context-section[data-section='sales'] { background-color: color-mix(in srgb, var(--blue-2) 50%, var(--surface)); }
+.fpw-context-section[data-section='stock'] { background-color: color-mix(in srgb, var(--cyan-2) 50%, var(--surface)); }
+.fpw-context-section-title { margin-bottom: 2px; color: var(--muted); font-size: 12px; font-weight: 400; line-height: 14px; }
+.forecast-workbench-root .fpw-context-section .fpw-metric-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px 4px; }
+.fpw-metric { min-width: 0; min-height: 25px; }
+.forecast-workbench-root .fpw-context-section .fpw-metric label { display: block; overflow: hidden; color: var(--muted); font-size: 11px; font-weight: 400; line-height: 14px; text-overflow: ellipsis; white-space: nowrap; cursor: help; }
+.forecast-workbench-root .fpw-context-section .fpw-metric strong { display: block; overflow: hidden; margin-top: 0; color: var(--ink); font-size: 12px; font-weight: 600; line-height: 14px; text-overflow: ellipsis; white-space: nowrap; font-variant-numeric: tabular-nums; }
 
 .fpw-line-label,
 .fpw-line-value { min-width: 0; min-height: calc(var(--forecast-system-row-height) - 1px); display: flex; align-items: center; }
@@ -367,6 +378,7 @@ body.fpw-is-resizing { cursor: col-resize; user-select: none; }
 .forecast-workbench-root .fpw-table .ant-table-tbody > tr > td.fpw-forecast-cell { padding: 0; }
 .fpw-entry-button { cursor: pointer; }
 .fpw-forecast-entry-wrap { width: 100%; padding: 6px 8px; }
+.fpw-forecast-entry-wrap:has(.fpw-entry-button.fpw-entry-empty) { justify-content: center; }
 .fpw-forecast-entry-wrap .fpw-entry-button { color: inherit; }
 .fpw-forecast-entry-wrap .fpw-entry-button.fpw-entry-value { justify-content: start; }
 .fpw-forecast-entry-wrap .fpw-entry-button.fpw-entry-empty { place-content: center; }

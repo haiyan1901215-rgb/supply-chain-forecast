@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { chromium } = require('playwright');
 
-const url = process.argv[2] || 'http://127.0.0.1:8816/index.html?v=ui-consistency';
+const url = process.argv[2] || 'http://127.0.0.1:8816/index.html?v=0.3.47-workbench-table-governance';
 const chrome = process.env.PLAYWRIGHT_CHROME || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const projectRoot = path.resolve(__dirname, '../../../..');
 
@@ -19,6 +19,15 @@ const requiredGuidelines = [
   'design-system/patterns/table-operation.md',
   'design-system/audits/sales-forecast-workbench.md'
 ];
+
+const measureEmptyForecastEntry = locator => locator.evaluate(node => {
+  const cell = node.closest('td').getBoundingClientRect();
+  const icon = node.querySelector('.edit-icon').getBoundingClientRect();
+  return {
+    horizontalDelta: Math.abs((cell.left + cell.width / 2) - (icon.left + icon.width / 2)),
+    verticalDelta: Math.abs((cell.top + cell.height / 2) - (icon.top + icon.height / 2))
+  };
+});
 
 for (const relativePath of requiredGuidelines) {
   assert.ok(fs.existsSync(path.join(projectRoot, relativePath)), `缺少项目规范：${relativePath}`);
@@ -54,6 +63,7 @@ for (const relativePath of requiredGuidelines) {
       const fixedBoundary = node.querySelector('th.fpw-fixed-boundary');
       const metricLabel = node.querySelector('.fpw-metric label');
       const metricValue = node.querySelector('.fpw-metric strong');
+      const contextCell = node.querySelector('tr.fpw-child-row td.fpw-context-cell');
       const root = node.closest('.forecast-workbench-root');
       const rootStyle = getComputedStyle(root);
       const labelStyle = getComputedStyle(metricLabel);
@@ -73,6 +83,22 @@ for (const relativePath of requiredGuidelines) {
         fixedBoundaryShadow: getComputedStyle(fixedBoundary, '::after').boxShadow,
         metricLabel: [labelStyle.fontSize, labelStyle.fontWeight, labelStyle.color],
         metricValue: [valueStyle.fontSize, valueStyle.fontWeight, valueStyle.color],
+        metricValueColors: [...new Set([...contextCell.querySelectorAll('.fpw-metric strong')].map(value => getComputedStyle(value).color))],
+        metricSections: [...contextCell.querySelectorAll('.fpw-context-section')].map(section => {
+          const style = getComputedStyle(section);
+          const gridStyle = getComputedStyle(section.querySelector('.fpw-metric-grid'));
+          return {
+            key: section.dataset.section,
+            title: section.querySelector('.fpw-context-section-title')?.textContent?.trim(),
+            background: style.backgroundColor,
+            padding: style.padding,
+            radius: style.borderRadius,
+            marginTop: style.marginTop,
+            columns: gridStyle.gridTemplateColumns.split(' ').length,
+            rowGap: gridStyle.rowGap,
+            columnGap: gridStyle.columnGap
+          };
+        }),
         crossHighlight: rootStyle.getPropertyValue('--forecast-cross-color').trim(),
         focusBorder: rootStyle.getPropertyValue('--forecast-focus-border').trim(),
         standards: window.EnterpriseUiStandards
@@ -151,8 +177,25 @@ for (const relativePath of requiredGuidelines) {
     await identityCell.hover();
     assert.equal(await workbench.locator('.fpw-cross-row, .fpw-cross-column, .fpw-cross-cell').count(), 0, '移入固定信息列后必须清除十字高亮');
 
+    assert.equal(await workbench.getByRole('button', { name: '收起全部预测线' }).count(), 1, '工作台预测线必须默认展开');
+    await workbench.getByRole('button', { name: '收起全部预测线' }).click();
+    assert.equal(await workbench.getByRole('button', { name: '展开全部预测线' }).count(), 1, '收起后必须在原位替换为展开操作');
     await workbench.getByRole('button', { name: '展开全部预测线' }).click();
     await page.waitForTimeout(100);
+    const workbenchEmptyEntries = {
+      manual: await measureEmptyForecastEntry(workbench.locator('tr.fpw-child-row.fpw-prediction-manual .fpw-entry-empty').first()),
+      activity: await measureEmptyForecastEntry(workbench.locator('tr.fpw-child-row.fpw-prediction-activity .fpw-entry-empty').first())
+    };
+    for (const [line, geometry] of Object.entries(workbenchEmptyEntries)) {
+      assert.ok(geometry.horizontalDelta <= 1 && geometry.verticalDelta <= 1, `工作台 ${line} 空值编辑图标必须相对整个单元格居中：${JSON.stringify(geometry)}`);
+    }
+    const firstExpandedChildSystem = workbench.locator('tr.fpw-child-row.fpw-prediction-system').first();
+    const firstExpandedChildManual = workbench.locator('tr.fpw-child-row.fpw-prediction-manual').first();
+    const fixedBusinessCells = firstExpandedChildSystem.locator('td.fpw-identity-cell, td.fpw-share-cell, td.fpw-context-cell');
+    const fixedBusinessBackgrounds = await fixedBusinessCells.evaluateAll(cells => cells.map(cell => getComputedStyle(cell).backgroundColor));
+    await firstExpandedChildManual.locator('td.fpw-forecast-cell').first().hover();
+    assert.deepEqual(await fixedBusinessCells.evaluateAll(cells => cells.map(cell => getComputedStyle(cell).backgroundColor)), fixedBusinessBackgrounds, '十字高亮不得越过预测线污染固定业务列');
+    assert.ok(fixedBusinessBackgrounds.every(color => color === 'rgb(255, 255, 255)'), '子ASIN的变体、占比、销量 / 库存必须保持白底');
     const expandedRows = await workbench.locator('tr.fpw-child-row').evaluateAll(rows => {
       const entityKeyOf = row => row.getAttribute('data-row-key')?.replace(/\|(system|manual|activity|final)$/, '');
       const entityKey = entityKeyOf(rows[0]);
@@ -256,6 +299,7 @@ for (const relativePath of requiredGuidelines) {
       const fixedDivider = document.querySelector('#forecastFixedDivider');
       const metricLabel = node.querySelector('.metric label');
       const metricValue = node.querySelector('.metric strong');
+      const contextCell = node.querySelector('tr[data-child-row] td.context-cell');
       const collapsedFinal = node.querySelector('tr.forecast-collapsed[data-forecast-line="final"]');
       const collapsedLine = collapsedFinal.querySelector('td.line-cell');
       const collapsedDate = collapsedFinal.querySelector('td.date-col');
@@ -284,6 +328,22 @@ for (const relativePath of requiredGuidelines) {
         },
         metricLabel: [labelStyle.fontSize, labelStyle.fontWeight, labelStyle.color],
         metricValue: [valueStyle.fontSize, valueStyle.fontWeight, valueStyle.color],
+        metricValueColors: [...new Set([...contextCell.querySelectorAll('.metric strong')].map(value => getComputedStyle(value).color))],
+        metricSections: [...contextCell.querySelectorAll('.context-section')].map(section => {
+          const style = getComputedStyle(section);
+          const gridStyle = getComputedStyle(section.querySelector('.metric-grid'));
+          return {
+            key: section.dataset.section,
+            title: section.querySelector('.context-section-title')?.textContent?.trim(),
+            background: style.backgroundColor,
+            padding: style.padding,
+            radius: style.borderRadius,
+            marginTop: style.marginTop,
+            columns: gridStyle.gridTemplateColumns.split(' ').length,
+            rowGap: gridStyle.rowGap,
+            columnGap: gridStyle.columnGap
+          };
+        }),
         forecastColors: {
           manualLine: getComputedStyle(node.querySelector('td.line-cell.line-manual')).color,
           activityLine: getComputedStyle(node.querySelector('td.line-cell.line-event')).color,
@@ -310,6 +370,8 @@ for (const relativePath of requiredGuidelines) {
     assert.equal(workbenchContract.fixedBoundaryShadow, 'none', '工作台固定区不得再叠加第二条分割阴影');
     assert.deepEqual(salesContract.metricLabel, workbenchContract.metricLabel, '两页销量/库存标签字号、字重和颜色必须一致');
     assert.deepEqual(salesContract.metricValue, workbenchContract.metricValue, '两页销量/库存数值字号、字重和颜色必须一致');
+    assert.deepEqual(salesContract.metricValueColors, workbenchContract.metricValueColors, '工作台库存数值不得额外使用青色或橙色');
+    assert.deepEqual(salesContract.metricSections, workbenchContract.metricSections, '两页销量/库存分区底色、间距、圆角和网格必须一致');
     assert.deepEqual(salesContract.forecastColors, workbenchForecastColors, '两页人工、活动预测及最终预测来源颜色必须一致');
     assert.deepEqual(salesContract.collapsedFinal, { lineVerticalAlign: 'top', dateVerticalAlign: 'top', alignItems: 'flex-start', justifyContent: 'flex-start', textAlign: 'left' }, '销售页收起态最终预测必须顶部左对齐');
     assert.ok(await salesTable.getByText('(规则)', { exact: true }).count() > 0, '销售填报最终预测来源应显示为规则');
@@ -340,6 +402,14 @@ for (const relativePath of requiredGuidelines) {
     if (await salesForecastToggle.getAttribute('aria-expanded') === 'false') {
       await salesForecastToggle.click();
       await page.waitForTimeout(100);
+    }
+    const salesEmptyEntries = {
+      manual: await measureEmptyForecastEntry(salesTable.locator('tr[data-forecast-line="manual"] .entry-icon').first()),
+      activity: await measureEmptyForecastEntry(salesTable.locator('tr[data-forecast-line="activity"] .entry-icon').first())
+    };
+    for (const line of ['manual', 'activity']) {
+      assert.ok(salesEmptyEntries[line].horizontalDelta <= 1 && salesEmptyEntries[line].verticalDelta <= 1, `销售页 ${line} 空值编辑图标必须相对整个单元格居中`);
+      assert.ok(Math.abs(workbenchEmptyEntries[line].horizontalDelta - salesEmptyEntries[line].horizontalDelta) <= 1 && Math.abs(workbenchEmptyEntries[line].verticalDelta - salesEmptyEntries[line].verticalDelta) <= 1, `两页 ${line} 空值编辑图标必须使用同一整格居中规则`);
     }
     const salesHoverProof = salesTable.locator('tr[data-child-row]:not([hidden]) td.date-col').nth(1);
     await salesHoverProof.hover();

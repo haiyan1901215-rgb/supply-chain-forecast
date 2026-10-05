@@ -1,7 +1,7 @@
 const assert = require('node:assert/strict');
 const { chromium } = require('playwright');
 
-const url = process.argv[2] || 'http://127.0.0.1:8816/index.html?v=0.3.45-batch-detail-flow';
+const url = process.argv[2] || 'http://127.0.0.1:8816/index.html?v=0.3.47-workbench-table-governance';
 const chrome = process.env.PLAYWRIGHT_CHROME || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const domClick = locator => locator.waitFor({ state: 'attached' }).then(() => locator.evaluate(node => node.click()));
 const dismissPopover = async page => {
@@ -131,9 +131,17 @@ const dismissPopover = async page => {
     await domClick(detailDrawer.locator('.ant-drawer-close'));
     await detailDrawer.waitFor({ state: 'hidden' });
 
-    assert.deepEqual((await firstChild.locator('.fpw-line-label').allTextContents()).map(value => value.trim()), ['最终预测'], '默认只显示最终预测');
+    const initialFirstChildLines = await workbench.locator('.fpw-table .ant-table-tbody > tr.fpw-child-row').evaluateAll(rows => {
+      const entityKeyOf = row => row.getAttribute('data-row-key')?.replace(/\|(system|manual|activity|final)$/, '');
+      const entityKey = entityKeyOf(rows[0]);
+      return rows.filter(row => entityKeyOf(row) === entityKey).map(row => row.querySelector('.fpw-line-label')?.textContent?.trim());
+    });
+    assert.deepEqual(initialFirstChildLines, ['规则预测', '人工预测', '活动预测', '最终预测'], '预测工作台预测线应默认展开');
     assert.equal(await workbench.locator('tbody tr[data-row-key] .fpw-forecast-toggle').count(), 0, '父子ASIN行内不得显示预测线开关');
     assert.equal(await workbench.locator('th.fpw-line-header .fpw-forecast-toggle').count(), 1, '预测线表头必须只保留一个全局开关');
+    assert.equal(await workbench.getByRole('button', { name: '收起全部预测线' }).count(), 1, '默认展开后应显示收起操作');
+    await domClick(workbench.getByRole('button', { name: '收起全部预测线' }));
+    assert.deepEqual((await workbench.locator('.fpw-table .ant-table-tbody > tr.fpw-child-row .fpw-line-label').allTextContents()).slice(0, 1).map(value => value.trim()), ['最终预测'], '收起后只显示最终预测');
     await domClick(workbench.getByRole('button', { name: '展开全部预测线' }));
     const firstChildLines = await workbench.locator('.fpw-table .ant-table-tbody > tr.fpw-child-row').evaluateAll(rows => {
       const entityKeyOf = row => row.getAttribute('data-row-key')?.replace(/\|(system|manual|activity|final)$/, '');
@@ -152,15 +160,43 @@ const dismissPopover = async page => {
     assert.equal(await workbench.getByRole('button', { name: '收起全部预测线' }).count(), 1, '展开后表头开关应在原位替换为收起语义');
     assert.ok(await firstChildManual.locator('.fpw-entry-button.fpw-line-manual').count() > 0);
     assert.ok(await firstChildActivity.locator('.fpw-entry-button.fpw-line-activity').count() > 0);
-    const emptyEntryGeometry = await firstChildManual.locator('.fpw-entry-button.fpw-entry-empty').first().evaluate(node => {
-      const button = node.getBoundingClientRect();
-      const icon = node.querySelector('.edit-icon').getBoundingClientRect();
-      return {
-        horizontalDelta: Math.abs((button.left + button.width / 2) - (icon.left + icon.width / 2)),
-        verticalDelta: Math.abs((button.top + button.height / 2) - (icon.top + icon.height / 2))
-      };
-    });
-    assert.ok(emptyEntryGeometry.horizontalDelta <= 1 && emptyEntryGeometry.verticalDelta <= 1, '空值人工预测的编辑图标必须上下左右居中');
+    const childFixedCells = firstChildSystem.locator('td.fpw-identity-cell, td.fpw-share-cell, td.fpw-context-cell');
+    const fixedBackgroundsBeforeCrossHover = await childFixedCells.evaluateAll(cells => cells.map(cell => getComputedStyle(cell).backgroundColor));
+    await firstChildManual.locator('td.fpw-forecast-cell').first().hover();
+    const fixedBackgroundsAfterCrossHover = await childFixedCells.evaluateAll(cells => cells.map(cell => getComputedStyle(cell).backgroundColor));
+    assert.deepEqual(fixedBackgroundsAfterCrossHover, fixedBackgroundsBeforeCrossHover, '十字高亮不得改变变体、占比、销量 / 库存列底色');
+    assert.ok(fixedBackgroundsAfterCrossHover.every(color => color === 'rgb(255, 255, 255)'), '子ASIN固定业务列在十字高亮时必须保持白底');
+    const emptyEntryTargets = [
+      ['子ASIN人工预测', firstChildManual.locator('.fpw-entry-button.fpw-entry-empty').first()],
+      ['子ASIN活动预测', firstChildActivity.locator('.fpw-entry-button.fpw-entry-empty').first()],
+      ['父ASIN人工预测', workbench.locator('.fpw-parent-row.fpw-prediction-manual .fpw-entry-button.fpw-entry-empty').first()],
+      ['父ASIN活动预测', workbench.locator('.fpw-parent-row.fpw-prediction-activity .fpw-entry-button.fpw-entry-empty').first()]
+    ];
+    for (const [label, target] of emptyEntryTargets) {
+      const emptyEntryGeometry = await target.evaluate(node => {
+        const cell = node.closest('td.fpw-forecast-cell').getBoundingClientRect();
+        const wrapper = node.closest('.fpw-forecast-entry-wrap');
+        const button = node.getBoundingClientRect();
+        const icon = node.querySelector('.edit-icon').getBoundingClientRect();
+        const center = rect => ({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+        const cellCenter = center(cell);
+        const buttonCenter = center(button);
+        const iconCenter = center(icon);
+        return {
+          cellIconHorizontalDelta: Math.abs(cellCenter.x - iconCenter.x),
+          cellIconVerticalDelta: Math.abs(cellCenter.y - iconCenter.y),
+          buttonIconHorizontalDelta: Math.abs(buttonCenter.x - iconCenter.x),
+          buttonIconVerticalDelta: Math.abs(buttonCenter.y - iconCenter.y),
+          wrapperJustifyContent: getComputedStyle(wrapper).justifyContent
+        };
+      });
+      assert.ok(emptyEntryGeometry.cellIconHorizontalDelta <= 1 && emptyEntryGeometry.cellIconVerticalDelta <= 1, `${label}的编辑图标必须相对整个预测单元格上下左右居中：${JSON.stringify(emptyEntryGeometry)}`);
+      assert.ok(emptyEntryGeometry.buttonIconHorizontalDelta <= 1 && emptyEntryGeometry.buttonIconVerticalDelta <= 1, `${label}的编辑图标必须保持按钮内居中`);
+      assert.equal(emptyEntryGeometry.wrapperJustifyContent, 'center', `${label}空值容器必须复用销售预测的垂直居中规则`);
+    }
+    await emptyEntryTargets[0][1].hover();
+    await page.waitForTimeout(180);
+    await page.screenshot({ path: 'evidence/forecast-workbench-empty-entry-center.png', fullPage: false });
     assert.equal(await workbench.getByText('(PMC)', { exact: true }).count(), 0, '预测来源只能是规则、人工、活动');
     assert.ok(await workbench.getByText('(规则)', { exact: true }).count() > 0, '规则预测来源应在最终预测值下方展示');
 
@@ -315,7 +351,9 @@ const dismissPopover = async page => {
     const columnDrawer = page.getByRole('dialog', { name: '列配置' });
     const selectedRows = columnDrawer.locator('.antd-selected-field-row[draggable="true"]');
     assert.equal(await selectedRows.count(), 5);
-    assert.equal(await columnDrawer.getByRole('button', { name: /^移除/ }).count(), 5);
+    assert.deepEqual((await columnDrawer.locator('.antd-selected-group').first().locator('.antd-selected-field-name').allTextContents()).map(value => value.trim()), ['变体'], '列配置只允许变体作为必备字段');
+    assert.equal(await columnDrawer.getByRole('button', { name: /^移除/ }).count(), 8);
+    for (const label of ['占比', '预测线', '日期预测']) assert.equal(await columnDrawer.getByRole('button', { name: `移除${label}` }).count(), 1, `${label}必须可移除`);
     assert.equal(await columnDrawer.getByRole('button', { name: /^置顶/ }).count(), 5);
     assert.equal(await columnDrawer.getByRole('button', { name: /^固定/ }).count(), 5);
     assert.equal(await columnDrawer.getByRole('button', { name: '保存为新模板' }).count(), 1);
@@ -325,11 +363,23 @@ const dismissPopover = async page => {
     assert.notDeepEqual(afterOrder, beforeOrder, '列配置应支持键盘/拖拽重排');
     await domClick(columnDrawer.getByRole('button', { name: /^固定/ }).first());
     assert.equal(await columnDrawer.locator('.column-quick-action.is-pinned').count(), 1);
-    await domClick(columnDrawer.getByRole('button', { name: /^移除/ }).last());
-    assert.ok(await columnDrawer.locator('.antd-selected-field-row[draggable="true"]').count() < 5);
-    await domClick(columnDrawer.getByRole('button', { name: '恢复默认' }));
+    await domClick(columnDrawer.getByRole('button', { name: '移除占比' }));
+    await domClick(columnDrawer.getByRole('button', { name: '移除预测线' }));
+    await domClick(columnDrawer.getByRole('button', { name: '移除日期预测' }));
     await domClick(columnDrawer.getByRole('button', { name: '保存并应用' }));
     await columnDrawer.waitFor({ state: 'hidden' });
+    assert.equal(await workbench.locator('th.fpw-share-header').count(), 0, '移除占比后工作台不得继续渲染占比列');
+    assert.equal(await workbench.locator('th.fpw-line-header').count(), 0, '移除预测线后工作台不得继续渲染预测线列');
+    assert.equal(await workbench.locator('th.fpw-week-group').count(), 0, '移除日期预测后工作台不得继续渲染日期矩阵');
+    assert.equal(await workbench.locator('th.fpw-identity-header').count(), 1, '变体列必须始终保留');
+    await domClick(workbench.getByRole('button', { name: '列配置' }));
+    const restoredColumnDrawer = page.getByRole('dialog', { name: '列配置' });
+    await domClick(restoredColumnDrawer.getByRole('button', { name: '恢复默认' }));
+    await domClick(restoredColumnDrawer.getByRole('button', { name: '保存并应用' }));
+    await restoredColumnDrawer.waitFor({ state: 'hidden' });
+    assert.equal(await workbench.locator('th.fpw-share-header').count(), 1, '恢复默认后应恢复占比列');
+    assert.equal(await workbench.locator('th.fpw-line-header').count(), 1, '恢复默认后应恢复预测线列');
+    assert.ok(await workbench.locator('th.fpw-week-group').count() > 0, '恢复默认后应恢复日期预测');
 
     await page.mouse.move(1500, 60);
     await page.waitForTimeout(3600);
@@ -346,7 +396,7 @@ const dismissPopover = async page => {
 
     assert.deepEqual(errors, [], `页面运行时错误：${errors.join('；')}`);
     assert.deepEqual(warnings, [], `页面运行时告警：${warnings.join('；')}`);
-    console.log('Forecast workbench V0.3.45 component parity browser verification passed');
+    console.log('Forecast workbench V0.3.47 component parity browser verification passed');
   } finally {
     await browser.close();
   }
