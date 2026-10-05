@@ -403,12 +403,42 @@ body.fpw-is-resizing { cursor: col-resize; user-select: none; }
 .fpw-drawer-title { min-width: 0; display: flex; align-items: center; gap: 7px; }
 .fpw-drawer-title strong { overflow: hidden; color: var(--ui-color-text); font-size: var(--type-title); font-weight: var(--weight-title); text-overflow: ellipsis; white-space: nowrap; }
 .fpw-drawer-title span { flex: 0 0 auto; color: var(--ui-color-text-secondary); font-size: var(--type-help); font-weight: var(--weight-body); }
-.fpw-drawer-content { padding-top: 4px; }
+.fpw-detail-drawer .ant-drawer-body { background: var(--ui-color-bg-container); }
+.fpw-drawer-content { padding-top: 2px; }
 .fpw-drawer-section + .fpw-drawer-section { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--portal-border, var(--ui-color-border)); }
 .fpw-drawer-section h3 { margin: 0 0 10px; color: var(--ui-color-text); font-size: 13px; font-weight: 650; }
+.fpw-drawer-section-head { min-height: 24px; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.fpw-drawer-section-head h3 { margin-bottom: 10px; }
+.fpw-drawer-section .ant-descriptions-item-label { width: 102px; color: var(--ui-color-text-secondary); font-size: var(--type-help); white-space: nowrap; }
+.fpw-drawer-section .ant-descriptions-item-content { min-width: 0; color: var(--ui-color-text); font-size: var(--type-body); overflow-wrap: anywhere; }
+.fpw-drawer-section .ant-descriptions-row > th,
+.fpw-drawer-section .ant-descriptions-row > td { padding-bottom: 8px; }
+.fpw-result-unit { color: var(--ui-color-text-secondary); font-size: var(--type-help); line-height: 22px; }
+.fpw-result-formation { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--ui-color-border); background: var(--ui-color-bg-container); }
+.fpw-result-line { min-width: 0; min-height: 82px; display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: 10px 12px; }
+.fpw-result-line + .fpw-result-line { border-left: 1px solid var(--ui-color-border); }
+.fpw-result-line > span { color: var(--ui-color-text-secondary); font-size: var(--type-help); }
+.fpw-result-line > strong { overflow: hidden; color: var(--ui-color-text); font-size: 18px; font-weight: 600; line-height: 24px; text-overflow: ellipsis; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.fpw-result-line.is-manual > strong { color: var(--forecast-manual-text); }
+.fpw-result-line.is-activity > strong { color: var(--amber); }
+.fpw-result-line > small { overflow: hidden; color: var(--ui-color-text-secondary); font-size: var(--type-help); font-weight: var(--weight-body); line-height: 16px; text-overflow: ellipsis; white-space: nowrap; }
+.fpw-formation-rule { display: flex; align-items: baseline; gap: 8px; padding: 9px 12px; border: 1px solid var(--ui-color-border); border-top: 0; background: var(--forecast-table-head-bg); }
+.fpw-formation-rule strong { flex: 0 0 auto; color: var(--ui-color-text); font-size: var(--type-help); font-weight: 600; }
+.fpw-formation-rule span { color: var(--ui-color-text-secondary); font-size: var(--type-help); line-height: 18px; }
+.fpw-drawer-tags { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.fpw-drawer-tags .ant-tag { margin-inline-end: 0; }
+.fpw-drawer-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .fpw-drawer-asin { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
 .fpw-drawer-asin .ant-tag { margin-inline-end: 0; }
 .fpw-drawer-note { margin: 10px 0 0; color: var(--ui-color-text-secondary); font-size: 12px; line-height: 20px; }
+
+@media (max-width: 720px) {
+  .fpw-result-formation { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fpw-result-line:nth-child(3) { border-left: 0; border-top: 1px solid var(--ui-color-border); }
+  .fpw-result-line:nth-child(4) { border-top: 1px solid var(--ui-color-border); }
+  .fpw-drawer-footer { align-items: stretch; flex-direction: column-reverse; }
+  .fpw-drawer-footer .ant-btn { width: 100%; }
+}
 
 .fpw-binding-workspace { min-height: 100%; display: flex; flex-direction: column; padding: 12px 16px; background: var(--surface); }
 .fpw-binding-head,

@@ -3,7 +3,7 @@
   const h=React.createElement,{useState,useEffect}=React;
   const {ConfigProvider,App,Tabs,Table,Button,Space,Tag,Input,InputNumber,Form,Switch,Tooltip,Alert,Select,DatePicker,Modal,Popover}=antd;
   let db={schema:1,locked:false,records:{},demands:{}};
-  let active='forecast-workbench',activeOrigin='top-forecast-workbench',refresh=()=>{},dirtyReview=false,guard=action=>action(),planningSystemTab={active:'base',batchId:null},forecastWorkbenchTab={active:'base',bindingsOpen:false};
+  let active='forecast-workbench',activeOrigin='top-forecast-workbench',refresh=()=>{},dirtyReview=false,guard=action=>action(),planningSystemTab={active:'base',batchId:null},forecastWorkbenchTab={active:'base',bindingsOpen:false},forecastNavigationContext=null;
   const salesBatch=()=>window.ForecastBatchContract?.getCurrentMeta?.()||window.ForecastBatchContract?.getCurrent?.()||null;
   const salesBatchDate=()=>salesBatch()?.batchDate||currentBatch;
   const salesRange=(batchId=salesBatchDate())=>{const batch=window.ForecastBatchContract?.getBatchMeta?.(batchId)||window.ForecastBatchContract?.getBatch?.(batchId);return {start:batch?.forecastStartDate||batchId,end:batch?.forecastEndDate||shiftDay(batchId,181)};};
@@ -127,6 +127,37 @@
   function showForecastWorkbenchBase(){forecastWorkbenchTab.active='base';selectView('forecast-workbench',{keepForecastWorkbenchTab:true,origin:'top-forecast-workbench'});}
   function openForecastBindings(){forecastWorkbenchTab={active:'bindings',bindingsOpen:true};selectView('forecast-workbench',{keepForecastWorkbenchTab:true,origin:'top-forecast-workbench'});}
   function closeForecastBindings(){forecastWorkbenchTab={active:'base',bindingsOpen:false};showForecastWorkbenchBase();}
+  function focusSalesForecast(context){
+    const entity=context?.entity;if(!entity)return;
+    const group=groups.find(item=>item.id===entity.groupId)||(groups.find(item=>item.parent===entity.parentAsin&&item.market===entity.market&&item.account===entity.account));
+    state.batch=context.batchDate||salesBatchDate();
+    state.view='batch';
+    state.query=entity.childAsin||entity.parentAsin||'';
+    state.filters={market:entity.market||'',platform:entity.platform||'Amazon',account:entity.account||'',owner:entity.owner||'',tag:''};
+    state.page=1;
+    if(group){
+      state.collapsed.delete(group.id);
+      const children=entity.childId?group.children.filter(child=>child.id===entity.childId):group.children;
+      children.forEach(child=>state.expandedChildren.add(child.id));
+    }
+    refreshDateScope?.(context.windowStartDate||null);
+    if(context.windowStartDate&&context.windowEndDate)syncWindow(indexForDate(context.windowStartDate),indexForDate(context.windowEndDate));
+    render();
+    window.dispatchEvent(new CustomEvent('sales-forecast-filter-sync',{detail:{filters:{...state.filters},query:state.query}}));
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      const row=entity.childId?document.querySelector(`tr[data-child-row="${CSS.escape(entity.childId)}"]`):document.querySelector(`tr[data-parent-id="${CSS.escape(group?.id||entity.groupId||'')}"]`);
+      row?.scrollIntoView({block:'center',behavior:'smooth'});
+    }));
+  }
+  function openSalesFromForecast(context){
+    forecastNavigationContext=context;
+    selectView('sales',{origin:'top-sales',forecastContext:true});
+    focusSalesForecast(context);
+  }
+  function returnToForecastContext(){
+    if(!forecastNavigationContext)return selectView('forecast-workbench',{origin:'top-forecast-workbench'});
+    selectView('forecast-workbench',{origin:'top-forecast-workbench',keepForecastWorkbenchTab:true,restoreForecastContext:true});
+  }
   function transaction(change){const next=JSON.parse(JSON.stringify(db));change(next);db=next;refresh();renderTable();window.dispatchEvent(new Event('forecast-workflow-change'));}
   function editable(c){return (window.ForecastWindow?window.ForecastWindow.isOpen():!db.locked)&&['draft','returned'].includes(statusOf(c));}
   window.canEditForecastRecord=id=>editable(findChild(id));
@@ -154,7 +185,15 @@
       h(Tooltip,{title:tip},h(Tag,{color:{initial:'processing',open:'processing',closed:'warning',waiting:'default',frozen:'default'}[status.key],className:'sales-window-state',style:{marginInlineEnd:0}},status.label)),
       h(Button,{type:'primary',disabled:!candidates.length||(windowApi&&!windowApi.isOpen()),onClick:submitSales},state.selected.size?'提交已选预测':'提交本批次'));
   }
-  function Bar(){const {modal}=App.useApp();const flow=workflowState();guard=action=>{if(!dirtyReview)return action();modal.confirm({title:'放弃未保存的PMC校准？',okText:'放弃修改',cancelText:'继续填写',onOk:()=>{dirtyReview=false;action();}});};return h('div',{className:'pmc-role-bar'},h('div',{className:'pmc-demo-state'},h('span',{className:'pmc-muted'},'流程状态'),h(Tag,{color:colors[flow.key]},flow.label)),active==='sales'?h(SalesActions):h('span',{className:'pmc-muted'},'当前批次 '+formatKey(salesBatchDate())+' · '+(active==='review'?'PMC计划员':'备货计划')));}
+  function Bar(){
+    const {modal}=App.useApp(),flow=workflowState();
+    guard=action=>{if(!dirtyReview)return action();modal.confirm({title:'放弃未保存的PMC校准？',okText:'放弃修改',cancelText:'继续填写',onOk:()=>{dirtyReview=false;action();}});};
+    const context=active==='sales'&&forecastNavigationContext?h('div',{className:'sales-workbench-context'},
+      h(Button,{type:'text',size:'small',icon:h(icons.LeftOutlined),'aria-label':'返回预测工作台并定位当前对象',onClick:returnToForecastContext},'返回预测工作台'),
+      h('span',{className:'pmc-muted'},`当前对象：${forecastNavigationContext.entity?.label||'—'}`)
+    ):null;
+    return h('div',{className:'pmc-role-bar'},context,h('div',{className:'pmc-demo-state'},h('span',{className:'pmc-muted'},'流程状态'),h(Tag,{color:colors[flow.key]},flow.label)),active==='sales'?h(SalesActions):h('span',{className:'pmc-muted'},'当前批次 '+formatKey(salesBatchDate())+' · '+(active==='review'?'PMC计划员':'备货计划')));
+  }
   function Review({row,onChanged}){
     const {message,modal}=App.useApp(),[form]=Form.useForm(),r=row.r||db.records[key(row.c)],readOnly=r?.status!=='pending';
     const days=salesDays();
@@ -184,7 +223,7 @@
     useEffect(()=>{const resize=()=>setViewportHeight(innerHeight);window.addEventListener('resize',resize);return()=>window.removeEventListener('resize',resize);},[]);
     const [status,setStatus]=useState('pending'),[query,setQuery]=useState(''),[expanded,setExpanded]=useState([]),[revision,bump]=useState(0),[site,setSite]=useState('all');
     if(active==='forecast-workbench'&&forecastWorkbenchTab.active==='bindings'&&window.ForecastBindingWorkspace)return h(window.ForecastBindingWorkspace,{onBack:showForecastWorkbenchBase});
-    if(active==='forecast-workbench'&&window.ForecastWorkbench)return h(window.ForecastWorkbench,{onOpenSales:()=>selectView('sales',{origin:'top-sales'}),onOpenBatch:(batchId,label)=>openForecastResultBatch(batchId,label),onOpenBinding:openForecastBindings});
+    if(active==='forecast-workbench'&&window.ForecastWorkbench)return h(window.ForecastWorkbench,{onOpenSales:openSalesFromForecast,navigationContext:forecastNavigationContext,onOpenBatch:(batchId,label)=>openForecastResultBatch(batchId,label),onOpenBinding:openForecastBindings});
     if(active==='decomposition'&&window.ParentAsinModule?.ParentAsinWorkspace)return h(window.ParentAsinModule.ParentAsinWorkspace);
     const batchDate=salesBatchDate(),range=salesRange(batchDate),rows=all().map(row=>{const r=db.records[key(row.c,batchDate)],sales=r?.sales||snapshot(row.c,batchDate);return {...row,r,sales,status:statusOf(row.c,batchDate)};});
     const effectiveStatus=status;
@@ -198,7 +237,7 @@
       h('div',{className:'pmc-toolbar'},h(Space,null,h(Input.Search,{placeholder:'商品名称 / 父子ASIN','aria-label':'审核查询',allowClear:true,onSearch:setQuery,style:{width:300}}),h(Select,{value:site,onChange:setSite,'aria-label':'审核国家站点',style:{width:150},options:[{value:'all',label:'全部国家 / 站点'},{value:'US',label:'🇺🇸 美国 / US'},{value:'UK',label:'🇬🇧 英国 / UK'}]})),h('span',{className:'pmc-muted'},'汇总口径：整个预测范围 · 件')),
       h(Table,{size:'small',rowKey:'id',dataSource:selected,columns,scroll:{x:1440,y:Math.max(260,viewportHeight-350)},pagination:{showSizeChanger:true,showQuickJumper:true,showTotal:n=>'共 '+n+' 个子ASIN'},locale:{emptyText:effectiveStatus==='pending'?'暂无待审核预测，请先在销售填报中提交':'暂无符合条件的预测'},expandable:{showExpandColumn:false,expandedRowKeys:expanded,expandedRowRender:row=>h(Review,{key:row.id+'|'+row.status,row,onChanged:()=>bump(revision+1)})}}));
   }
-  function selectView(view,options={}){guard(()=>{active=view;activeOrigin=options.origin||({sales:'top-sales',plans:'top-plans',decomposition:'plan-batches','forecast-workbench':'top-forecast-workbench'}[view]||activeOrigin);const isSales=view==='sales',isDecomposition=view==='decomposition',isForecastWorkbench=view==='forecast-workbench';if(isDecomposition&&!options.keepPlanningSystemTab)planningSystemTab={active:'base',batchId:null};if(isForecastWorkbench&&!options.keepForecastWorkbenchTab)forecastWorkbenchTab={active:'base',bindingsOpen:false};if(isSales&&salesForecastDirty){renderTable();salesForecastDirty=false;}$('.content').hidden=!isSales;$('.content').style.display=isSales?'':'none';host.hidden=isSales;host.classList.toggle('planning-workspace',isDecomposition);host.classList.toggle('forecast-workbench-view',isForecastWorkbench);bar.hidden=isDecomposition||isForecastWorkbench;const systemTabs=$('.workspace-tabs-v028'),routeLabel=$('.topbar-route-label');if(systemTabs){systemTabs.style.display=(isSales||isDecomposition||isForecastWorkbench)?'':'none';if(isSales)window.forecastWorkspaceTabsRedraw?.();if(isDecomposition)renderPlanningSystemTabs();if(isForecastWorkbench)renderForecastWorkbenchTabs();}if(routeLabel){routeLabel.textContent=isSales?'':isDecomposition?'计划配置':isForecastWorkbench?'预测工作台':view==='plans'?'备货计划':'PMC工作区';routeLabel.hidden=isSales||isForecastWorkbench;}$('.crumb b').textContent=isDecomposition?'预测批次列表':isForecastWorkbench?(forecastWorkbenchTab.active==='bindings'?'变体关系管理':'预测工作台'):view==='plans'?'备货计划':view==='sales'?'销售预测':'PMC审核';updateShellMenu(view,activeOrigin);refresh();if(isSales){syncHorizontalScrollbar();}});}
+  function selectView(view,options={}){guard(()=>{if(view==='sales'&&!options.forecastContext)forecastNavigationContext=null;if(view==='forecast-workbench'&&!options.restoreForecastContext)forecastNavigationContext=null;active=view;activeOrigin=options.origin||({sales:'top-sales',plans:'top-plans',decomposition:'plan-batches','forecast-workbench':'top-forecast-workbench'}[view]||activeOrigin);const isSales=view==='sales',isDecomposition=view==='decomposition',isForecastWorkbench=view==='forecast-workbench';if(isDecomposition&&!options.keepPlanningSystemTab)planningSystemTab={active:'base',batchId:null};if(isForecastWorkbench&&!options.keepForecastWorkbenchTab)forecastWorkbenchTab={active:'base',bindingsOpen:false};if(isSales&&salesForecastDirty){renderTable();salesForecastDirty=false;}$('.content').hidden=!isSales;$('.content').style.display=isSales?'':'none';host.hidden=isSales;host.classList.toggle('planning-workspace',isDecomposition);host.classList.toggle('forecast-workbench-view',isForecastWorkbench);bar.hidden=isDecomposition||isForecastWorkbench;const systemTabs=$('.workspace-tabs-v028'),routeLabel=$('.topbar-route-label');if(systemTabs){systemTabs.style.display=(isSales||isDecomposition||isForecastWorkbench)?'':'none';if(isSales)window.forecastWorkspaceTabsRedraw?.();if(isDecomposition)renderPlanningSystemTabs();if(isForecastWorkbench)renderForecastWorkbenchTabs();}if(routeLabel){routeLabel.textContent=isSales?'':isDecomposition?'计划配置':isForecastWorkbench?'预测工作台':view==='plans'?'备货计划':'PMC工作区';routeLabel.hidden=isSales||isForecastWorkbench;}$('.crumb b').textContent=isDecomposition?'预测批次列表':isForecastWorkbench?(forecastWorkbenchTab.active==='bindings'?'变体关系管理':'预测工作台'):view==='plans'?'备货计划':view==='sales'?'销售预测':'PMC审核';updateShellMenu(view,activeOrigin);refresh();if(isSales){syncHorizontalScrollbar();}});}
   refresh=()=>{
     barRoot.render(wrap(h(Bar)));
     if(active!=='sales')root.render(wrap(h(Workspace,{key:active})));

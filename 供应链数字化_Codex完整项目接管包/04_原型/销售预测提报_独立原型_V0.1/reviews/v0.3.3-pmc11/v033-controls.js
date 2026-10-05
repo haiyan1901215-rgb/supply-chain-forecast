@@ -156,6 +156,11 @@
 
   function Filters(){
     const [draft,setDraft]=useState({...state.filters,query:state.query});
+    useEffect(()=>{
+      const sync=event=>setDraft({...state.filters,...(event.detail?.filters||{}),query:event.detail?.query??state.query});
+      window.addEventListener('sales-forecast-filter-sync',sync);
+      return()=>window.removeEventListener('sales-forecast-filter-sync',sync);
+    },[]);
     const apply=values=>{state.filters={market:values.market,platform:values.platform,account:values.account,owner:values.owner,tag:values.tag};state.query=values.query;state.page=1;renderTable();$('#workbench').scrollTop=0;};
     const control=spec=>{const [key,label,options]=spec;return h(Select,{key,'aria-label':label,'data-testid':'filter-'+key,value:draft[key],showSearch:true,optionFilterProp:'label',options:options.map(([value,label])=>({value,label})),style:{width:'100%'},onChange:value=>setDraft(old=>({...old,[key]:value})),popupMatchSelectWidth:Math.max(key==='account'?180:160,0)});};
     return h('div',{className:'antd-filter-grid'},...filterSpec.slice(0,4).map(control),h(Input,{'aria-label':'编码或商品名称',placeholder:'ASIN / SKU / 业务识别码',allowClear:true,value:draft.query,onChange:e=>setDraft(old=>({...old,query:e.target.value})),onPressEnter:()=>apply(draft)}),control(filterSpec[4]),h(Button,{type:'primary',onClick:()=>apply(draft)},'查询'),h(Button,{onClick:()=>{const initial={market:'',platform:'Amazon',account:'',owner:'',tag:'',query:''};setDraft(initial);apply(initial);}},'重置'));

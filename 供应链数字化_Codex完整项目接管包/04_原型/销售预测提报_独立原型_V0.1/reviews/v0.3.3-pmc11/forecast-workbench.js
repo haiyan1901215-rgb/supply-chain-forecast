@@ -708,8 +708,8 @@
     const drawerStatuses = drawerRow ? [...new Set(dates.map(date => drawerRow.forecast[dateKey(date)]?.status).filter(Boolean))] : [];
     const sourceOrder = ['system', 'manual', 'activity'];
     const sourceSummary = sourceOrder.filter(source => drawerSourceCounts[source]).map(source => `${({ system: '规则', manual: '人工', activity: '活动' })[source]} ${drawerSourceCounts[source]} 天`).join(' / ') || drawerStatuses.join('；') || '—';
-    const currentWindowStart = dates[0] ? dateKey(dates[0]) : coverageStart;
-    const currentWindowEnd = dates.at(-1) ? dateKey(dates.at(-1)) : coverageEnd;
+    const drawerWindowStartKey = dates[0] ? dateKey(dates[0]) : coverageStart;
+    const drawerWindowEndKey = dates.at(-1) ? dateKey(dates.at(-1)) : coverageEnd;
     const formatDateTime = value => value ? dayjs(value).format('YYYY/MM/DD HH:mm') : '—';
     const currentShare = drawerRow?.type === 'child'
       ? shareAdjustments[`child:${drawerRow.group.id}|${drawerRow.child.id}`]?.share ?? drawerBatchRow?.finalShare ?? drawerRow.share
@@ -723,11 +723,17 @@
     ] : [];
     const drawerNavigationContext = drawerRow ? {
       batchDate,
+      windowStartDate: drawerWindowStartKey,
+      windowEndDate: drawerWindowEndKey,
       entity: {
         type: drawerRow.type,
         entityKey: drawerRow.entityKey || drawerRow.key,
         parentEntityKey: `parent:${drawerRow.group.id}`,
         groupId: drawerRow.group.id,
+        platform: drawerRow.group.platform,
+        market: drawerRow.group.market,
+        account: drawerRow.group.account,
+        owner: drawerRow.group.owner,
         parentAsin: drawerRow.group.parent,
         childId: drawerRow.type === 'child' ? drawerRow.child.id : null,
         childAsin: drawerRow.type === 'child' ? drawerRow.child.asin : null,
@@ -761,7 +767,7 @@
             { key: 'batch-version', label: '批次版本', children: batchSnapshot?.batchVersion || meta.batchVersion || '—' },
             { key: 'result-version', label: '结果版本', children: batchSnapshot?.activeResultVersion || meta.activeResultVersion || '—' },
             { key: 'period', label: '预测周期', span: 2, children: `${dateText(coverageStart)} ~ ${dateText(coverageEnd)}` },
-            { key: 'window', label: '当前查看窗口', span: 2, children: `${dateText(currentWindowStart)} ~ ${dateText(currentWindowEnd)}（${dates.length} 天）` },
+            { key: 'window', label: '当前查看窗口', span: 2, children: `${dateText(drawerWindowStartKey)} ~ ${dateText(drawerWindowEndKey)}（${dates.length} 天）` },
             { key: 'cutoff', label: '数据截至', children: dateText(batchSnapshot?.dataCutoffDate || meta.dataCutoffDate) },
             { key: 'updated', label: '数据更新时间', children: formatDateTime(batchSnapshot?.dataUpdatedAt || meta.dataUpdatedAt) }
           ]
@@ -781,7 +787,7 @@
             { key: 'site', label: '平台 / 站点', children: `${drawerRow.group.platform} / ${drawerRow.group.market}` },
             { key: 'store', label: '账号 / 店铺', children: drawerRow.group.account },
             { key: 'owner', label: '销售负责人', children: drawerRow.group.owner },
-            { key: 'scope', label: '预测范围', span: 2, children: `${dateText(currentWindowStart)} ~ ${dateText(currentWindowEnd)}` }
+            { key: 'scope', label: '预测范围', span: 2, children: `${dateText(drawerWindowStartKey)} ~ ${dateText(drawerWindowEndKey)}` }
           ]
         })
       ),
@@ -1064,10 +1070,49 @@
       ? column.children.reduce((childSum, child) => childSum + Number(child.width || 0), 0)
       : Number(column.width || 0)), 0);
 
-    const locateRow = key => {
+    const locateRow = (key, parentKey = null) => {
       setSelectedKey(key);
-      if (key.startsWith('parent:')) setExpandedRowKeys(current => current.includes(key) ? current : [...current, key]);
-      requestAnimationFrame(() => document.querySelector(`[data-row-key="${CSS.escape(key)}"]`)?.scrollIntoView({ block: 'center', behavior: 'smooth' }));
+      const expandableKey = key.startsWith('parent:') ? key : parentKey;
+      if (expandableKey) setExpandedRowKeys(current => current.includes(expandableKey) ? current : [...current, expandableKey]);
+      requestAnimationFrame(() => requestAnimationFrame(() => document.querySelector(`[data-row-key="${CSS.escape(key)}"]`)?.scrollIntoView({ block: 'center', behavior: 'smooth' })));
+    };
+
+    useEffect(() => {
+      const restored = navigationContext?.workbench;
+      if (!navigationContext?.entity?.entityKey || !restored) return;
+      restoredLocation.current = false;
+      setFilterDraft({ ...emptyFilters, ...(restored.filterDraft || restored.filters || {}) });
+      setFilters({ ...emptyFilters, ...(restored.filters || {}) });
+      setPage(restored.page || 1);
+      setPageSize(restored.pageSize || 20);
+      setWindowStart(restored.windowStart || 0);
+      setWindowSize(restored.windowSize || 14);
+      setCollapsedWeeks(new Set(restored.collapsedWeeks || []));
+      setSelectedKey(restored.selectedKey || navigationContext.entity.entityKey);
+      setExpandedRowKeys(restored.expandedRowKeys || []);
+      setExpandedForecastKeys(new Set(restored.expandedForecastKeys || []));
+      setTreeExpandedKeys(restored.treeExpandedKeys || []);
+      setTreeCheckedKeys(restored.treeCheckedKeys || []);
+      setTreeExcludedKeys(new Set(restored.treeExcludedKeys || []));
+      setTreePanelCollapsed(Boolean(restored.treePanelCollapsed));
+    }, [navigationContext]);
+
+    useEffect(() => {
+      const entity = navigationContext?.entity;
+      if (!entity?.entityKey || restoredLocation.current || !tableRows.some(row => row.entityKey === entity.entityKey)) return;
+      restoredLocation.current = true;
+      locateRow(entity.entityKey, entity.parentEntityKey);
+    }, [navigationContext?.entity?.entityKey, tableRows]);
+
+    const closeDrawerAndLocate = () => {
+      if (!drawerRow) return;
+      locateRow(drawerRow.entityKey || drawerRow.key, `parent:${drawerRow.group.id}`);
+      setDrawerRow(null);
+    };
+    const enterSalesForecast = () => {
+      if (!drawerNavigationContext || !onOpenSales) return message.warning('销售预测填报入口未就绪');
+      setDrawerRow(null);
+      onOpenSales(drawerNavigationContext);
     };
 
     const selectAllVariants = () => setTreeCheckedKeys(allTreeLeafKeys);
@@ -1415,14 +1460,19 @@
       h(Drawer, {
         className: 'fpw-detail-drawer',
         placement: 'right',
-        width: 448,
+        width: 'min(672px, 92vw)',
         open: Boolean(drawerRow),
         onClose: () => setDrawerRow(null),
         title: drawerRow && h('div', { className: 'fpw-drawer-title' },
-          h('strong', null, drawerRow.type === 'parent' ? drawerRow.group.parent : drawerRow.child.asin),
-          h('span', null, `· ${drawerRow.type === 'parent' ? 'Parent ASIN' : 'Child ASIN'}`)
+          h('strong', null, '预测批次详情'),
+          h('span', null, `· ${drawerRow.type === 'parent' ? drawerRow.group.parent : drawerRow.child.asin}`)
         ),
-        styles: { header: { padding: '14px 18px' }, body: { padding: '0 18px 18px' } }
+        extra: drawerRow && h(Tag, { color: 'default', style: { marginInlineEnd: 0 } }, drawerRow.type === 'parent' ? '父ASIN' : '子ASIN'),
+        footer: drawerRow && h('div', { className: 'fpw-drawer-footer' },
+          h(Button, { icon: icon('LeftOutlined'), onClick: closeDrawerAndLocate }, '返回列表并定位'),
+          h(Button, { type: 'primary', icon: icon('EditOutlined'), onClick: enterSalesForecast }, '进入销售预测填报')
+        ),
+        styles: { header: { padding: '14px 18px' }, body: { padding: '0 18px 18px' }, footer: { padding: '10px 18px' } }
       }, forecastBasisPanel),
       h(Modal, {
         open: Boolean(shareEditor),

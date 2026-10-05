@@ -1,7 +1,7 @@
 const assert = require('node:assert/strict');
 const { chromium } = require('playwright');
 
-const url = process.argv[2] || 'http://127.0.0.1:8816/index.html?v=0.3.41-component-parity';
+const url = process.argv[2] || 'http://127.0.0.1:8816/index.html?v=0.3.45-batch-detail-flow';
 const chrome = process.env.PLAYWRIGHT_CHROME || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const domClick = locator => locator.waitFor({ state: 'attached' }).then(() => locator.evaluate(node => node.click()));
 const dismissPopover = async page => {
@@ -122,10 +122,12 @@ const dismissPopover = async page => {
     const detailDrawer = page.locator('.fpw-detail-drawer');
     await detailDrawer.waitFor();
     assert.equal(await detailDrawer.locator('.ant-tabs').count(), 0, '右侧抽屉应移除多余Tab');
-    await detailDrawer.getByText('预测关键参数', { exact: true }).waitFor();
-    assert.equal(await detailDrawer.getByText('子体拆分', { exact: false }).count(), 0);
-    assert.equal(await detailDrawer.getByText('父子关系', { exact: false }).count(), 0);
-    assert.equal(await detailDrawer.getByText('销售组合', { exact: false }).count(), 0);
+    for (const heading of ['批次信息', '当前预测对象', '预测结果形成', '预测依据']) await detailDrawer.getByRole('heading', { name: heading, exact: true }).waitFor();
+    assert.equal(await detailDrawer.getByText('预测关键参数', { exact: true }).count(), 0, '详情不应继续以模型参数为主体');
+    for (const parameter of ['动态 Alpha', '季节因子', 'Listing适配系数']) assert.equal(await detailDrawer.getByText(parameter, { exact: true }).count(), 0, `${parameter}不应在业务详情中展开`);
+    assert.equal(await detailDrawer.getByText('活动预测 > 人工预测 > 规则预测。', { exact: false }).count(), 1, '详情应明确最终预测的按日形成关系');
+    assert.equal(await detailDrawer.getByRole('button', { name: '进入销售预测填报' }).count(), 1, '详情必须提供销售预测填报入口');
+    assert.equal(await detailDrawer.getByRole('button', { name: '返回列表并定位' }).count(), 1, '详情必须提供当前对象定位入口');
     await domClick(detailDrawer.locator('.ant-drawer-close'));
     await detailDrawer.waitFor({ state: 'hidden' });
 
@@ -344,7 +346,7 @@ const dismissPopover = async page => {
 
     assert.deepEqual(errors, [], `页面运行时错误：${errors.join('；')}`);
     assert.deepEqual(warnings, [], `页面运行时告警：${warnings.join('；')}`);
-    console.log('Forecast workbench V0.3.41 component parity browser verification passed');
+    console.log('Forecast workbench V0.3.45 component parity browser verification passed');
   } finally {
     await browser.close();
   }
