@@ -31,7 +31,7 @@
     if(entryValue==null)return '';
     const base=kind==='manual'?f?.ai:(f?.manual??f?.ai);
     if(base==null)return '';
-    return `<span class="adjustment-entry" data-reason-host="${c.id}" data-reason-date="${key}" data-reason-kind="${kind}" data-reason-label="${signed(entryValue-base)}" aria-label="${kind==='manual'?'人工预测':'活动预测'}调整说明"></span>`;
+    return `<span class="adjustment-entry forecast-adjustment-entry" data-reason-host="${c.id}" data-reason-date="${key}" data-reason-kind="${kind}" data-reason-label="${signed(entryValue-base)}" aria-label="${kind==='manual'?'人工预测':'活动预测'}调整说明"></span>`;
   }
   historyRows=function(c){
     const batches=olderBatches().slice(0,state.historyCount[c.id]||2),rows=[];
@@ -80,7 +80,7 @@
   };
   dateCells=function(c,line){return visibleColumns().map((col,i)=>{
     const d=col.days[0],key=dateKey(d),index=indexForDate(key),f=forecastAt(c,state.batch,key),focus=`data-focus-index="${i}" data-time-column="${col.key}"`,cls=col.boundary?'week-boundary':'',field=line==='summary'?'final':line;
-    const value=weekValue(c,col,field).value,kind=col.type==='week'?'mixed':source(c,d)[0],label={system:'系统',pmc:'PMC',manual:'人工',activity:'活动',mixed:'混合',none:'未覆盖'}[kind];
+    const value=weekValue(c,col,field).value,kind=col.type==='week'?'mixed':source(c,d)[0],label={system:'规则',pmc:'PMC',manual:'人工',activity:'活动',mixed:'混合',none:'未覆盖'}[kind];
     const statuses=col.days.map(day=>forecastAt(c,state.batch,dateKey(day))?.forecastStatus).filter(Boolean);
     if(statuses.length && ['system','pmc','final'].includes(field))return `<td class="date-col num line-${field==='pmc'?'system':field} ${cls}" ${focus}>${value==null?'':numberOrBlank(value)}<span class="forecast-state" tabindex="0" data-hint="${esc([...new Set(statuses)].join('；'))}；${statuses.length}天不纳入数值合计">${col.type==='day'||value==null?esc([...new Set(statuses)].join('；')):`${statuses.length}天待实际销量`}</span></td>`;
     if(field==='system'||field==='pmc')return `<td class="date-col num line-system ${cls}" ${focus}>${numberOrBlank(value)}${field==='pmc'&&value!=null?'<span class="source-tag system">(PMC)</span>':''}</td>`;

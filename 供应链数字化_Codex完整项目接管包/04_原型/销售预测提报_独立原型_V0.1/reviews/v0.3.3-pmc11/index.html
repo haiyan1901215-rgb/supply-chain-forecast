@@ -28,6 +28,10 @@
       --radius: 6px;
       --shadow: 0 10px 28px rgba(17, 28, 58, .14);
       --font: Inter, "PingFang SC", "Microsoft YaHei", sans-serif;
+      --forecast-table-head-bg: #f7f9fc;
+      --forecast-week-head-bg: #e9eef8;
+      --forecast-day-head-bg: #f2f5fb;
+      --forecast-parent-row-bg: #f7f9fc;
     }
     * { box-sizing: border-box; }
     html, body { height: 100%; }
@@ -166,15 +170,17 @@
     .identity-head, .identity-cell { left: 40px; }
     .context-head, .context-cell { left: 374px; }
     .line-head, .line-cell { left: 564px; }
-    .forecast-table thead .select-head { z-index: 11; background: #f7f9fc; }
+    .forecast-table thead .select-head { z-index: 11; background: var(--forecast-table-head-bg); }
     .forecast-table thead .identity-head, .forecast-table thead .context-head, .forecast-table thead .line-head { z-index: 10; }
     table { border-collapse: separate; border-spacing: 0; }
     .forecast-table { min-width: 2060px; width: 100%; table-layout: fixed; }
     .forecast-table th, .forecast-table td { padding: 8px 9px; border-right: 1px solid #edf0f5; border-bottom: 1px solid #edf0f5; vertical-align: middle; }
-    .forecast-table thead th { position: sticky; top: 0; z-index: 7; height: 31px; color: var(--muted); background: #f7f9fc; font-size: 11px; font-weight: 650; text-align: left; }
+    .forecast-table th, .forecast-table td, .forecast-table th > *, .forecast-table td > * { min-width: 0; }
+    .forecast-table .identity-head, .forecast-table .identity-cell, .forecast-table .size-head, .forecast-table .size-cell, .forecast-table .context-head, .forecast-table .context-cell, .forecast-table .line-head, .forecast-table .line-cell, .forecast-table .date-head, .forecast-table .date-col { overflow: hidden; }
+    .forecast-table thead th { position: sticky; top: 0; z-index: 7; height: 31px; color: var(--muted); background: var(--forecast-table-head-bg); font-size: 11px; font-weight: 650; text-align: left; }
     .forecast-table thead tr:nth-child(2) th { top: 31px; height: 45px; }
-    .forecast-table thead th.week-head { padding: 6px 9px; color: #53658b; background: #e9eef8; border-bottom: 1px solid #d1d9e7; text-align: center; font-size: 10px; }
-    .forecast-table thead th.date-head { padding: 5px 6px; text-align: center; color: #4c5a76; background: #f2f5fb; }
+    .forecast-table thead th.week-head { padding: 6px 9px; color: #53658b; background: var(--forecast-week-head-bg); border-bottom: 1px solid #d1d9e7; text-align: center; font-size: 10px; }
+    .forecast-table thead th.date-head { padding: 5px 6px; text-align: center; color: #4c5a76; background: var(--forecast-day-head-bg); }
     .forecast-table thead th.date-head.weekend { color: #a87223; background: #fff8ec; }
     .forecast-table tbody td { height: 37px; font-size: 12px; }
     .forecast-table tbody tr:hover td { background: #fbfcff; }
@@ -182,9 +188,9 @@
     .forecast-table .identity-head, .forecast-table .identity-cell { width: var(--identity-width); min-width: var(--identity-width); position: sticky; left: 40px; z-index: 5; background: #fff; }
     .forecast-table .context-head, .forecast-table .context-cell { width: var(--context-width); min-width: var(--context-width); position: sticky; left: calc(40px + var(--identity-width)); z-index: 5; background: #fff; }
     .forecast-table .line-head, .forecast-table .line-cell { width: var(--line-width); min-width: var(--line-width); position: sticky; left: calc(40px + var(--identity-width) + var(--context-width)); z-index: 5; background: #fff; }
-    .forecast-table thead .identity-head, .forecast-table thead .context-head, .forecast-table thead .line-head { z-index: 10; background: #f7f9fc; }
+    .forecast-table thead .identity-head, .forecast-table thead .context-head, .forecast-table thead .line-head { z-index: 10; background: var(--forecast-table-head-bg); }
     .forecast-table .size-head, .forecast-table .size-cell { position: sticky; left: calc(40px + var(--identity-width)); z-index: 5; width: var(--size-width); min-width: var(--size-width); background: #fff; text-align: center; }
-    .forecast-table thead .size-head { z-index: 10; background: #f7f9fc; }
+    .forecast-table thead .size-head { z-index: 10; background: var(--forecast-table-head-bg); }
     .forecast-table .context-head, .forecast-table .context-cell { left: calc(40px + var(--identity-width) + var(--size-width)); }
     .forecast-table .line-head, .forecast-table .line-cell { left: calc(40px + var(--identity-width) + var(--size-width) + var(--context-width)); }
     .size-value { display: block; color: var(--ink); font-size: 16px; font-weight: 650; }
@@ -192,7 +198,7 @@
     .forecast-table .parent-row .size-cell { background: var(--surface-3); }
     .forecast-table .summary-row .size-cell { background: #f1f5ff; }
     .forecast-table th.week-boundary, .forecast-table td.week-boundary { border-left: 2px solid #b4c3df; }
-    .week-heading { display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .week-heading { display: flex; width: 100%; align-items: center; justify-content: flex-start; gap: 6px; }
     .week-toggle { flex: 0 0 17px; width: 17px; height: 17px; display: grid; place-items: center; border: 1px solid #acbad0; border-radius: 2px; padding: 0; background: #fff; color: #526078; }
     .week-toggle svg { width: 11px; height: 11px; }
     .week-period { font-size: 9px; font-weight: 400; }
@@ -200,9 +206,9 @@
     .forecast-table td.week-total { padding-right: 16px; }
     .partial-count { display: block; margin-top: 2px; color: var(--muted); font-size: 9px; line-height: 12px; white-space: nowrap; }
     .date-col { text-align: right; }
-    .parent-row td { height: 38px; color: #32405d; background: #eef3fb; border-top: 1px solid #ced8eb; font-weight: 700; }
-    .forecast-table tbody .parent-row .identity-cell { background: #eef3fb; }
-    .forecast-table tbody .parent-row .context-cell, .forecast-table tbody .parent-row .line-cell { background: #eef3fb; }
+    .parent-row td { height: 38px; color: #32405d; background: var(--forecast-parent-row-bg); border-top: 1px solid #ced8eb; font-weight: 700; }
+    .forecast-table tbody .parent-row .identity-cell { background: var(--forecast-parent-row-bg); }
+    .forecast-table tbody .parent-row .context-cell, .forecast-table tbody .parent-row .line-cell { background: var(--forecast-parent-row-bg); }
     .parent-label { display: flex; align-items: center; gap: 8px; }
     .collapse { flex: 0 0 20px; width: 20px; height: 20px; display: inline-grid; place-items: center; padding: 0; border: 1px solid #b9c7e4; border-radius: 4px; color: var(--blue); background: #fff; }
     .collapse svg { display: block; width: 12px; height: 12px; }
@@ -433,14 +439,14 @@
   <link rel="stylesheet" href="v030.css?v=0.3.0" />
   <link rel="stylesheet" href="v031.css?v=0.3.1" />
   <link rel="stylesheet" href="v032.css?v=0.3.2" />
-  <link rel="stylesheet" href="v033.css?v=0.3.3-pmc5" />
-  <link rel="stylesheet" href="sales-freeze.css?v=0.3.38-time-window-parity" />
+  <link rel="stylesheet" href="v033.css?v=0.3.44-forecast-entry-parity" />
+  <link rel="stylesheet" href="sales-freeze.css?v=0.3.44-forecast-entry-parity" />
   <link rel="stylesheet" href="forecast-ledger-values.css?v=0.3.32-pmc-refinement" />
   <link rel="stylesheet" href="parent-asin.css?v=0.3.3-pmc11" />
   <link rel="stylesheet" href="parent-asin-config12.css?v=0.3.3-config12" />
   <link rel="stylesheet" href="forecast-plan.css?v=0.3.32-pmc-refinement" />
   <link rel="stylesheet" href="portal-shell.css?v=0.3.26-portal-shell-menu" />
-  <link rel="stylesheet" href="forecast-workbench.css?v=0.3.40-forecast-lines" />
+  <link rel="stylesheet" href="forecast-workbench.css?v=0.3.44-forecast-entry-parity" />
 </head>
 <body>
   <div class="app portal-shell">
@@ -461,12 +467,6 @@
         <button type="button" data-view="sales" data-menu-origin="top-sales"><span class="icon" data-shell-icon="FundOutlined" aria-hidden="true">⌁</span><span>销售预测</span></button>
         <button type="button" data-view="plans" data-menu-origin="top-plans"><span class="icon" data-shell-icon="ContainerOutlined" aria-hidden="true">▤</span><span>备货计划</span></button>
         <button type="button" data-view="transfer" data-menu-origin="top-transfer"><span class="icon" data-shell-icon="SwapOutlined" aria-hidden="true">↔</span><span>调拨计划</span></button>
-        <div class="menu-group" data-menu-group="planning">
-          <button class="menu-group-toggle" type="button" data-menu-toggle="planning" aria-expanded="false" aria-controls="planning-submenu"><span class="icon" data-shell-icon="SettingOutlined" aria-hidden="true">⚙</span><span>计划配置</span><span class="menu-chevron" data-shell-icon="RightOutlined" aria-hidden="true">›</span></button>
-          <div class="menu-submenu" id="planning-submenu" hidden>
-            <button type="button" data-view="decomposition" data-menu-origin="plan-batches"><span class="submenu-dot" aria-hidden="true"></span><span>预测批次列表</span></button>
-          </div>
-        </div>
       </nav>
       <button class="sider-toggle" type="button" aria-label="折叠侧边菜单" data-action="toggle-sidebar">‹</button>
     </aside>
@@ -474,7 +474,7 @@
       <header class="topbar" aria-label="全局导航">
         <div class="topbar-workspace">
           <div class="workspace-tabs" role="tablist" aria-label="工作页签"><button class="workspace-tab active" type="button" role="tab" aria-selected="true">预测工作台</button></div>
-          <span class="topbar-route-label" hidden>计划配置</span>
+          <span class="topbar-route-label" hidden></span>
         </div>
         <div class="top-actions">
           <button class="shell-icon-button" type="button" aria-label="刷新当前页面" title="刷新当前页面" data-shell-action="refresh"><span data-shell-icon="ReloadOutlined" aria-hidden="true">↻</span></button>
@@ -554,7 +554,7 @@
     function matches(c, g) { const q = state.query.trim().toLowerCase(); return !q || [g.parent,g.spu,g.name,g.skc,c.asin,c.sku].some(v => String(v).toLowerCase().includes(q)); }
     function manualValue(c, i) { const value = c.manual[i]; return value === null || value === '' || value === undefined ? null : Number(value); }
     function activityAt(c, d) { return c.activity[dateKey(d)] || null; }
-    function source(c, d, i) { if (activityAt(c, d)) return ['activity','活动']; if (manualValue(c, i) !== null) return ['manual','人工']; return ['system','规则']; }
+    function source(c, d, i) { if (activityAt(c, d)) return ['activity','活动']; if (manualValue(c, i) !== null) return ['manual','人工']; return ['system','系统']; }
     function systemValue(c, i) { return Math.max(0, c.base + (i % 5 === 0 ? 0 : i % 3 === 0 ? 1 : 0)); }
     function activityValue(c, d) { return activityAt(c, d)?.qty || 0; }
     function finalValue(c, d, i) { const activity = activityAt(c, d); const manual = manualValue(c, i); return activity ? activity.qty : manual !== null ? manual : systemValue(c, i); }
@@ -579,12 +579,12 @@
         : w.days.map((d,i)=>({type:'day',key:'date:'+dateKey(d),week:w,days:[d],boundary:i===0})));
     }
     function dateHeader(col, i) {
-      if(col.type==='week')return `<th class="date-head date-col week-boundary week-collapsed" data-focus-index="${i}"><div>周合计 · 件</div><small>${weekRange(col.days)} · ${col.days.length}天</small>${resizeHandle(col.key,'W'+col.week.number+'合计')}</th>`;
+      if(col.type==='week')return `<th class="date-head date-col week-boundary week-collapsed" data-focus-index="${i}"><div class="week-period">${weekRange(col.days)}</div>${resizeHandle(col.key,'W'+col.week.number+'合计')}</th>`;
       const d=col.days[0];
       return `<th class="date-head date-col ${col.boundary?'week-boundary':''} ${[0,6].includes(d.getDay())?'weekend':''}" data-focus-index="${i}"><div>${dateLabel(d)}</div><small>周${weekLabel(d)}</small>${resizeHandle(col.key,dateLabel(d))}</th>`;
     }
     function weekHeaders() {
-      return visibleWeeks().map(w=>{const collapsed=state.collapsedWeeks.has(w.key);return `<th class="week-head week-boundary ${collapsed?'week-collapsed':''}" colspan="${collapsed?1:w.days.length}"><div class="week-heading"><button class="week-toggle" type="button" data-week-toggle="${w.key}" aria-expanded="${!collapsed}" aria-label="${collapsed?'展开':'收起'} W${w.number} ${weekRange(w.days)}"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M2 6h8${collapsed?'M6 2v8':''}"/></svg></button><span>W${w.number}${collapsed?'':` · ${weekRange(w.days)}`}</span></div></th>`;}).join('');
+      return visibleWeeks().map(w=>{const collapsed=state.collapsedWeeks.has(w.key);return `<th class="week-head week-boundary ${collapsed?'week-collapsed':''}" colspan="${collapsed?1:w.days.length}"><div class="week-heading"><span>W${w.number}</span><button class="week-toggle" type="button" data-week-toggle="${w.key}" aria-expanded="${!collapsed}" aria-label="${collapsed?'展开':'收起'} W${w.number} ${weekRange(w.days)}"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M2 6h8${collapsed?'M6 2v8':''}"/></svg></button></div></th>`;}).join('');
     }
     const penIcon = '<svg class="edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 16-1 5 5-1L20 8a2.8 2.8 0 0 0-4-4Z"/><path d="m14 6 4 4M4 16l4 4"/></svg>';
     const copyIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="13" rx="1"/><path d="M16 8V3H3v13h5"/></svg>';
@@ -593,7 +593,7 @@
     function resizeHandle(key, label) { return `<span class="column-resizer" data-resize-column="${key}" role="separator" tabindex="0" aria-orientation="vertical" aria-label="调整${label}列宽"></span>`; }
     function columnWidth(key) { return key.startsWith('date:') ? state.dateWidths[key.slice(5)] ?? 96 : key.startsWith('week:') ? state.weekWidths[key.slice(5)] ?? 110 : state[key + 'Width']; }
     function setColumnWidth(key, width) {
-      const limits = key.startsWith('date:') ? [72, 240] : key.startsWith('week:') ? [100,240] : key==='size' ? [52,120] : key === 'identity' ? [260, 640] : [100, 360];
+      const limits = key.startsWith('date:') ? [0, 240] : key.startsWith('week:') ? [0,240] : key==='size' ? [0,120] : key === 'identity' ? [0, 640] : [0, 360];
       const value = Math.round(Math.max(limits[0], Math.min(limits[1], width)));
       if (key.startsWith('date:')) state.dateWidths[key.slice(5)] = value;
       else if(key.startsWith('week:')) state.weekWidths[key.slice(5)] = value;
@@ -657,9 +657,9 @@
         const focus = `data-focus-index="${i}" data-time-column="${col.key}"`, boundary=col.boundary?'week-boundary':'';
         if(col.type==='week') {
           const {value,count}=weekValue(c,col,line), cls={system:'line-system',manual:'line-manual',activity:'line-event',final:'line-final'}[line];
-          const kinds=[...new Set(col.days.map(day=>source(c,day,indexForDate(dateKey(day)))[0]))], kind=kinds.length===1?kinds[0]:'mixed';
-          const sourceLabel={system:'规则',manual:'人工',activity:'活动',mixed:'混合'}[kind];
-          return `<td class="date-col num week-total ${boundary} ${cls}" ${focus}>${line==='final'?`<button class="cell-link final-value" type="button" data-week-detail="${col.week.key}" data-asin="${c.asin}" aria-label="查看 ${c.asin} W${col.week.number} 周合计"><span>${num(value)}</span><span class="source-tag ${kind}">${sourceLabel}</span></button>`:value===null?'':`<span>${num(value)}</span>${line==='manual'||line==='activity'?`<small class="partial-count" data-hint="${line==='manual'?'人工修正':'活动提报'}：已填${count}/${col.days.length}天，合计${value}件" tabindex="0">已填${count}/${col.days.length}天</small>`:''}`}</td>`;
+          const kinds=col.days.map(day=>source(c,day,indexForDate(dateKey(day)))[0]), kind=kinds.includes('activity')?'activity':kinds.includes('manual')?'manual':'system';
+          const sourceLabel={system:'规则',manual:'人工',activity:'活动'}[kind];
+          return `<td class="date-col num week-total ${boundary} ${cls}" ${focus}>${line==='final'?`<button class="cell-link final-value" type="button" data-week-detail="${col.week.key}" data-asin="${c.asin}" aria-label="查看 ${c.asin} W${col.week.number} 周合计"><span>${num(value)}</span><span class="source-tag ${kind}">(${sourceLabel})</span></button>`:value===null?'':`<span>${num(value)}</span>${line==='manual'||line==='activity'?`<small class="partial-count" data-hint="${line==='manual'?'人工修正':'活动提报'}：已填${count}/${col.days.length}天，合计${value}件" tabindex="0">已填${count}/${col.days.length}天</small>`:''}`}</td>`;
         }
         if (line === 'system') return `<td class="date-col num line-system ${boundary}" ${focus}>${systemValue(c,index)}</td>`;
         if (line === 'manual' || line === 'activity') {
@@ -672,7 +672,7 @@
             : `<button class="${value === null ? 'entry-icon' : 'entry-value'}" type="button" aria-label="${label} ${esc(c.asin)} ${dateLabel(d)}" ${attributes}><span class="entry-number">${value ?? ''}</span>${penIcon}</button>`}</td>`;
         }
         const [kind,label] = source(c,d,index);
-        return `<td class="date-col num line-final ${boundary}" ${focus}><button class="cell-link final-value" type="button" data-final="${esc(c.asin)}" data-index="${index}"><span>${finalValue(c,d,index)}</span><span class="source-tag ${kind}">${label}</span></button></td>`;
+        return `<td class="date-col num line-final ${boundary}" ${focus}><button class="cell-link final-value" type="button" data-final="${esc(c.asin)}" data-index="${index}"><span>${finalValue(c,d,index)}</span><span class="source-tag ${kind}">(${label})</span></button></td>`;
       }).join('');
     }
 
@@ -1113,35 +1113,35 @@
       if(e.key==='Enter' && e.target.matches('[data-manual]')) { e.preventDefault(); e.target.blur(); }
     });
   </script>
-    <script src="forecast-ledger-values.js?v=0.3.32-pmc-refinement"></script>
-    <script src="v024-core.js?v=0.3.32-pmc-refinement"></script>
+    <script src="forecast-ledger-values.js?v=0.3.43-rule-line-performance"></script>
+    <script src="v024-core.js?v=0.3.43-rule-line-performance"></script>
   <script src="vendor/react-18.3.1.min.js"></script>
   <script src="vendor/react-dom-18.3.1.min.js"></script>
   <script src="vendor/dayjs-1.11.13.min.js"></script>
   <script src="vendor/antd-5.27.6.min.js"></script>
   <script src="vendor/antd-icons-5.6.1.min.js"></script>
-  <script src="enterprise-theme.js"></script>
+  <script src="enterprise-theme.js?v=0.3.43-rule-line-performance"></script>
   <script src="v021.js?v=0.3.6-performance-date1"></script>
   <script src="v022.js?v=0.3.5-sales-batch-sync1"></script>
   <script src="v024.js?v=0.2.4"></script>
-    <script src="v033-controls.js?v=0.3.40-forecast-lines"></script>
+    <script src="v033-controls.js?v=0.3.44-forecast-entry-parity"></script>
   <script src="v026-insights.js?v=0.3.6-performance-date1"></script>
   <script src="v032-timeline.js?v=0.3.5-sales-batch-sync1"></script>
-  <script src="v027.js?v=0.3.5-sales-batch-sync1"></script>
+  <script src="v027.js?v=0.3.43-rule-line-performance"></script>
   <script src="v031-workspace.js?v=0.3.39-interaction-parity"></script>
   <script src="v032-presentation.js?v=0.3.38-time-window-parity"></script>
   <script src="v030.js?v=0.3.0"></script>
   <script src="v031.js?v=0.3.9-product-layout2"></script>
   <script src="v032.js?v=0.3.2"></script>
   <script src="v033.js?v=0.3.3"></script>
-    <script src="sales-freeze.js?v=0.3.38-time-window-parity"></script>
+    <script src="sales-freeze.js?v=0.3.44-forecast-entry-parity"></script>
   <script src="planning-model.js?v=0.3.6-performance-date1"></script>
   <script src="parent-asin.js?v=0.3.6-performance-date1"></script>
   <script src="parent-asin-config12.js?v=0.3.6-performance-date1"></script>
     <script src="forecast-batch-model.js?v=0.3.32-pmc-refinement"></script>
   <script src="forecast-source-import.js?v=0.3.20-pmc-same-ledger"></script>
     <script src="forecast-plan-workspace.js?v=0.3.32-pmc-refinement"></script>
-    <script src="forecast-workbench.js?v=0.3.40-forecast-lines"></script>
+    <script src="forecast-workbench.js?v=0.3.44-forecast-entry-parity"></script>
     <script src="pmc-workflow.js?v=0.3.39-interaction-parity"></script>
     <script src="submission-window.js?v=0.3.32-pmc-refinement"></script>
 </body>

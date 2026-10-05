@@ -10,7 +10,10 @@
   // The PMC calibration line remains part of the planning ledger. Sales only
   // receives the confirmed baseline and its own manual/activity inputs.
   const lines = { pmc: ['system', 'pmc', 'final'], sales: ['system', 'manual', 'activity', 'final'] };
-  const labels = { system: '系统预测', pmc: 'PMC校准', manual: '人工预测', activity: '活动预测', final: '最终预测' };
+  const labels = { system: '规则预测', pmc: 'PMC校准', manual: '人工预测', activity: '活动预测', final: '最终预测' };
+  const sourceLabels = { system: '规则', manual: '人工', activity: '活动' };
+  const sourceOf = forecast => forecast?.activity != null ? 'activity' : forecast?.manual != null ? 'manual' : 'system';
+  const sourceOfMany = sources => sources.includes('activity') ? 'activity' : sources.includes('manual') ? 'manual' : 'system';
   const stateText = statuses => [...new Set(statuses.filter(Boolean))].join('；');
-  return { waiting, numeric, sum, lines, labels, stateText };
+  return { waiting, numeric, sum, lines, labels, sourceLabels, sourceOf, sourceOfMany, stateText };
 });

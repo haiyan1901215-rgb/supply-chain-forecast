@@ -1,7 +1,7 @@
 const assert = require('node:assert/strict');
 const { chromium } = require('playwright');
 
-const url = process.argv[2] || 'http://127.0.0.1:8816/index.html?v=0.3.40-forecast-lines';
+const url = process.argv[2] || 'http://127.0.0.1:8816/index.html?v=0.3.41-component-parity';
 const chrome = process.env.PLAYWRIGHT_CHROME || chromium.executablePath();
 
 (async () => {
@@ -36,6 +36,18 @@ const chrome = process.env.PLAYWRIGHT_CHROME || chromium.executablePath();
     assert.ok(initial.activityEntries > 0, 'activity forecast cells should expose edit actions');
     assert.equal(initial.submitDisabled, false, 'sales submit action should be enabled in initial fill state');
 
+    assert.equal(await page.locator('.forecast-table:visible .head-goods [data-tree]').count(), 1, 'product details header should expose one stateful toggle');
+    await page.getByRole('button', { name: '一键收起全部父子ASIN' }).click();
+    assert.equal(await page.getByRole('button', { name: '一键展开全部父子ASIN' }).count(), 1, 'collapsed product details should replace the icon action in place');
+    await page.getByRole('button', { name: '一键展开全部父子ASIN' }).click();
+
+    const firstForecastToggle = page.locator('.forecast-table:visible [data-forecast-toggle-button]').first();
+    assert.equal(await firstForecastToggle.locator('path').getAttribute('d'), 'M2 6h8', 'expanded forecast rows should show the collapse icon');
+    await firstForecastToggle.click();
+    const restoredForecastToggle = page.locator('.forecast-table:visible [data-forecast-toggle-button]').first();
+    assert.equal(await restoredForecastToggle.locator('path').getAttribute('d'), 'M2 6h8M6 2v8', 'collapsed forecast rows should replace the control with the expand icon');
+    await restoredForecastToggle.click();
+
     await page.locator('td.entry-cell [data-edit-manual]').first().click();
     await page.getByRole('dialog', { name: '人工预测' }).waitFor();
     await page.getByLabel('预测销量').fill('42');
@@ -50,6 +62,14 @@ const chrome = process.env.PLAYWRIGHT_CHROME || chromium.executablePath();
       return row?.textContent || '';
     });
     assert.match(saved || '', /42/, 'saved manual forecast should be visible in the ledger');
+
+    const identityResizer = page.locator('.forecast-table:visible [data-resize-column="identity"]');
+    const resizeBox = await identityResizer.boundingBox();
+    await page.mouse.move(resizeBox.x + resizeBox.width / 2, resizeBox.y + resizeBox.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(resizeBox.x - 280, resizeBox.y + resizeBox.height / 2, { steps: 6 });
+    await page.mouse.up();
+    assert.ok((await page.locator('.forecast-table:visible .identity-head').boundingBox()).width < 260, 'sales product column should resize below the old content minimum');
     assert.deepEqual(errors, [], 'browser errors');
     console.log('sales initial fill verification passed');
   } finally {

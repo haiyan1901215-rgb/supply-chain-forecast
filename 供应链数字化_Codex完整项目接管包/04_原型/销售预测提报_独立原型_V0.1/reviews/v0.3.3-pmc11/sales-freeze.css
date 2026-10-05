@@ -10,8 +10,8 @@
 .app .forecast-table .final-value > span:first-child {font-size:12px;font-weight:600;color:var(--text);}
 .app .forecast-table .final-value .source-tag {font-size:11px;font-weight:400;}
 .app .forecast-table .final-value .source-tag.system {color:var(--muted);}
-.app .forecast-table .final-value .source-tag.manual {color:#415bd8;}
-.app .forecast-table .final-value .source-tag.activity {color:var(--orange,#d97706);}
+.app .forecast-table .final-value .source-tag.manual {color:var(--forecast-manual-text);}
+.app .forecast-table .final-value .source-tag.activity {color:var(--amber);}
 .app .forecast-table .final-value .source-tag.mixed {color:var(--cyan,#087d83);}
 .app .forecast-table .line-final.line-cell {font-weight:600;}
 .activity-preview-compact {font-size:11px;line-height:17px;}
@@ -99,11 +99,14 @@
 .app .forecast-table .metric strong {font-size:12px;font-weight:600;}
 .app .forecast-table .line-cell {font-size:12px;font-weight:400;color:var(--text);}
 .app .forecast-table td.line-system {color:var(--muted);background-color:var(--surface);}
-.app .forecast-table td.line-manual,
-.app .forecast-table td.line-event {background-color:var(--surface);}
-.app .forecast-table .line-event.has-forecast .entry-number {color:var(--orange,#d97706);}
-.app .forecast-table td.line-final {background-color:#f8fafc;}
-.app .forecast-table tbody tr[data-forecast-line] > td.date-col.line-final {background-color:#f8fafc;}
+.app .forecast-table td.line-manual {color:var(--blue);background-color:var(--surface);}
+.app .forecast-table td.line-event {color:var(--amber);background-color:var(--surface);}
+.app .forecast-table .line-event.has-forecast .entry-number {color:var(--amber);}
+.app .forecast-table td.line-final {background-color:var(--forecast-final-row-bg);}
+.app .forecast-table tbody tr[data-forecast-line] > td.date-col.line-final {background-color:var(--forecast-final-row-bg);}
+.app .forecast-table tr.forecast-collapsed[data-forecast-line="final"] > td.line-cell,
+.app .forecast-table tr.forecast-collapsed[data-forecast-line="final"] > td.date-col {vertical-align:top;padding-top:10px;}
+.app .forecast-table tr.forecast-collapsed[data-forecast-line="final"] .final-value {align-items:flex-start;justify-content:flex-start;text-align:left;}
 .app .forecast-table .parent-band .parent-strip {gap:0;}
 .app .forecast-table .parent-strip > .collapse {margin:0 5px;}
 .app .forecast-table .parent-strip > .code-value {position:relative;}
@@ -138,8 +141,8 @@
 .app .forecast-table .final-value .final-number {font-size:12px;font-weight:600;line-height:16px;}
 .app .forecast-table .final-value .source-tag {font-size:11px;font-weight:400;color:var(--muted);line-height:13px;}
 .app .forecast-table .final-value .source-tag.system {color:var(--muted);}
-.app .forecast-table .final-value .source-tag.manual {color:#415bd8;}
-.app .forecast-table .final-value .source-tag.activity {color:var(--orange,#d97706);}
+.app .forecast-table .final-value .source-tag.manual {color:var(--forecast-manual-text);}
+.app .forecast-table .final-value .source-tag.activity {color:var(--amber);}
 .app .forecast-table .final-value .source-tag.mixed {color:var(--cyan,#087d83);}
 .app .forecast-table .entry-cell:hover .edit-icon {opacity:0;}
 .app .forecast-table .entry-cell .entry-value:hover .edit-icon,
@@ -269,8 +272,8 @@
   line-height:13px;
 }
 .app .forecast-table .history-final-value .source-tag.system {color:var(--muted);}
-.app .forecast-table .history-final-value .source-tag.manual {color:#415bd8;}
-.app .forecast-table .history-final-value .source-tag.activity {color:var(--orange,#d97706);}
+.app .forecast-table .history-final-value .source-tag.manual {color:var(--forecast-manual-text);}
+.app .forecast-table .history-final-value .source-tag.activity {color:var(--amber);}
 .app .forecast-table .history-final-value .source-tag.mixed {color:var(--cyan,#087d83);}
 .history-management .history-entry-button.ant-btn {
   min-width:auto;

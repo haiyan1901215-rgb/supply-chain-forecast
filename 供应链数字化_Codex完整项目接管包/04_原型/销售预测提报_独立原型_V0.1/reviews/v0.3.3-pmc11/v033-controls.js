@@ -2,7 +2,7 @@
 (() => {
   const h=React.createElement,{useState,useEffect,useReducer}=React;
   const {ConfigProvider,App,Select,Input,Button,Tooltip,Popover,Drawer,Checkbox,List,Space,Tag,Alert,DatePicker,Typography}=antd;
-  const {SettingOutlined,HolderOutlined,VerticalAlignTopOutlined,CloseCircleOutlined,LockOutlined,PushpinOutlined,QuestionCircleOutlined,SearchOutlined}=icons;
+  const {SettingOutlined,HolderOutlined,VerticalAlignTopOutlined,CloseCircleOutlined,LockOutlined,PushpinOutlined,QuestionCircleOutlined,SearchOutlined,EditOutlined}=icons;
   const filterSpec=[
     ['platform','平台',[['Amazon','Amazon'],['Temu','Temu'],['SHEIN','SHEIN']]],
     ['market','国家 / 站点',[['','全部国家 / 站点'],['US','美国 / US'],['UK','英国 / UK']]],
@@ -26,6 +26,39 @@
 
   const forecastCountProps={showCount:true,maxLength:200,autoSize:{minRows:3,maxRows:5},styles:{textarea:{paddingBottom:24},count:{position:'absolute',bottom:5,right:10,margin:0,lineHeight:'16px',fontSize:helpFont,pointerEvents:'none'}}};
   const forecastPreviewCountProps={showCount:true,maxLength:200,autoSize:{minRows:2,maxRows:3},styles:{textarea:{paddingBottom:24,overflow:'hidden',resize:'none'},count:{position:'absolute',bottom:5,right:10,margin:0,lineHeight:'16px',fontSize:helpFont,pointerEvents:'none'}}};
+  function ForecastToggleIcon({expanded=false}){
+    return h('svg',{viewBox:'0 0 12 12',fill:'none',stroke:'currentColor',strokeWidth:1.3,'aria-hidden':true},h('path',{d:`M2 6h8${expanded?'':'M6 2v8'}`}));
+  }
+  window.ForecastToggleIcon=ForecastToggleIcon;
+  window.ForecastEditorStandards=Object.freeze({countedTextAreaProps:forecastCountProps,previewCountedTextAreaProps:forecastPreviewCountProps});
+  function toggleForecastRowsInPlace(children,nextExpanded){
+    const table=$('.forecast-table');
+    if(!table||!children.length)return false;
+    const records=children.map(child=>{
+      const rows=[...table.querySelectorAll('tr[data-child-row][data-forecast-line]')].filter(row=>row.dataset.childRow===child.id);
+      const byLine=Object.fromEntries(rows.map(row=>[row.dataset.forecastLine,row]));
+      return {child,rows,byLine};
+    });
+    if(records.some(({byLine})=>!byLine.system||!byLine.manual||!byLine.activity||!byLine.final))return false;
+    records.forEach(({child,rows,byLine})=>{
+      const source=nextExpanded?byLine.final:byLine.system;
+      const target=nextExpanded?byLine.system:byLine.final;
+      const fixedCells=[...source.children].filter(cell=>cell.hasAttribute('rowspan'));
+      const anchor=target.querySelector('.line-cell');
+      const historyCount=table.querySelectorAll(`tr[data-history-for="${child.id}"]`).length;
+      fixedCells.forEach(cell=>{cell.rowSpan=(nextExpanded?4:1)+historyCount;target.insertBefore(cell,anchor);});
+      rows.forEach(row=>{
+        const visible=nextExpanded||row===byLine.final;
+        row.hidden=!visible;
+        row.classList.toggle('forecast-collapsed',!nextExpanded&&row===byLine.final);
+        row.classList.toggle('child-start',row===(nextExpanded?byLine.system:byLine.final));
+      });
+    });
+    window.refreshForecastControls?.();
+    syncHorizontalScrollbar();
+    positionForecastDivider();
+    return true;
+  }
   function forecastFields(kind,preview=false){
     const item=(name,label,child,rules=[])=>h(antd.Form.Item,{name,label,rules:preview?[]:rules,className:name==='reason'||name==='note'?'forecast-note-field':undefined},child);
     const qty=item('qty','预测销量',h(antd.InputNumber,{'aria-label':'预测销量',min:0,max:999999999,precision:0,readOnly:preview,controls:!preview,style:{width:'100%'},autoFocus:!preview,formatter:preview?v=>v==null||v===''?'':num(Number(v)):undefined}),[{required:true,message:'请填写预测销量'},{type:'integer',min:0,message:'请输入大于等于0的整数'}]);
@@ -35,7 +68,7 @@
     return [qty,item('name','活动名称',h(Input,{'aria-label':'活动名称',maxLength:50,showCount:true,readOnly:preview}),[{required:true,whitespace:true,message:'请填写活动名称'},{max:50,message:'最多50字'}]),item('date','活动日期',h(DatePicker,{'aria-label':'活动日期',format:'YYYY/MM/DD',allowClear:false,inputReadOnly:true,open:preview?false:undefined,style:{width:'100%'},disabledDate:d=>!canEdit(d.format('YYYY-MM-DD'))}),[{required:true,message:'请选择活动日期'}]),item('note','备注说明',area('备注说明'),[{max:200,message:'最多200字'}])];
   }
 
-  function ReasonPopover({content,label,c,date,kind}){
+  function ForecastAdjustmentPopover({content,label,ariaLabel,details}){
     const [open,setOpen]=useState(false),trigger=React.useRef(null);
     const changeOpen=next=>setOpen(next);
     useEffect(()=>{
@@ -48,15 +81,38 @@
       document.addEventListener('pointerdown',onPointerDown,true);
       return()=>{document.removeEventListener('keydown',escape);document.removeEventListener('scroll',onScroll,true);document.removeEventListener('pointerdown',onPointerDown,true);};
     },[open]);
-    const draft=batchDraft(c,state.batch),event=draft.activity[date],manual=kind==='manual',values=manual?{qty:draft.manual[date],reason:draft.manualReasons[date]||''}:{qty:event?.qty,name:event?.name||'',date:dayjs(date),note:event?.note||''};
+    const preview=h('div',{className:'reason-preview activity-preview-compact','aria-label':ariaLabel},...details.map(([field,value])=>h('div',{key:field,className:'activity-preview-field'},h('span',null,field),h('div',null,value))));
+    return h(Popover,{open,onOpenChange:changeOpen,content:preview,placement:'top',autoAdjustOverflow:true,arrow:{pointAtCenter:true},trigger:['hover','focus','click'],mouseEnterDelay:0.2,styles:{body:{width:320,maxWidth:'calc(100vw - 32px)',maxHeight:'min(360px, calc(100vh - 48px))',overflow:'hidden',padding:12,background:enterpriseThemeV020.token.colorBgElevated,color:enterpriseThemeV020.token.colorText,boxShadow:enterpriseThemeV020.token.boxShadowSecondary}}},h('span',{ref:trigger,className:'cell-reason',tabIndex:0,'aria-label':content,onClick:e=>e.stopPropagation()},label||content));
+  }
+  window.ForecastAdjustmentPopover=ForecastAdjustmentPopover;
+
+  function ForecastEditableValue({value,valueText,ariaLabel,onEdit,className='',buttonClassName='',adjustmentClassName='',adjustmentLabel=null,adjustmentContent='',adjustmentAriaLabel='',adjustmentDetails=[]}){
+    const empty=value==null;
+    const button=h('button',{
+      type:'button',
+      className:`${empty?'entry-icon':'entry-value'} ${buttonClassName}`.trim(),
+      'aria-label':ariaLabel,
+      onClick:onEdit
+    },
+    h('span',{className:'entry-number'},empty?'':valueText),
+    h('span',{className:'entry-edit-slot','aria-hidden':true},h(EditOutlined,{className:'edit-icon entry-ant-edit'})));
+    const adjustment=!empty&&adjustmentLabel!=null?h('span',{className:`adjustment-entry forecast-adjustment-entry ${adjustmentClassName}`.trim()},
+      h(ForecastAdjustmentPopover,{content:adjustmentContent,label:adjustmentLabel,ariaLabel:adjustmentAriaLabel,details:adjustmentDetails})
+    ):null;
+    return h('div',{className:`forecast-entry-wrap forecast-entry-stack ${className}`.trim()},button,adjustment);
+  }
+  window.ForecastEditableValue=ForecastEditableValue;
+
+  function ReasonPopover({content,label,c,date,kind}){
+    const draft=batchDraft(c,state.batch),event=draft.activity[date],manual=kind==='manual';
     const change=[...(draft.changes||[])].reverse().find(item=>item.date===date&&item.line===(manual?'人工预测':'活动预测'));
     const changeTime=change?.at?dayjs(change.at).format('YYYY/MM/DD HH:mm'):'';
-    const preview=h('div',{className:'reason-preview activity-preview-compact','aria-label':manual?'人工预测详情':'活动预测详情'},...(manual?[
-        ['预测日期',formatKey(date)],['人工预测销量',num(draft.manual[date])],['调整原因',draft.manualReasons[date]||'']
-      ]:[
-        ['活动日期',formatKey(date)],['活动预测销量',num(event?.qty??0)],['活动名称',event?.name||''],['备注',event?.note||'']
-      ]).concat([['调整人',change?.by||''],['调整时间',changeTime]]).map(([label,value])=>h('div',{key:label,className:'activity-preview-field'},h('span',null,label),h('div',null,value))));
-    return h(Popover,{open,onOpenChange:changeOpen,content:preview,placement:'top',autoAdjustOverflow:true,arrow:{pointAtCenter:true},trigger:['hover','focus','click'],mouseEnterDelay:0.2,styles:{body:{width:320,maxWidth:'calc(100vw - 32px)',maxHeight:'min(360px, calc(100vh - 48px))',overflow:'hidden',padding:12,background:enterpriseThemeV020.token.colorBgElevated,color:enterpriseThemeV020.token.colorText,boxShadow:enterpriseThemeV020.token.boxShadowSecondary}}},h('span',{ref:trigger,className:'cell-reason',tabIndex:0,'aria-label':content,onClick:e=>e.stopPropagation()},label||content));
+    const details=(manual?[
+      ['预测日期',formatKey(date)],['人工预测销量',num(draft.manual[date])],['调整原因',draft.manualReasons[date]||'']
+    ]:[
+      ['活动日期',formatKey(date)],['活动预测销量',num(event?.qty??0)],['活动名称',event?.name||''],['备注',event?.note||'']
+    ]).concat([['调整人',change?.by||''],['调整时间',changeTime]]);
+    return h(ForecastAdjustmentPopover,{content,label,ariaLabel:manual?'人工预测详情':'活动预测详情',details});
   }
 
   function HistoryForecastPopover({host,c,batch,kind}){
@@ -247,7 +303,7 @@
     const portals=[ReactDOM.createPortal(h(Filters),$('#filterControls'),'filters'),ReactDOM.createPortal(h(Tooltip,{title:'列配置'},h(Button,{id:'antdColumnButton',type:'text',icon:h(SettingOutlined),'aria-label':'列配置',onClick:begin})),$('#columnIcon'),'columns')];
     $$('[data-forecast-toggle]').forEach(host=>{
       const id=host.dataset.forecastToggle,children=id==='all'?displayGroups().flatMap(g=>g.children):[findChild(id)],expanded=children.every(c=>state.expandedChildren.has(c.id)),label=expanded?'收起填报':'展开填报';
-      portals.push(ReactDOM.createPortal(h(Tooltip,{title:(expanded?'收起':'展开')+'当前页填报明细'},h(Button,{type:'text',size:'small',disabled:!children.length,className:'forecast-toggle-action',style:{width:20,minWidth:20,height:22,padding:0,color:enterpriseThemeV020.token.colorTextSecondary},icon:h(expanded?icons.UpOutlined:icons.DownOutlined),'aria-label':label,'aria-expanded':expanded,'data-forecast-toggle-button':id,onClick:()=>{children.forEach(c=>expanded?state.expandedChildren.delete(c.id):state.expandedChildren.add(c.id));renderTable();requestAnimationFrame(()=>document.querySelector('[data-forecast-toggle-button="'+id+'"]')?.focus({preventScroll:true}));}})),host,'forecast-'+id));
+      portals.push(ReactDOM.createPortal(h(Tooltip,{title:(expanded?'收起':'展开')+'当前页填报明细'},h(Button,{type:'text',size:'small',disabled:!children.length,className:'forecast-state-toggle forecast-toggle-action',icon:h(ForecastToggleIcon,{expanded}),'aria-label':label,'aria-expanded':expanded,'data-forecast-toggle-button':id,onClick:()=>{children.forEach(c=>expanded?state.expandedChildren.delete(c.id):state.expandedChildren.add(c.id));if(!toggleForecastRowsInPlace(children,!expanded))renderTable();requestAnimationFrame(()=>document.querySelector('[data-forecast-toggle-button="'+id+'"]')?.focus({preventScroll:true}));}})),host,'forecast-'+id));
     });
     $$('[data-reason-host]').forEach(host=>{
       const c=findChild(host.dataset.reasonHost),key=host.dataset.reasonDate,draft=batchDraft(c,state.batch),content=host.dataset.reasonKind==='manual'?draft.manualReasons[key]:[draft.activity[key]?.name,draft.activity[key]?.note].filter(Boolean).join('\n');

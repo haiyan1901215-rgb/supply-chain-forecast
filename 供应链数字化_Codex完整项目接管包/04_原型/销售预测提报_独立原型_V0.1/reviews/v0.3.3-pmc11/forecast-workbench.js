@@ -1,8 +1,37 @@
 (function () {
   const h = React.createElement;
   const { useEffect, useMemo, useRef, useState } = React;
-  const { Alert, Button, Checkbox, DatePicker, Descriptions, Drawer, Empty, Form, Input, InputNumber, List, Modal, Pagination, Popover, Select, Space, Table, Tabs, Tag, Tooltip, Tree } = antd;
+  const { Alert, Button, Checkbox, DatePicker, Descriptions, Drawer, Dropdown, Form, Input, InputNumber, List, Modal, Pagination, Popover, Select, Space, Table, Tag, Tooltip, Tree } = antd;
   const designTokens = antd.theme.getDesignToken(enterpriseThemeV020);
+  const uiStandards = window.EnterpriseUiStandards || {};
+  const forecastTableStandards = uiStandards.forecastTable || {
+    headerBackground: '#f7f9fc',
+    weekHeaderBackground: '#e9eef8',
+    dayHeaderBackground: '#f2f5fb',
+    parentRowBackground: '#f7f9fc',
+    finalRowBackground: '#ffffff',
+    headerText: '#53658b',
+    dayHeaderText: '#4c5a76',
+    parentText: '#32405d',
+    manualText: '#3f5bdc',
+    toggleBorder: '#acbad0',
+    toggleText: '#526078',
+    resizeGuide: '#aebbe5',
+    dayWidth: 72,
+    weekTotalWidth: 112,
+    weekHeaderHeight: 28,
+    dayHeaderHeight: 34,
+    systemRowHeight: 40,
+    editableRowHeight: 54,
+    finalRowHeight: 55,
+    keyboardResizeStep: 8,
+    crossHighlight: 'rgba(31, 111, 235, .045)',
+    focusBorder: 'rgba(31, 111, 235, .18)',
+    weekendBackground: '#fafafa',
+    gridBorder: '#e5eaf2',
+    weekBoundary: '#b4c3df',
+    parentBoundary: '#ced8eb'
+  };
 
   const marketNames = { US: '美国 / US', UK: '英国 / UK', DE: '德国 / DE' };
   const tagDefinitions = {
@@ -38,20 +67,13 @@
   }
 
   function weekToggleGlyph(collapsed) {
-    return h('svg', { viewBox: '0 0 12 12', fill: 'none', stroke: 'currentColor', strokeWidth: 1.4, 'aria-hidden': true },
-      h('path', { d: `M2 6h8${collapsed ? 'M6 2v8' : ''}` })
-    );
+    return stateToggleGlyph(!collapsed);
   }
 
-  function parentToggleGlyph(collapsed) {
+  function stateToggleGlyph(expanded) {
+    if (window.ForecastToggleIcon) return h(window.ForecastToggleIcon, { expanded });
     return h('svg', { viewBox: '0 0 12 12', fill: 'none', stroke: 'currentColor', strokeWidth: 1.3, 'aria-hidden': true },
-      h('path', { d: `M2 6h8${collapsed ? 'M6 2v8' : ''}` })
-    );
-  }
-
-  function treeHeaderGlyph(action) {
-    return h('svg', { viewBox: '0 0 16 16', fill: 'none', stroke: 'currentColor', strokeWidth: 1.6, 'aria-hidden': true },
-      h('path', { d: action === 'expand' ? 'm4 6 4-4 4 4M4 10l4 4 4-4' : 'm4 2 4 4 4-4M4 14l4-4 4 4' })
+      h('path', { d: `M2 6h8${expanded ? '' : 'M6 2v8'}` })
     );
   }
 
@@ -282,35 +304,35 @@
     const manual = status ? null : result?.manual ?? null;
     const activity = status ? null : result?.activity?.qty ?? result?.activity ?? null;
     const final = status ? null : result?.final ?? result?.pmc ?? result?.pmcBaseline ?? system;
-    const source = activity != null ? 'activity' : manual != null ? 'manual' : result?.pmc != null ? 'pmc' : 'system';
+    const source = window.ForecastLedgerValues?.sourceOf?.(result) || (activity != null ? 'activity' : manual != null ? 'manual' : 'system');
     return { system, manual, activity, final, source, status };
   }
 
-  function ForecastWorkbench({ onOpenBinding } = {}) {
+  function ForecastWorkbench({ onOpenBinding, onOpenSales, navigationContext } = {}) {
     const { message, modal } = antd.App.useApp();
     const [shareForm] = Form.useForm();
     const emptyFilters = { platform: '', market: '', account: '', owner: '', status: '', keyword: '' };
+    const restoredWorkbench = navigationContext?.workbench || {};
     const [treeQuery, setTreeQuery] = useState('');
-    const [filterDraft, setFilterDraft] = useState(emptyFilters);
-    const [filters, setFilters] = useState(emptyFilters);
+    const [filterDraft, setFilterDraft] = useState(() => ({ ...emptyFilters, ...(restoredWorkbench.filterDraft || restoredWorkbench.filters || {}) }));
+    const [filters, setFilters] = useState(() => ({ ...emptyFilters, ...(restoredWorkbench.filters || {}) }));
     const [revision, setRevision] = useState(0);
-    const [collapsedWeeks, setCollapsedWeeks] = useState(new Set());
-    const [windowSize, setWindowSize] = useState(14);
-    const [windowStart, setWindowStart] = useState(0);
-    const [selectedKey, setSelectedKey] = useState(null);
-    const [treeExpandedKeys, setTreeExpandedKeys] = useState([]);
-    const [treeCheckedKeys, setTreeCheckedKeys] = useState([]);
-    const [treeExcludedKeys, setTreeExcludedKeys] = useState(new Set());
-    const [treePanelCollapsed, setTreePanelCollapsed] = useState(false);
-    const [expandedRowKeys, setExpandedRowKeys] = useState([]);
-    const [expandedForecastKeys, setExpandedForecastKeys] = useState(new Set());
+    const [collapsedWeeks, setCollapsedWeeks] = useState(() => new Set(restoredWorkbench.collapsedWeeks || []));
+    const [windowSize, setWindowSize] = useState(restoredWorkbench.windowSize || 14);
+    const [windowStart, setWindowStart] = useState(restoredWorkbench.windowStart || 0);
+    const [selectedKey, setSelectedKey] = useState(restoredWorkbench.selectedKey || navigationContext?.entity?.entityKey || null);
+    const [treeExpandedKeys, setTreeExpandedKeys] = useState(restoredWorkbench.treeExpandedKeys || []);
+    const [treeCheckedKeys, setTreeCheckedKeys] = useState(restoredWorkbench.treeCheckedKeys || []);
+    const [treeExcludedKeys, setTreeExcludedKeys] = useState(() => new Set(restoredWorkbench.treeExcludedKeys || []));
+    const [treePanelCollapsed, setTreePanelCollapsed] = useState(Boolean(restoredWorkbench.treePanelCollapsed));
+    const [expandedRowKeys, setExpandedRowKeys] = useState(restoredWorkbench.expandedRowKeys || []);
+    const [expandedForecastKeys, setExpandedForecastKeys] = useState(() => new Set(restoredWorkbench.expandedForecastKeys || []));
     const [hoveredColumn, setHoveredColumn] = useState(null);
     const [hoveredRow, setHoveredRow] = useState(null);
-    const [page, setPage] = useState(1);
-    const [pageSize, setPageSize] = useState(20);
+    const [page, setPage] = useState(restoredWorkbench.page || 1);
+    const [pageSize, setPageSize] = useState(restoredWorkbench.pageSize || 20);
     const [viewportHeight, setViewportHeight] = useState(window.innerHeight);
     const [drawerRow, setDrawerRow] = useState(null);
-    const [drawerTab, setDrawerTab] = useState('basis');
     const [selectedRowKeys, setSelectedRowKeys] = useState([]);
     const [shareAdjustments, setShareAdjustments] = useState(() => loadStoredObject(workbenchShareStorageKey));
     const [shareEditor, setShareEditor] = useState(null);
@@ -332,6 +354,7 @@
     });
     const resizeSession = useRef(null);
     const draggedColumn = useRef(null);
+    const restoredLocation = useRef(false);
 
     const meta = useMemo(() => currentMeta(), [revision]);
     const batchSnapshot = useMemo(() => window.ForecastBatchContract?.getCurrent?.() || null, [revision]);
@@ -380,23 +403,45 @@
       }).filter(Boolean);
     }, [rawGroups, treeQuery]);
 
+    const openTreeBindingAction = (group, child, mode) => {
+      ForecastBindingStore.requestAction({ mode, recordKey: `${group.id}|${child.id}`, childASIN: child.asin });
+      onOpenBinding?.();
+    };
     const treeData = useMemo(() => treeGroups.map(group => ({
           key: `parent:${group.id}`,
           title: h('div', { className: 'fpw-tree-parent-title' },
             h('div', null,
               h('span', { className: 'country-flag fpw-tree-flag', 'aria-hidden': true }, marketFlag(group.market)),
               h('strong', null, group.parent)
-            ),
-            h(Tooltip, { title: '管理父子关系' }, h(Button, { type: 'text', size: 'small', className: 'fpw-tree-more', icon: icon('MoreOutlined'), 'aria-label': `管理 ${group.parent} 父子关系`, onClick: event => { event.stopPropagation(); ForecastBindingStore.requestAction({ mode: 'manage', parentGroupId: group.id }); onOpenBinding?.(); } }))
+            )
           ),
           children: group.children.map(child => {
             const childKey = `child:${group.id}|${child.id}`;
+            const excluded = treeExcludedKeys.has(childKey);
+            const menuItems = [
+              { key: 'heading', label: '在变体列表中', disabled: true },
+              { type: 'divider' },
+              { key: 'visibility', icon: excluded ? icon('CheckOutlined') : null, label: excluded ? '显示' : '排除' },
+              { type: 'divider' },
+              { key: 'edit', label: '修改绑定' },
+              { key: 'remove', label: '移除绑定', danger: true }
+            ];
             return {
               key: childKey,
-              title: h('div', { className: `fpw-tree-child-title ${treeExcludedKeys.has(childKey) ? 'is-excluded' : ''}` },
+              title: h('div', { className: `fpw-tree-child-title ${excluded ? 'is-excluded' : ''}` },
                 h('span', null, child.asin),
-                treeExcludedKeys.has(childKey) && h(Tag, { bordered: false }, '已排除'),
-                h(Tooltip, { title: '调整变体绑定' }, h(Button, { type: 'text', size: 'small', className: 'fpw-tree-more', icon: icon('MoreOutlined'), 'aria-label': `调整 ${child.asin} 变体绑定`, onClick: event => { event.stopPropagation(); ForecastBindingStore.requestAction({ mode: 'edit', recordKey: `${group.id}|${child.id}`, childASIN: child.asin }); onOpenBinding?.(); } }))
+                excluded && h(Tag, { bordered: false }, '已排除'),
+                h(Dropdown, {
+                  trigger: ['click'],
+                  menu: { items: menuItems, onClick: ({ key, domEvent }) => {
+                    domEvent?.stopPropagation?.();
+                    if (key === 'visibility') {
+                      setTreeExcludedKeys(current => { const next = new Set(current); next.has(childKey) ? next.delete(childKey) : next.add(childKey); return next; });
+                      return;
+                    }
+                    openTreeBindingAction(group, child, key === 'remove' ? 'remove' : 'edit');
+                  } }
+                }, h(Button, { type: 'text', size: 'small', className: 'fpw-tree-more', icon: icon('MoreOutlined'), 'aria-label': `管理 ${child.asin} 变体`, onClick: event => event.stopPropagation() }))
               ),
               isLeaf: true
             };
@@ -495,10 +540,10 @@
       });
       const forecast = Object.fromEntries(dates.map(date => {
         const key = dateKey(date);
-        const sources = [...new Set(children.map(row => row.forecast[key]?.source).filter(Boolean))];
+        const sources = children.map(row => row.forecast[key]?.source).filter(Boolean);
         const statuses = [...new Set(children.map(row => row.forecast[key]?.status).filter(Boolean))];
         const values = Object.fromEntries(['system', 'manual', 'activity', 'final'].map(line => [line, total(children.map(row => row.forecast[key]?.[line]))]));
-        return [key, { ...values, source: sources.length === 1 ? sources[0] : 'mixed', status: values.final == null ? statuses.join('；') || null : null }];
+        return [key, { ...values, source: window.ForecastLedgerValues?.sourceOfMany?.(sources) || (sources.includes('activity') ? 'activity' : sources.includes('manual') ? 'manual' : 'system'), status: values.final == null ? statuses.join('；') || null : null }];
       }));
       const daily = Object.fromEntries(dates.map(date => { const key = dateKey(date); return [key, { value: forecast[key].final, status: forecast[key].status }]; }));
       return {
@@ -520,27 +565,52 @@
     }), [batchDate, batchSnapshot, dates, filteredGroups, revision, shareAdjustments]);
 
     const pageRows = useMemo(() => rows.slice((page - 1) * pageSize, page * pageSize), [page, pageSize, rows]);
+    const tableRows = useMemo(() => {
+      const lineRows = entity => {
+        const lines = expandedForecastKeys.has(entity.key) ? ['system', 'manual', 'activity', 'final'] : ['final'];
+        const { children: variantChildren, ...entityFields } = entity;
+        return lines.map((forecastLine, lineIndex) => ({
+          ...entityFields,
+          variantChildren,
+          entityKey: entity.key,
+          key: lineIndex === 0 ? entity.key : `${entity.key}|${forecastLine}`,
+          forecastLine,
+          lineIndex,
+          lineCount: lines.length
+        }));
+      };
+      return pageRows.flatMap(parent => [
+        ...lineRows(parent),
+        ...(expandedRowKeys.includes(parent.key) ? parent.children.flatMap(lineRows) : [])
+      ]);
+    }, [expandedForecastKeys, expandedRowKeys, pageRows]);
 
     useEffect(() => setPageDestination(null), [page, pageSize, rows.length]);
 
-    const gridBorderStyle = { borderInlineEnd: '1px solid #edf0f5', borderBottom: '1px solid #edf0f5' };
+    const gridBorderStyle = { borderInlineEnd: `1px solid ${forecastTableStandards.gridBorder}`, borderBottom: `1px solid ${forecastTableStandards.gridBorder}` };
+    const isForecastPeriodColumn = columnKey => columnKey?.startsWith('date:') || columnKey?.startsWith('collapsed:');
     const columnClass = (columnKey, rowKey, extra = '') => [
       extra,
-      hoveredColumn === columnKey ? 'fpw-cross-column' : '',
-      hoveredColumn === columnKey && hoveredRow === rowKey ? 'fpw-cross-cell' : ''
+      isForecastPeriodColumn(columnKey) && hoveredColumn === columnKey ? 'fpw-cross-column' : '',
+      isForecastPeriodColumn(columnKey) && hoveredColumn === columnKey && hoveredRow === rowKey ? 'fpw-cross-cell' : ''
     ].filter(Boolean).join(' ');
-    const cellEvents = (columnKey, rowKey, extra = '') => ({
-      className: columnClass(columnKey, rowKey, extra),
-      style: gridBorderStyle,
-      onMouseEnter: () => setHoveredColumn(columnKey),
-      onMouseLeave: () => setHoveredColumn(null)
-    });
-    const headerEvents = (columnKey, extra = '') => cellEvents(columnKey, null, extra);
+    const cellEvents = (columnKey, rowKey, extra = '') => {
+      const events = { className: columnClass(columnKey, rowKey, extra), style: gridBorderStyle };
+      if (!isForecastPeriodColumn(columnKey)) return events;
+      return {
+        ...events,
+        onMouseEnter: () => { setHoveredColumn(columnKey); setHoveredRow(rowKey); },
+        onMouseLeave: () => { setHoveredColumn(null); setHoveredRow(null); }
+      };
+    };
+    const headerEvents = (columnKey, extra = '') => ({ className: columnClass(columnKey, null, extra), style: gridBorderStyle });
+    const fixedBoundaryEvents = events => ({ ...events, style: { ...events.style, borderInlineEnd: `1px solid ${uiStandards.colors?.borderStrong || '#d1d9e7'}` } });
 
-    const resizeLimits = key => key === 'identity' ? [260, 640] : key.startsWith('date:') ? [52, 180] : [52, 240];
+    const defaultColumnWidth = key => key.startsWith('date:') ? forecastTableStandards.dayWidth : key.startsWith('collapsed:') ? forecastTableStandards.weekTotalWidth : ({ identity: 310, share: 82, context: 188, forecastLine: 108 }[key] || 68);
+    const resizeLimits = key => key === 'identity' ? [0, 640] : key.startsWith('date:') ? [0, 180] : [0, 240];
     const startResize = (event, key) => {
       const [min, max] = resizeLimits(key);
-      resizeSession.current = { key, startX: event.clientX, startWidth: columnWidths[key] || (key.startsWith('date:') ? 62 : min), min, max };
+      resizeSession.current = { key, startX: event.clientX, startWidth: columnWidths[key] ?? defaultColumnWidth(key), min, max };
       document.body.classList.add('fpw-is-resizing');
       event.preventDefault();
       event.stopPropagation();
@@ -549,7 +619,8 @@
       if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
       event.preventDefault();
       const [min, max] = resizeLimits(key);
-      setColumnWidths(current => ({ ...current, [key]: Math.max(min, Math.min(max, (current[key] || (key.startsWith('date:') ? 62 : min)) + (event.key === 'ArrowRight' ? 8 : -8))) }));
+      const step = forecastTableStandards.keyboardResizeStep || 8;
+      setColumnWidths(current => ({ ...current, [key]: Math.max(min, Math.min(max, (current[key] ?? defaultColumnWidth(key)) + (event.key === 'ArrowRight' ? step : -step))) }));
     };
     const resizeHandle = (key, label) => h('span', {
       className: 'fpw-column-resizer',
@@ -557,7 +628,8 @@
       tabIndex: 0,
       'aria-orientation': 'vertical',
       'aria-label': `调整${label}列宽`,
-      'aria-valuenow': columnWidths[key] || (key.startsWith('date:') ? 62 : undefined),
+      'aria-valuemin': 0,
+      'aria-valuenow': columnWidths[key] ?? defaultColumnWidth(key),
       onPointerDown: event => startResize(event, key),
       onKeyDown: event => resizeByKeyboard(event, key)
     });
@@ -575,16 +647,16 @@
     const openDrawer = (row, event) => {
       event?.stopPropagation?.();
       setSelectedKey(row.key);
-      setDrawerTab('basis');
       setDrawerRow(row);
     };
 
     const identity = row => {
       const value = row.type === 'parent' ? row.group.parent : row.child.asin;
-      const expanded = expandedRowKeys.includes(row.key);
+      const entityKey = row.entityKey || row.key;
+      const expanded = expandedRowKeys.includes(entityKey);
       const toggleVariant = event => {
         event.stopPropagation();
-        setExpandedRowKeys(current => current.includes(row.key) ? current.filter(key => key !== row.key) : [...current, row.key]);
+        setExpandedRowKeys(current => current.includes(entityKey) ? current.filter(key => key !== entityKey) : [...current, entityKey]);
       };
       const codeValue = (code, label, onActivate = null) => h('span', { className: `fpw-code-value code-value ${onActivate ? 'is-actionable' : ''}` },
         h(Tooltip, { title: label, mouseEnterDelay: 0.2 },
@@ -597,7 +669,7 @@
         row.type === 'child' && h('button', { className: 'thumb fpw-child-thumb', type: 'button', 'data-preview': row.group.image, 'aria-label': `放大${row.group.name || row.child.asin}主图`, onClick: event => event.stopPropagation() }, h('img', { src: row.group.image, alt: row.group.name || row.child.asin })),
         h('div', { className: 'fpw-identity-copy' },
           h('div', { className: 'fpw-code-line' },
-            row.type === 'parent' && h('button', { type: 'button', className: 'collapse fpw-parent-collapse', 'aria-label': `${expanded ? '收起' : '展开'} ${value} 变体`, 'aria-expanded': expanded, onClick: toggleVariant }, parentToggleGlyph(!expanded)),
+            row.type === 'parent' && h('button', { type: 'button', className: 'collapse fpw-parent-collapse', 'aria-label': `${expanded ? '收起' : '展开'} ${value} 变体`, 'aria-expanded': expanded, onClick: toggleVariant }, stateToggleGlyph(expanded)),
             row.type === 'parent' && h('span', { className: 'country-flag fpw-country-flag', 'aria-hidden': true }, marketFlag(row.group.market)),
             codeValue(value, row.type === 'parent' ? '父ASIN' : '子ASIN', event => openDrawer(row, event)),
             row.type === 'parent' && h('span', { className: 'fpw-inline-separator', 'aria-hidden': true }, '丨'),
@@ -753,13 +825,6 @@
         : h(Empty, { image: Empty.PRESENTED_IMAGE_SIMPLE, description: '当前对象无销售组合拆解' })
     );
 
-    const drawerTabs = drawerRow ? [
-      { key: 'basis', label: '预测依据', children: forecastBasisPanel },
-      { key: 'split', label: '子体拆分', children: splitPanel },
-      { key: 'relation', label: '父子关系', children: relationPanel },
-      { key: 'combo', label: '销售组合', children: comboPanel }
-    ] : [];
-
     const metricHints = {
       recentSales: '当前子ASIN近30天销量；父ASIN为可见子体汇总',
       dailySales: '近30天销量除以有效天数后的日均销量',
@@ -770,8 +835,8 @@
     const fieldTitle = (title, key) => h(Tooltip, { title: metricHints[key], mouseEnterDelay: 0.2 }, h('span', { className: 'fpw-field-title', tabIndex: 0 }, title));
     const visibleColumnKeys = columnConfig.keys;
     const forecastLineKeys = ['system', 'manual', 'activity', 'final'];
-    const forecastLineLabels = { system: '系统预测', manual: '人工预测', activity: '活动预测', final: '最终预测' };
-    const forecastSourceLabels = { system: '系统', pmc: 'PMC', manual: '人工', activity: '活动', mixed: '混合' };
+    const forecastLineLabels = { system: '规则预测', manual: '人工预测', activity: '活动预测', final: '最终预测' };
+    const forecastSourceLabels = window.ForecastLedgerValues?.sourceLabels || { system: '规则', manual: '人工', activity: '活动' };
     const metricDefinitions = {
       recentSales: { label: '近30天销量', value: row => formatNumber(row.recentSales) },
       dailySales: { label: '近30天日均', value: row => formatNumber(row.dailySales) },
@@ -789,14 +854,6 @@
       );
     }));
 
-    const toggleForecastLines = (rowKey, event) => {
-      event?.stopPropagation?.();
-      setExpandedForecastKeys(current => {
-        const next = new Set(current);
-        next.has(rowKey) ? next.delete(rowKey) : next.add(rowKey);
-        return next;
-      });
-    };
     const openSharedForecastEditor = (row, line, date, event) => {
       event?.stopPropagation?.();
       const key = dateKey(date);
@@ -804,48 +861,89 @@
       if (!window.openForecastEditor) return message.error('预测编辑器未就绪，请刷新后重试');
       const target = row.type === 'child'
         ? { id: row.child.id }
-        : { ids: row.children.map(childRow => childRow.child.id), weights: row.children.map(childRow => childRow.share), label: row.group.parent };
+        : { ids: row.variantChildren.map(childRow => childRow.child.id), weights: row.variantChildren.map(childRow => childRow.share), label: row.group.parent };
       window.openForecastEditor({ kind: line === 'manual' ? 'manual' : 'activity', key, ...target });
     };
     const lineValue = (row, days, line) => {
       const values = days.map(date => row.forecast[dateKey(date)]?.[line]);
       return days.length === 1 ? values[0] : total(values);
     };
+    const signedForecastValue = value => `${value > 0 ? '+' : ''}${formatNumber(value)}`;
+    const adjustmentDetails = (row, line, key, value) => {
+      const children = row.type === 'child' ? [row.child] : row.variantChildren.map(item => item.child);
+      const drafts = children.map(child => batchDraft(child, batchDate));
+      const expectedLine = line === 'manual' ? '人工预测' : '活动预测';
+      const changes = drafts.flatMap(draft => draft.changes || []).filter(item => item.date === key && item.line === expectedLine);
+      const latest = [...changes].sort((a, b) => String(b.at || '').localeCompare(String(a.at || '')))[0];
+      const uniqueText = values => [...new Set(values.filter(Boolean))].join('；');
+      const changeTime = latest?.at ? dayjs(latest.at).format('YYYY/MM/DD HH:mm') : '';
+      if (line === 'manual') {
+        return [
+          ['预测日期', key.replaceAll('-', '/')],
+          ['人工预测销量', formatNumber(value)],
+          ['调整原因', uniqueText(drafts.map(draft => draft.manualReasons[key]))],
+          ['调整人', latest?.by || row.group.owner || ''],
+          ['调整时间', changeTime]
+        ];
+      }
+      const events = drafts.map(draft => draft.activity[key]).filter(Boolean);
+      return [
+        ['活动日期', key.replaceAll('-', '/')],
+        ['活动预测销量', formatNumber(value)],
+        ['活动名称', uniqueText(events.map(event => event.name))],
+        ['备注', uniqueText(events.map(event => event.note))],
+        ['调整人', latest?.by || row.group.owner || ''],
+        ['调整时间', changeTime]
+      ];
+    };
     const forecastLineContent = row => {
-      const expanded = expandedForecastKeys.has(row.key);
-      const lines = expanded ? forecastLineKeys : ['final'];
-      return h('div', { className: `fpw-line-stack ${expanded ? 'is-expanded' : ''}` }, lines.map((line, index) => h('div', { className: `fpw-line-label fpw-line-${line}`, key: line },
-        h('span', null, forecastLineLabels[line]),
-        index === 0 && h(Tooltip, { title: expanded ? '收起预测线' : '展开预测线' }, h(Button, {
-          type: 'text', size: 'small', className: 'fpw-forecast-toggle', icon: icon(expanded ? 'UpOutlined' : 'DownOutlined'),
-          'aria-label': `${expanded ? '收起' : '展开'} ${row.label} 预测线`, 'aria-expanded': expanded,
-          onClick: event => toggleForecastLines(row.key, event)
-        }))
-      )));
+      const line = row.forecastLine;
+      return h('div', { className: `fpw-line-label fpw-line-${line}` },
+        h('span', null, forecastLineLabels[line])
+      );
     };
     const forecastCell = (row, days) => {
-      const expanded = expandedForecastKeys.has(row.key);
-      const lines = expanded ? forecastLineKeys : ['final'];
+      const line = row.forecastLine;
       const singleDay = days.length === 1;
       const date = days[0];
       const status = singleDay ? row.forecast[dateKey(date)]?.status : null;
-      return h('div', { className: `fpw-forecast-line-stack ${expanded ? 'is-expanded' : ''}` }, lines.map(line => {
-        const value = lineValue(row, days, line);
-        const editable = singleDay && (line === 'manual' || line === 'activity') && (typeof canEdit !== 'function' || canEdit(dateKey(date)));
-        if (editable) return h('button', {
-          type: 'button', key: line, className: `fpw-line-value fpw-line-${line} fpw-entry-button`,
+      const value = lineValue(row, days, line);
+      const editable = singleDay && (line === 'manual' || line === 'activity') && (typeof canEdit !== 'function' || canEdit(dateKey(date)));
+      if (editable) {
+        const key = dateKey(date);
+        const forecast = row.forecast[key] || {};
+        const baseline = line === 'manual' ? forecast.system : (forecast.manual ?? forecast.system);
+        const delta = value == null || baseline == null ? null : value - baseline;
+        const label = delta == null ? '' : signedForecastValue(delta);
+        if (window.ForecastEditableValue) return h(window.ForecastEditableValue, {
+          value,
+          valueText: value == null ? '' : formatNumber(value),
+          ariaLabel: `${row.label} ${dateLabel(date)} ${forecastLineLabels[line]}`,
+          onEdit: event => openSharedForecastEditor(row, line, date, event),
+          className: `fpw-line-value fpw-line-${line} fpw-forecast-entry-wrap`,
+          buttonClassName: `fpw-entry-button fpw-line-${line} ${value == null ? 'fpw-entry-empty' : 'fpw-entry-value'}`,
+          adjustmentClassName: 'fpw-adjustment-entry',
+          adjustmentLabel: delta == null ? null : label,
+          adjustmentContent: `${forecastLineLabels[line]}调整说明`,
+          adjustmentAriaLabel: `${forecastLineLabels[line]}详情`,
+          adjustmentDetails: value == null ? [] : adjustmentDetails(row, line, key, value)
+        });
+        return h('button', {
+          type: 'button',
+          className: `fpw-line-value fpw-line-${line} fpw-entry-button ${value == null ? 'fpw-entry-empty' : 'fpw-entry-value'}`,
           'aria-label': `${row.label} ${dateLabel(date)} ${forecastLineLabels[line]}`,
           onClick: event => openSharedForecastEditor(row, line, date, event)
         }, h('span', null, value == null ? '' : formatNumber(value)), h('span', { className: 'edit-icon', 'aria-hidden': true }, icon('EditOutlined')));
-        if (line === 'final') {
-          const source = singleDay ? row.forecast[dateKey(date)]?.source || 'system' : 'mixed';
-          return h(Tooltip, { key: line, title: status || null }, h('span', { className: `fpw-line-value fpw-line-final ${value == null ? 'fpw-empty-value' : ''}` },
+      }
+      if (line === 'final') {
+          const sources = days.map(day => row.forecast[dateKey(day)]?.source).filter(Boolean);
+          const source = window.ForecastLedgerValues?.sourceOfMany?.(sources) || (sources.includes('activity') ? 'activity' : sources.includes('manual') ? 'manual' : 'system');
+          return h(Tooltip, { title: status || null }, h('span', { className: `fpw-line-value fpw-line-final ${value == null ? 'fpw-empty-value' : ''}` },
             h('strong', null, value == null ? '—' : formatNumber(value)),
-            value != null && h('small', { className: `fpw-source-${source}` }, forecastSourceLabels[source] || '系统')
+            value != null && h('small', { className: `fpw-source-${source}` }, `(${forecastSourceLabels[source] || '规则'})`)
           ));
-        }
-        return h(Tooltip, { key: line, title: status || null }, h('span', { className: `fpw-line-value fpw-line-${line} ${value == null ? 'fpw-empty-value' : ''}` }, value == null ? '—' : formatNumber(value)));
-      }));
+      }
+      return h(Tooltip, { title: status || null }, h('span', { className: `fpw-line-value fpw-line-${line} ${value == null ? 'fpw-empty-value' : ''}` }, value == null ? '—' : formatNumber(value)));
     };
 
     const weekColumns = weeks.map((week, weekIndex) => {
@@ -859,8 +957,8 @@
         });
       };
       const title = h('div', { className: 'fpw-week-title' },
-        h('button', { type: 'button', className: 'fpw-week-toggle', 'aria-label': `${collapsed ? '展开' : '收起'} ${week.label}`, 'aria-expanded': !collapsed, onClick: toggleWeek }, weekToggleGlyph(collapsed)),
-        h('strong', null, week.label)
+        h('strong', null, week.label),
+        h('button', { type: 'button', className: 'fpw-week-toggle', 'aria-label': `${collapsed ? '展开' : '收起'} ${week.label} ${dateLabel(week.days[0])} ~ ${dateLabel(week.days.at(-1))}`, 'aria-expanded': !collapsed, onClick: toggleWeek }, weekToggleGlyph(collapsed))
       );
       const dayColumns = week.days.map(date => {
         const key = `date:${dateKey(date)}`;
@@ -868,7 +966,7 @@
         return {
           title: h('div', { className: 'fpw-day-title' }, h('span', null, dateLabel(date)), h('small', null, `周${dayNames[date.getDay()]}`), resizeHandle(key, dateLabel(date))),
           key,
-          width: columnWidths[key] || 62,
+          width: columnWidths[key] ?? defaultColumnWidth(key),
           render: (_, row) => forecastCell(row, [date]),
           onCell: row => cellEvents(key, row.key, `${weekend ? 'fpw-weekend-cell ' : ''}fpw-forecast-cell ${weekIndex > 0 && date === week.days[0] ? 'fpw-week-boundary' : ''}`),
           onHeaderCell: () => headerEvents(key, `${weekend ? 'fpw-weekend-header ' : ''}fpw-header-cell fpw-day-header ${weekIndex > 0 && date === week.days[0] ? 'fpw-week-boundary' : ''}`)
@@ -876,25 +974,32 @@
       });
       const collapsedKey = `collapsed:${week.key}`;
       const collapsedColumn = {
-        title: '',
+        title: h('div', { className: 'fpw-day-title fpw-week-range-title' },
+          h('span', null, `${dateLabel(week.days[0])} ~ ${dateLabel(week.days.at(-1))}`),
+          resizeHandle(collapsedKey, `${week.label}合计`)
+        ),
         key: collapsedKey,
-        width: 68,
+        width: columnWidths[collapsedKey] ?? defaultColumnWidth(collapsedKey),
         render: (_, row) => forecastCell(row, week.days),
         onCell: row => cellEvents(collapsedKey, row.key, `fpw-week-collapsed-cell fpw-forecast-cell ${weekIndex > 0 ? 'fpw-week-boundary' : ''}`),
         onHeaderCell: () => headerEvents(collapsedKey, `fpw-header-cell fpw-week-collapsed-header ${weekIndex > 0 ? 'fpw-week-boundary' : ''}`)
       };
-      return { title, key: week.key, onHeaderCell: () => ({ className: `fpw-week-group ${weekIndex > 0 ? 'fpw-week-boundary' : ''}`, style: { ...gridBorderStyle, borderBottom: '1px solid #d1d9e7' } }), children: collapsed ? [collapsedColumn] : dayColumns };
+      return { title, key: week.key, onHeaderCell: () => ({ className: `fpw-week-group ${weekIndex > 0 ? 'fpw-week-boundary' : ''}`, style: { ...gridBorderStyle, borderBottom: `1px solid ${uiStandards.colors?.borderStrong || '#d1d9e7'}` } }), children: collapsed ? [collapsedColumn] : dayColumns };
     });
 
+    const allVariantsExpanded = allParentKeys.length > 0 && allParentKeys.every(key => expandedRowKeys.includes(key));
     const variantHeaderAction = h('span', { className: 'fpw-variant-header-actions' },
-      h(Tooltip, { title: '展开全部父子ASIN' }, h(Button, { type: 'text', size: 'small', className: 'tree-tool', icon: treeHeaderGlyph('expand'), 'aria-label': '一键展开全部父子ASIN', onClick: event => { event.stopPropagation(); setExpandedRowKeys(allParentKeys); } })),
-      h(Tooltip, { title: '收起全部父子ASIN' }, h(Button, { type: 'text', size: 'small', className: 'tree-tool', icon: treeHeaderGlyph('collapse'), 'aria-label': '一键收起全部父子ASIN', onClick: event => { event.stopPropagation(); setExpandedRowKeys([]); } }))
+      h(Tooltip, { title: allVariantsExpanded ? '收起全部父子ASIN' : '展开全部父子ASIN' }, h(Button, {
+        type: 'text', size: 'small', className: 'forecast-state-toggle tree-tool', icon: stateToggleGlyph(allVariantsExpanded),
+        'aria-label': allVariantsExpanded ? '一键收起全部父子ASIN' : '一键展开全部父子ASIN', 'aria-expanded': allVariantsExpanded,
+        onClick: event => { event.stopPropagation(); setExpandedRowKeys(allVariantsExpanded ? [] : allParentKeys); }
+      }))
     );
 
     const allForecastKeys = rows.flatMap(parent => [parent.key, ...parent.children.map(child => child.key)]);
     const allForecastExpanded = allForecastKeys.length > 0 && allForecastKeys.every(key => expandedForecastKeys.has(key));
     const forecastHeaderAction = h(Tooltip, { title: allForecastExpanded ? '收起全部预测线' : '展开全部预测线' }, h(Button, {
-      type: 'text', size: 'small', className: 'fpw-forecast-toggle', icon: icon(allForecastExpanded ? 'UpOutlined' : 'DownOutlined'),
+      type: 'text', size: 'small', className: 'forecast-state-toggle fpw-forecast-toggle', icon: stateToggleGlyph(allForecastExpanded),
       'aria-label': allForecastExpanded ? '收起全部预测线' : '展开全部预测线',
       onClick: event => { event.stopPropagation(); setExpandedForecastKeys(allForecastExpanded ? new Set() : new Set(allForecastKeys)); }
     }));
@@ -909,7 +1014,7 @@
       const parent = rows.find(row => row.type === 'parent' && row.group.id === shareEditor.group.id);
       if (!parent) return message.error('未找到当前父ASIN变体');
       const target = Math.round(Number(values.share) * 100);
-      if (!Number.isFinite(target) || target < 0 || target > 10000) return message.error('子ASIN占比必须在0%至100%之间');
+      if (!Number.isFinite(target) || target < 0 || target > 10000) return message.error('子ASIN份额占比必须在0%至100%之间');
       const reason = values.reason.trim();
       const sharesByAsin = Object.fromEntries(parent.children.map(row => [row.child.asin, row.key === shareEditor.key ? target : row.share]));
       const shareTotal = Object.values(sharesByAsin).reduce((sum, value) => sum + value, 0);
@@ -926,8 +1031,8 @@
         shareForm.resetFields();
         setRevision(value => value + 1);
         const totalText = formatShare(shareTotal);
-        if (shareTotal > 10000) message.warning(`子ASIN占比已保存，当前父ASIN合计 ${totalText}，已超过100%`);
-        else message.success(`子ASIN占比已保存，当前父ASIN合计 ${totalText}`);
+        if (shareTotal > 10000) message.warning(`子ASIN份额占比已保存，当前父ASIN合计 ${totalText}，已超过100%`);
+        else message.success(`子ASIN份额占比已保存，当前父ASIN合计 ${totalText}`);
       } catch (error) {
         message.error(error.message || '占比保存失败，请重试');
       }
@@ -936,17 +1041,17 @@
     const shareContent = row => {
       if (row.type === 'parent') {
         const over = row.share > 10000;
-        return h(Tooltip, { title: over ? '子ASIN占比合计超过100%，请检查并调整' : null }, h('strong', { className: `fpw-parent-share ${over ? 'is-over' : ''}` },
-          formatShare(row.share),
-          over && h('span', { className: 'fpw-share-warning', 'aria-label': '占比合计超过100%' }, icon('WarningOutlined'))
+        return h(Tooltip, { title: over ? '子ASIN份额占比合计超过100%，请检查并调整' : null }, h('strong', { className: `fpw-parent-share ${over ? 'is-over' : ''}` },
+          over && h('span', { className: 'fpw-share-warning', 'aria-label': '份额占比合计超过100%' }, icon('WarningOutlined')),
+          formatShare(row.share)
         ));
       }
-      const trigger = h(Button, { type: 'text', size: 'small', className: 'fpw-share-entry', 'aria-label': `编辑子ASIN ${row.child.asin} 占比`, onClick: event => openShareEditor(row, event) },
+      const trigger = h(Button, { type: 'text', size: 'small', className: 'fpw-share-entry', 'aria-label': `编辑子ASIN ${row.child.asin} 份额占比`, onClick: event => openShareEditor(row, event) },
         h('span', { className: 'fpw-share-value' }, formatShare(row.share)),
         h('span', { className: 'fpw-share-edit-slot', 'aria-hidden': true }, icon('EditOutlined'))
       );
       if (!row.shareReason) return trigger;
-      return h(Popover, { trigger: ['hover', 'focus'], placement: 'top', content: h('div', { className: 'fpw-share-reason' }, h('strong', null, '占比调整'), h('span', null, `系统占比：${formatShare(row.systemShare)}`), h('span', null, `最终占比：${formatShare(row.share)}`), h('span', null, `调整原因：${row.shareReason}`)) }, trigger);
+      return h(Popover, { trigger: ['hover', 'focus'], placement: 'top', content: h('div', { className: 'fpw-share-reason' }, h('strong', null, '份额占比调整'), h('span', null, `系统份额占比：${formatShare(row.systemShare)}`), h('span', null, `最终份额占比：${formatShare(row.share)}`), h('span', null, `调整原因：${row.shareReason}`)) }, trigger);
     };
 
     const shareColumn = {
@@ -956,17 +1061,20 @@
       fixed: 'left',
       align: 'left',
       render: (_, row) => shareContent(row),
-      onCell: row => cellEvents('share', row.key, 'fpw-number-cell fpw-share-cell'),
+      onCell: row => ({ ...cellEvents('share', row.key, 'fpw-number-cell fpw-share-cell'), rowSpan: row.lineIndex === 0 ? row.lineCount : 0 }),
       onHeaderCell: () => headerEvents('share', 'fpw-header-cell fpw-share-header')
     };
 
     const columns = [
-      { title: resizableTitle('变体', 'identity', variantHeaderAction), key: 'identity', width: columnWidths.identity, fixed: 'left', render: (_, row) => identity(row), onCell: row => cellEvents('identity', row.key, 'fpw-identity-cell'), onHeaderCell: () => headerEvents('identity', 'fpw-header-cell fpw-identity-header') },
+      { title: resizableTitle('变体', 'identity', variantHeaderAction), key: 'identity', width: columnWidths.identity, fixed: 'left', render: (_, row) => identity(row), onCell: row => ({ ...cellEvents('identity', row.key, 'fpw-identity-cell'), rowSpan: row.lineIndex === 0 ? row.lineCount : 0 }), onHeaderCell: () => headerEvents('identity', 'fpw-header-cell fpw-identity-header') },
       shareColumn,
-      visibleColumnKeys.length && { title: resizableTitle('销量 / 库存', 'context'), key: 'context', width: columnWidths.context, fixed: 'left', render: (_, row) => contextContent(row), onCell: row => cellEvents('context', row.key, 'fpw-context-cell'), onHeaderCell: () => headerEvents('context', 'fpw-header-cell fpw-context-header') },
-      { title: resizableTitle('预测线', 'forecastLine', forecastHeaderAction), key: 'forecastLine', width: columnWidths.forecastLine, fixed: 'left', render: (_, row) => forecastLineContent(row), onCell: row => cellEvents('forecastLine', row.key, 'fpw-line-cell fpw-fixed-boundary'), onHeaderCell: () => headerEvents('forecastLine', 'fpw-header-cell fpw-line-header fpw-fixed-boundary') },
+      visibleColumnKeys.length && { title: resizableTitle('销量 / 库存', 'context'), key: 'context', width: columnWidths.context, fixed: 'left', render: (_, row) => contextContent(row), onCell: row => ({ ...cellEvents('context', row.key, 'fpw-context-cell'), rowSpan: row.lineIndex === 0 ? row.lineCount : 0 }), onHeaderCell: () => headerEvents('context', 'fpw-header-cell fpw-context-header') },
+      { title: resizableTitle('预测线', 'forecastLine', forecastHeaderAction), key: 'forecastLine', width: columnWidths.forecastLine, fixed: 'left', render: (_, row) => forecastLineContent(row), onCell: row => fixedBoundaryEvents(cellEvents('forecastLine', row.key, 'fpw-line-cell fpw-fixed-boundary')), onHeaderCell: () => fixedBoundaryEvents(headerEvents('forecastLine', 'fpw-header-cell fpw-line-header fpw-fixed-boundary')) },
       ...weekColumns
     ].filter(Boolean);
+    const tableScrollWidth = 40 + columns.reduce((sum, column) => sum + (column.children
+      ? column.children.reduce((childSum, child) => childSum + Number(child.width || 0), 0)
+      : Number(column.width || 0)), 0);
 
     const locateRow = key => {
       setSelectedKey(key);
@@ -1190,9 +1298,29 @@
       columnConfigError && h(Alert, { type: 'error', showIcon: true, message: columnConfigError })
     );
     const sharedVisualStyle = {
-      '--forecast-cross-color': colorWithAlpha(designTokens.colorPrimary, 0.14),
-      '--forecast-focus-border': colorWithAlpha(designTokens.colorPrimary, 0.40),
-      '--forecast-weekend-bg': designTokens.colorFillAlter
+      '--forecast-table-head-bg': forecastTableStandards.headerBackground,
+      '--forecast-week-head-bg': forecastTableStandards.weekHeaderBackground,
+      '--forecast-day-head-bg': forecastTableStandards.dayHeaderBackground,
+      '--forecast-parent-row-bg': forecastTableStandards.parentRowBackground,
+      '--forecast-final-row-bg': forecastTableStandards.finalRowBackground,
+      '--forecast-header-text': forecastTableStandards.headerText,
+      '--forecast-day-header-text': forecastTableStandards.dayHeaderText,
+      '--forecast-parent-text': forecastTableStandards.parentText,
+      '--forecast-manual-text': forecastTableStandards.manualText,
+      '--forecast-toggle-border': forecastTableStandards.toggleBorder,
+      '--forecast-toggle-text': forecastTableStandards.toggleText,
+      '--forecast-resize-guide': forecastTableStandards.resizeGuide,
+      '--forecast-grid-border': forecastTableStandards.gridBorder,
+      '--forecast-week-boundary': forecastTableStandards.weekBoundary,
+      '--forecast-parent-boundary': forecastTableStandards.parentBoundary,
+      '--forecast-cross-color': forecastTableStandards.crossHighlight,
+      '--forecast-focus-border': forecastTableStandards.focusBorder,
+      '--forecast-weekend-bg': forecastTableStandards.weekendBackground,
+      '--forecast-week-header-height': `${forecastTableStandards.weekHeaderHeight}px`,
+      '--forecast-day-header-height': `${forecastTableStandards.dayHeaderHeight}px`,
+      '--forecast-system-row-height': `${forecastTableStandards.systemRowHeight}px`,
+      '--forecast-editable-row-height': `${forecastTableStandards.editableRowHeight}px`,
+      '--forecast-final-row-height': `${forecastTableStandards.finalRowHeight}px`
     };
 
     return h('div', { className: 'forecast-workbench-root', style: sharedVisualStyle },
@@ -1278,13 +1406,13 @@
               bordered: true,
               rowKey: 'key',
               columns,
-              dataSource: pageRows,
+              dataSource: tableRows,
               pagination: false,
-              rowSelection: { fixed: true, columnWidth: 40, selectedRowKeys, preserveSelectedRowKeys: true, onChange: keys => setSelectedRowKeys(keys) },
-              scroll: { x: 'max-content', y: Math.max(280, viewportHeight - 320) },
-              expandable: { showExpandColumn: false, expandedRowKeys, onExpandedRowsChange: keys => setExpandedRowKeys([...keys]), indentSize: 0 },
-              rowClassName: row => [row.type === 'parent' ? 'fpw-parent-row' : 'fpw-child-row', hoveredRow === row.key ? 'fpw-cross-row' : '', selectedKey === row.key ? 'fpw-selected-row' : ''].filter(Boolean).join(' '),
-              onRow: row => ({ onClick: () => setSelectedKey(row.key), onMouseEnter: () => setHoveredRow(row.key), onMouseLeave: () => setHoveredRow(null) }),
+              tableLayout: 'fixed',
+              rowSelection: { fixed: true, columnWidth: 40, selectedRowKeys, preserveSelectedRowKeys: true, onCell: row => ({ rowSpan: row.lineIndex === 0 ? row.lineCount : 0 }), onChange: keys => setSelectedRowKeys(keys.filter(key => !String(key).includes('|system') && !String(key).includes('|manual') && !String(key).includes('|activity') && !String(key).includes('|final'))) },
+              scroll: { x: Math.max(1, tableScrollWidth), y: Math.max(280, viewportHeight - 320) },
+              rowClassName: row => [row.type === 'parent' ? 'fpw-parent-row' : 'fpw-child-row', 'fpw-prediction-row', `fpw-prediction-${row.forecastLine}`, row.lineIndex === 0 ? 'fpw-entity-start' : '', row.lineIndex === row.lineCount - 1 ? 'fpw-entity-end' : '', hoveredRow === row.key ? 'fpw-cross-row' : ''].filter(Boolean).join(' '),
+              onRow: row => ({ onClick: () => setSelectedKey(row.entityKey) }),
               locale: { emptyText: '暂无符合条件的父子ASIN' }
             })
           ),
@@ -1307,10 +1435,10 @@
           h('span', null, `· ${drawerRow.type === 'parent' ? 'Parent ASIN' : 'Child ASIN'}`)
         ),
         styles: { header: { padding: '14px 18px' }, body: { padding: '0 18px 18px' } }
-      }, h(Tabs, { size: 'small', activeKey: drawerTab, onChange: setDrawerTab, items: drawerTabs })),
+      }, forecastBasisPanel),
       h(Modal, {
         open: Boolean(shareEditor),
-        title: '调整子ASIN占比',
+        title: '调整子ASIN份额占比',
         width: 440,
         maskClosable: false,
         destroyOnHidden: true,
@@ -1322,9 +1450,8 @@
       }, shareEditor && h(React.Fragment, null,
         h('div', { className: 'forecast-editor-context' }, `${shareEditor.group.parent} · ${shareEditor.child.asin}`),
         h(Form, { form: shareForm, layout: 'vertical', onFinish: saveShare, scrollToFirstError: true, validateTrigger: ['onChange', 'onBlur'] },
-          h(Form.Item, { name: 'share', label: '子ASIN占比', rules: [{ required: true, message: '请输入子ASIN占比' }, { type: 'number', min: 0, max: 100, message: '占比必须在0%至100%之间' }] }, h(InputNumber, { min: 0, max: 100, precision: 2, controls: false, addonAfter: '%', style: { width: '100%' }, 'aria-label': '子ASIN占比' })),
-          h(Form.Item, { name: 'reason', label: '调整原因', rules: [{ required: true, whitespace: true, message: '请填写占比调整原因' }, { max: 200, message: '最多200字' }] }, h(Input.TextArea, { rows: 3, maxLength: 200, showCount: true, 'aria-label': '占比调整原因' })),
-          h('p', { className: 'fpw-share-balance-hint' }, '仅修改当前子ASIN，不联动调整其他子ASIN；合计超过100%时将在父ASIN行显示预警。')
+          h(Form.Item, { name: 'share', label: '子ASIN份额占比', rules: [{ required: true, message: '请输入子ASIN份额占比' }, { type: 'number', min: 0, max: 100, message: '份额占比必须在0%至100%之间' }] }, h(InputNumber, { min: 0, max: 100, precision: 2, controls: false, addonAfter: '%', style: { width: '100%' }, 'aria-label': '子ASIN份额占比' })),
+          h(Form.Item, { name: 'reason', label: '调整原因', rules: [{ required: true, whitespace: true, message: '请填写份额占比调整原因' }, { max: 200, message: '最多200字' }] }, h(Input.TextArea, { ...(window.ForecastEditorStandards?.countedTextAreaProps || { showCount: true, maxLength: 200, autoSize: { minRows: 3, maxRows: 5 } }), 'aria-label': '份额占比调整原因' }))
         )
       )),
       h(Drawer, {

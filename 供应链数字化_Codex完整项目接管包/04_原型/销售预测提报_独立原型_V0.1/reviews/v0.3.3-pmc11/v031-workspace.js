@@ -14,7 +14,7 @@
   const previousWidth=columnWidth;
   columnWidth=function(key){if(key.startsWith('date:'))return state.dateWidths[key.slice(5)]??104;if(key.startsWith('week:'))return state.weekWidths[key.slice(5)]??128;return previousWidth(key);};
   const previousDateHeader=dateHeader;
-  dateHeader=function(col,i){if(col.type!=='week')return previousDateHeader(col,i);return `<th class="date-head date-col week-boundary week-collapsed" data-focus-index="${i}"><div>${weekRange(col.days)}</div>${resizeHandle(col.key,'W'+col.week.number+'日期区间')}</th>`;};
+  dateHeader=function(col,i){if(col.type!=='week')return previousDateHeader(col,i);return `<th class="date-head date-col week-boundary week-collapsed" data-focus-index="${i}"><div class="week-period">${weekRange(col.days)}</div>${resizeHandle(col.key,'W'+col.week.number+'日期区间')}</th>`;};
 
   const paginationHost=$('.pagination');paginationHost.className='forecast-pagination';const paginationRoot=ReactDOM.createRoot(paginationHost);
   const locale={items_per_page:'条/页',jump_to:'跳至',jump_to_confirm:'确定',page:'页',prev_page:'上一页',next_page:'下一页',prev_5:'向前5页',next_5:'向后5页',page_size:'每页条数'};

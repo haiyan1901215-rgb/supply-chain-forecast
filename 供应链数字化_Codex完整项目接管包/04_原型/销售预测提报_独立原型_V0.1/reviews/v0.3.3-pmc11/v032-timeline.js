@@ -26,8 +26,8 @@
   renderTable=function(){
     baseRenderTable();
     $$('[data-forecast-line="controls"]').forEach(row=>{
-      const id=row.dataset.childRow,first=$(`[data-child-row="${id}"]`);
-      if(first)Array.from(first.children).filter(td=>td.hasAttribute('rowspan')).forEach(td=>td.rowSpan=Math.max(1,td.rowSpan-1));row.remove();
+      const id=row.dataset.childRow,owner=$$(`[data-child-row="${id}"]`).find(candidate=>candidate.querySelector('td[rowspan]'));
+      if(owner)Array.from(owner.children).filter(td=>td.hasAttribute('rowspan')).forEach(td=>td.rowSpan=Math.max(1,td.rowSpan-1));row.remove();
     });
     const head=$('.line-head');if(head){const resize=head.querySelector('[data-resize-column]');head.textContent='';const title=document.createElement('div');title.className='forecast-line-heading';title.innerHTML='<span>预测线</span><span data-forecast-toggle="all"></span>';head.append(title);if(resize)head.append(resize);}
     window.refreshForecastControls?.();syncHorizontalScrollbar();positionForecastDivider();

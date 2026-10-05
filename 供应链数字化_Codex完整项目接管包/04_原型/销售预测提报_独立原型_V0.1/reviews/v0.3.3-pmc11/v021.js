@@ -58,6 +58,6 @@ const v021RevealDrawer=revealDrawer;
 revealDrawer=function(title,sub,body){return v021RevealDrawer(title.replaceAll('人工修正','人工预测').replaceAll('活动提报','活动预测'),sub,body.replaceAll('人工修正','人工预测').replaceAll('活动提报','活动预测'));};
 $('.batch-toolbar').style.display='none';$('.filter-panel').style.display='none';
 const filterHost=document.createElement('section');filterHost.className='filter-panel filter-v020';filterHost.id='filterControls';$('.filter-panel').before(filterHost);
-const right=document.createElement('div');right.className='range-right';$('.range-bar').append(right);right.append($('.range-meta'));const configHost=document.createElement('span');configHost.id='columnIcon';right.append(configHost);
+const right=document.createElement('div');right.className='range-right';$('.range-bar').append(right);const rangeMeta=$('.range-meta');if(rangeMeta)right.append(rangeMeta);const configHost=document.createElement('span');configHost.id='columnIcon';right.append(configHost);
 const uiHost=document.createElement('div');uiHost.id='antdControls';document.body.append(uiHost);
 state.view='batch';render();

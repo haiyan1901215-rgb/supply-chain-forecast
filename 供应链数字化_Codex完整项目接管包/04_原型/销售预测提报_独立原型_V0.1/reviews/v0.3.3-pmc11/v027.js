@@ -24,7 +24,7 @@
   };
   const previousRender=renderTable;
   renderTable=function(){previousRender();
-    const labels={system:'规则预测，只读系统建议',manual:'人工预测，可填写销量与原因',activity:'活动预测，可填写活动销量与活动说明',final:'最终预测，只读；活动预测优先于人工预测，人工预测优先于规则预测'};
+    const labels={system:'规则预测，只读规则建议',manual:'人工预测，可填写销量与原因',activity:'活动预测，可填写活动销量与活动说明',final:'最终预测，只读；活动预测优先于人工预测，人工预测优先于规则预测'};
     $$('[data-forecast-line]').forEach(row=>{const cell=row.querySelector('.line-cell'),hint=labels[row.dataset.forecastLine];if(cell&&hint){cell.dataset.hint=hint;cell.tabIndex=0;}});
     window.refreshForecastControls?.();
   };
