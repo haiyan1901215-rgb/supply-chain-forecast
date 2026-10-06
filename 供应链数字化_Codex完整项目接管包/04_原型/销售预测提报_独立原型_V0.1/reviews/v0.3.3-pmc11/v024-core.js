@@ -23,6 +23,30 @@ const numberOrBlank = value => value==null?'':num(value);
 const signed = value => value==null?'—':`${value>0?'+':''}${num(value)}`;
 const sumValues = values => values.every(v=>v==null)?null:values.reduce((s,v)=>s+(v??0),0);
 const resolveForecast = (ai,manual,activity) => activity!=null?activity:manual!=null?manual:ai;
+const salesComboMetaByAsin = Object.freeze(Object.fromEntries(Object.entries({
+  B0GRG6H2KL: {
+    isCombo: true,
+    code: 'COMB-001',
+    version: 'V1',
+    name: '黑色M+L双装',
+    description: '黑色M+L双装',
+    lines: [{sku:'SKU-A',quantity:1},{sku:'SKU-B',quantity:2}]
+  },
+  B0H4QJ8L2P: {
+    isCombo: true,
+    code: 'COMB-002',
+    version: 'V1',
+    name: '肤色S+M双装',
+    description: '肤色S+M双装',
+    lines: [{sku:'SKU-C',quantity:1},{sku:'SKU-D',quantity:1}]
+  }
+}).map(([asin,meta])=>[asin,Object.freeze({...meta,lines:Object.freeze(meta.lines.map(line=>Object.freeze({...line})))})])));
+function getSalesComboDefinition(childOrAsin){
+  const asin=typeof childOrAsin==='string'?childOrAsin:childOrAsin?.asin;
+  return asin?salesComboMetaByAsin[asin]||null:null;
+}
+window.getSalesComboDefinition=getSalesComboDefinition;
+window.SalesComboCatalog=Object.freeze({get:getSalesComboDefinition});
 const modelDefinitions = [
   ['B0GRGFFVVN','C0001','91','黑色','高腰塑形短裤','black-shaping-shorts.png','李敏',['B0GRG5DRWW','B0GRG6H2KL','B0GRG7J9MN']],
   ['B0H4QG3TLS','C0002','92','肤色','无痕提臀短裤','nude-lifting-shorts.png','周宁',['B0CVRKCC5M','B0H4QJ8L2P','B0H4QL9M3R']],
@@ -43,13 +67,13 @@ modelDefinitions.forEach(([parent,spu,colorCode,color,name,asset,owner,asins],gr
   const g={id:'US-'+parent,parent,spu,version:'A',colorCode,colors:[color],skc:spu+'A-'+colorCode,name,owner,image:'assets/'+asset,market:'US',platform:'Amazon',account:'BRABIC-US',brand:'N',channel:groupIndex===1?null:'0',businessVersion:groupIndex===3?null:'A',tags:tagExamples[groupIndex]||tagExamples[0],listedAt:'2026-01-15',listingDays:278};
   g.children=asins.map((asin,i)=>{
     const serial=mockSequence++,size=(asins.length===2?['M','L']:['S','M','L','XL'])[i];
-    return {id:g.market+'-'+asin,asin,sku:skuExamples[serial],historicSku:'H'+String(serial+1).padStart(6,'0'),combo:'SC'+(serial+1).toString(36).toUpperCase().padStart(7,'0'),businessCode:g.brand+(g.channel??'')+spu+(g.businessVersion??'')+'-'+colorCode+'-'+size,size,color,serial,base:32-serial%6,stock:243-serial*4,fba:120,inbound:80,fbaInbound:60,doi:18.6+serial,exhausted:'11/02',arrival:'12/05',manual:{},activity:{},reason:'',changes:[]};
+    return {id:g.market+'-'+asin,asin,sku:skuExamples[serial],historicSku:'H'+String(serial+1).padStart(6,'0'),combo:'SC'+(serial+1).toString(36).toUpperCase().padStart(7,'0'),salesComboMeta:getSalesComboDefinition(asin),businessCode:g.brand+(g.channel??'')+spu+(g.businessVersion??'')+'-'+colorCode+'-'+size,size,color,serial,base:32-serial%6,stock:243-serial*4,fba:120,inbound:80,fbaInbound:60,doi:18.6+serial,exhausted:'11/02',arrival:'12/05',manual:{},activity:{},reason:'',changes:[]};
   });groups.push(g);
 });
 const ukGroup={...groups[0],id:'UK-'+groups[0].parent,market:'UK',account:'BRABIC-UK',channel:null};
 ukGroup.children=groups[0].children.slice(0,2).map((child,i)=>({...child,id:'UK-'+child.asin,base:18-i,stock:166-i*8,doi:23.2+i,businessCode:'NC0001A-91-'+child.size,manual:{},manualReasons:{},activity:{},reason:'',changes:[]}));groups.push(ukGroup);
 
-Object.assign(codeDescriptions,{SPU:'PLM商品款 / 开发款号；产品形态 + 4位开发流水号',SKC:'颜色商品单元；SPU版本 + 颜色主数据编码',SKU:'商品唯一编码；固定7位数字或大写字母','销售组合':'SC + 7位36进制流水号；独立于SKU','业务识别码':'品牌货盘 + 可选渠道 + SPU + 可选版本 - 颜色 - 尺码'});
+Object.assign(codeDescriptions,{ASIN:'平台商品编码',SPU:'PLM商品款 / 开发款号；产品形态 + 4位开发流水号',SKC:'颜色商品单元；SPU版本 + 颜色主数据编码',SKU:'商品唯一编码；固定7位数字或大写字母','销售组合':'SC + 7位36进制流水号；独立于SKU','销售组合编码':'SC + 7位36进制流水号；独立于SKU','业务识别码':'品牌货盘 + 可选渠道 + SPU + 可选版本 - 颜色 - 尺码'});
 const currentStorageKey='pmc-forecast-v019-current';
 try {
   const saved=JSON.parse(localStorage.getItem(currentStorageKey)||'{}');
@@ -84,7 +108,7 @@ function forecastAt(c,batch,key){
   if(!c||!covered(batch,key))return null;
   const draft=batchDraft(c,batch),planned=window.ForecastBatchContract?.getDailyForecast?.(batch,c.id,key)||null;
   if(planned){
-    const ai=planned.ruleForecast??planned.ai??0,manual=draft.manual[key]??null,activity=draft.activity[key]??null;
+    const ai=planned.salesRuleForecast??planned.ruleForecast??planned.ai??0,manual=draft.manual[key]??null,activity=draft.activity[key]??null;
     return {ai,manual,activity,final:resolveForecast(ai,manual,activity?.qty),reason:activity?(activity.note||activity.name):manual!=null?(draft.manualReasons?.[key]||draft.reason||'未填写调整原因'):(planned.reason||'沿用本批次拆解规则')};
   }
   if(forecastBatch(batch)){
@@ -122,7 +146,7 @@ function refreshDateScope(startKey=null){
 }
 
 const fieldCatalog=[
-  ['identity','商品 / 父子ASIN','必选字段',true],['site','国家 / 站点','必选字段',true],['sku','SKU及业务识别码','必选字段',true],['size','尺码','必选字段',true],['forecast','日期及四条预测线','必选字段',true],
+  ['identity','商品 / ASIN','必选字段',true],['site','国家 / 站点','必选字段',true],['sku','SKU及业务识别码','必选字段',true],['size','尺码','必选字段',true],['forecast','日期及四条预测线','必选字段',true],
   ['spu','SPU','父体信息'],['skc','SKC及颜色','父体信息'],['owner','销售负责人','父体信息'],
   ['image','商品主图','商品信息'],['title','商品名称','商品信息'],['store','账号 / 店铺','商品信息'],['combo','销售组合','商品信息'],['tags','分类标签','商品信息'],['listing','上架时间','商品信息'],['actions','趋势 / 分析 / 档案','商品信息'],['notes','商品备注','商品信息'],
   ['today','7日ADU','销售与库存'],['adu7','14日ADU','销售与库存'],['adu30','30日ADU','销售与库存'],['stock','可售库存','销售与库存'],['transit','在途合计','销售与库存'],['doi','DOI','销售与库存'],['arrival','预计到货','销售与库存'],['warning','库存预警','销售与库存']
@@ -137,13 +161,25 @@ const orderedFields=group=>columnConfig.keys.map(k=>fieldCatalog.find(f=>f.key==
 const hasContext=()=>orderedFields('销售与库存').length>0;
 const fixedCount=()=>hasContext()?5:4;
 function businessCode(c,g){const hint=`业务识别码：品牌货盘 ${g.brand}${g.channel==null?'；渠道未单独纳入':`；独立渠道货盘 ${g.channel}`}；SPU ${g.spu}${g.businessVersion?`；实物版本 ${g.businessVersion}`:'；业务版本未单独纳入'}；颜色 ${g.colorCode}（${c.color}）；尺码 ${c.size}`;return `<span class="code-value biz-code" data-code-tip="${esc(hint)}"><span class="code-text" tabindex="0" aria-label="业务识别码：${c.businessCode}">${c.businessCode}</span><button class="copy-code" type="button" data-copy="${c.businessCode}" aria-label="复制业务识别码 ${c.businessCode}">${copyIcon}</button></span>`;}
+function salesComboCode(c,{interactive=true}={}){
+  const meta=window.getSalesComboDefinition?.(c);
+  if(!meta?.isCombo)return '';
+  const value=c.combo||meta.code;
+  if(interactive)return `<span class="sales-combo-code-host" data-sales-combo-code="${esc(c.id)}" data-sales-combo-value="${esc(value)}"></span>`;
+  return copyable(value,'销售组合编码');
+}
+function businessIdentifier(c,g,options){return window.getSalesComboDefinition?.(c)?.isCombo?salesComboCode(c,options):businessCode(c,g);}
 const inheritedNoteContent=noteContent;
 noteContent=function(c){return inheritedNoteContent({...c,asin:c.id});};
 function productCell(g,c,rowspan){
   const expanded=state.expandedChildren.has(c.id),history=state.historyOpen.has(c.id);
+  const comboMeta=window.getSalesComboDefinition?.(c);
   const title=hasField('title')?`<div class="product-title">${g.name}</div>`:'';
-  const top=`<div class="product-box ${hasField('image')?'':'no-image'}">${hasField('image')?`<button class="thumb" type="button" data-preview="${g.image}" aria-label="放大${g.name}主图"><img src="${g.image}" alt="${g.name}"/></button>`:''}<div class="product-info">${title}<div class="child-asin-line">${copyable(c.asin,'Child ASIN')}</div><div class="product-identifiers">${copyable(c.sku,'SKU')}${businessCode(c,g)}</div></div></div>`;
-  const fields={store:`<div class="product-meta"><span data-hint="账号 / 店铺：${g.account}" tabindex="0">${g.account}</span></div>`,combo:`<div class="product-sub">${copyable(c.combo,'销售组合')}</div>`,tags:`<div class="product-tags">${productTags(g)}</div>`,listing:`<div class="product-meta">上架 ${formatKey(g.listedAt)} · ${g.listingDays} 天</div>`,actions:`<div class="product-actions">${Object.entries(insightViews).map(([k,l])=>`<button class="product-action ${k}" data-insight="${k}" data-asin="${c.id}" type="button">${actionIcon(k)}${l}</button>`).join('')}</div>`,notes:`<div class="product-note" data-note-container="${c.id}"><span>备注：</span>${noteContent(c)}</div>`};
+  const comboName=comboMeta?.name||comboMeta?.description;
+  const identifierPrimary=comboMeta?.isCombo?salesComboCode(c):copyable(c.sku,'SKU');
+  const identifierSecondary=comboMeta?.isCombo?'':businessCode(c,g);
+  const top=`<div class="product-box ${hasField('image')?'':'no-image'}">${hasField('image')?`<button class="thumb" type="button" data-preview="${g.image}" aria-label="放大${g.name}主图"><img src="${g.image}" alt="${g.name}"/></button>`:''}<div class="product-info">${title}<div class="child-asin-line">${copyable(c.asin,'ASIN')}</div>${comboName?`<div class="sales-combo-name">${esc(comboName)}</div>`:''}<div class="product-identifiers">${identifierPrimary}${identifierSecondary}</div></div></div>`;
+  const fields={store:`<div class="product-meta"><span data-hint="账号 / 店铺：${g.account}" tabindex="0">${g.account}</span></div>`,combo:`<div class="product-sub">${copyable(c.combo,'销售组合编码')}</div>`,tags:`<div class="product-tags">${productTags(g)}</div>`,listing:`<div class="product-meta">上架 ${formatKey(g.listedAt)} · ${g.listingDays} 天</div>`,actions:`<div class="product-actions">${Object.entries(insightViews).map(([k,l])=>`<button class="product-action ${k}" data-insight="${k}" data-asin="${c.id}" type="button">${actionIcon(k)}${l}</button>`).join('')}</div>`,notes:`<div class="product-note" data-note-container="${c.id}"><span>备注：</span>${noteContent(c)}</div>`};
   const historyTools='';
   return `<td class="identity-cell" rowspan="${rowspan}" data-record-id="${c.id}">${top}${orderedFields('商品信息').map(f=>fields[f.key]||'').join('')}<button class="history-toggle" type="button" data-history-toggle="${c.id}" aria-expanded="${history}">${history?'▾ 收起历史对比':'▸ 历史对比'}</button>${historyTools}</td>`;
 }
@@ -201,13 +237,13 @@ function parentForecastMarkup(g,col){
 }
 function renderTable(){
   const cols=visibleColumns(),rows=displayGroups(),visible=rows.flatMap(g=>g.children),context=hasContext(),allProductsExpanded=rows.length>0&&rows.every(g=>!state.collapsed.has(g.id));
-  const productToggleAction=allProductsExpanded?'collapse':'expand',productToggleLabel=allProductsExpanded?'收起全部父子ASIN':'展开全部父子ASIN';
-  let html=`<table class="forecast-table"><colgroup><col style="width:40px"/><col data-column="identity"/><col data-column="size"/>${context?'<col data-column="context"/>':''}<col data-column="line"/>${cols.map(col=>`<col data-column="${col.key}"/>`).join('')}</colgroup><thead><tr><th class="select-head" rowspan="2"><input id="selectAll" type="checkbox" ${visible.length&&visible.every(c=>state.selected.has(c.id))?'checked':''} aria-label="选择当前页全部站点子ASIN"/></th><th class="identity-head" rowspan="2"><div class="head-goods">商品详情<button class="collapse forecast-tree-toggle" data-tree="${productToggleAction}" aria-label="一键${productToggleLabel}" aria-expanded="${allProductsExpanded}" data-hint="${productToggleLabel}">${forecastToggleGlyph(allProductsExpanded)}</button></div>${resizeHandle('identity','商品 / ASIN')}</th><th class="size-head" rowspan="2">尺码${resizeHandle('size','尺码')}</th>${context?`<th class="context-head" rowspan="2">销量 / 库存${resizeHandle('context','销量 / 库存')}</th>`:''}<th class="line-head" rowspan="2">${state.expandedChildren.size?'预测线':'当前预测'}${resizeHandle('line','预测线')}</th>${weekHeaders()}</tr><tr>${cols.map(dateHeader).join('')}</tr></thead><tbody>`;
+  const productToggleAction=allProductsExpanded?'collapse':'expand',productToggleLabel=allProductsExpanded?'收起全部ASIN':'展开全部ASIN';
+  let html=`<table class="forecast-table"><colgroup><col style="width:40px"/><col data-column="identity"/><col data-column="size"/>${context?'<col data-column="context"/>':''}<col data-column="line"/>${cols.map(col=>`<col data-column="${col.key}"/>`).join('')}</colgroup><thead><tr><th class="select-head" rowspan="2"><input id="selectAll" type="checkbox" ${visible.length&&visible.every(c=>state.selected.has(c.id))?'checked':''} aria-label="选择当前页全部站点ASIN"/></th><th class="identity-head" rowspan="2"><div class="head-goods">商品详情<button class="collapse forecast-tree-toggle" data-tree="${productToggleAction}" aria-label="一键${productToggleLabel}" aria-expanded="${allProductsExpanded}" data-hint="${productToggleLabel}">${forecastToggleGlyph(allProductsExpanded)}</button></div>${resizeHandle('identity','商品 / ASIN')}</th><th class="size-head" rowspan="2">尺码${resizeHandle('size','尺码')}</th>${context?`<th class="context-head" rowspan="2">销量 / 库存${resizeHandle('context','销量 / 库存')}</th>`:''}<th class="line-head" rowspan="2">${state.expandedChildren.size?'预测线':'当前预测'}${resizeHandle('line','预测线')}</th>${weekHeaders()}</tr><tr>${cols.map(dateHeader).join('')}</tr></thead><tbody>`;
   let site='';rows.forEach(g=>{
     if(site!==g.market){site=g.market;const count=rows.filter(r=>r.market===site).reduce((s,r)=>s+r.children.length,0);html+=`<tr class="site-row"><td class="site-band" colspan="${fixedCount()}"><div class="site-caption"><span class="country-flag" tabindex="0" data-hint="国家 / 站点：${site==='US'?'美国 / US':'英国 / UK'} · Amazon">${flag(site)}</span><span>${site==='US'?'美国 / US':'英国 / UK'} · Amazon</span><small>${count} 个子体</small></div></td><td colspan="${cols.length}"></td></tr>`;}
     const totalCells=cols.map((col,i)=>`<td class="date-col num ${col.boundary?'week-boundary':''}" data-focus-index="${i}" data-time-column="${col.key}">${parentForecastMarkup(g,col)}</td>`).join('');
     const any=g.children.some(c=>state.selected.has(c.id)),all=g.children.every(c=>state.selected.has(c.id));
-    html+=`<tr class="parent-row" data-parent-id="${g.id}"><td class="select-cell"><input type="checkbox" data-parent-check="${g.id}" ${all?'checked':''} data-partial="${any&&!all}" aria-label="选择 ${g.market} ${g.parent} 下的子ASIN"/></td>${parentBand(g)}${totalCells}</tr>`;
+    html+=`<tr class="parent-row" data-parent-id="${g.id}"><td class="select-cell"><input type="checkbox" data-parent-check="${g.id}" ${all?'checked':''} data-partial="${any&&!all}" aria-label="选择 ${g.market} ${g.parent} 下的ASIN"/></td>${parentBand(g)}${totalCells}</tr>`;
     if(!state.collapsed.has(g.id))g.children.forEach(c=>{
       const expanded=state.expandedChildren.has(c.id),hist=state.historyOpen.has(c.id),hr=hist&&state.view==='batch'?historyRows(c):[],forecastLines=window.ForecastLedgerValues?.lines.sales||['system','manual','activity','final'],lines=[...forecastLines,'controls'],anchorLine=expanded?forecastLines[0]:'final',span=(expanded?forecastLines.length:1)+1+hr.length;
       const total=aggregate(c,state.batch,visibleDays()),baseline=aggregate(c,state.batch,visibleDays(),'ai'),change=alignedDelta(c,state.batch,olderBatches()[0],visibleDays());
@@ -226,19 +262,19 @@ function renderTable(){
 function applyColumnWidths(){const table=$('.forecast-table');if(!table)return;['identity','size','context','line'].forEach(key=>table.style.setProperty('--'+key+'-width',(key==='context'&&!hasContext()?0:state[key+'Width'])+'px'));const width=40+state.identityWidth+state.sizeWidth+(hasContext()?state.contextWidth:0)+state.lineWidth+visibleColumns().reduce((s,c)=>s+columnWidth(c.key),0);table.style.width=width+'px';table.style.minWidth=width+'px';table.style.setProperty('--inline-width',Math.max(450,$('#workbench').clientWidth-40)+'px');$$('col[data-column]',table).forEach(col=>col.style.width=columnWidth(col.dataset.column)+'px');$$('[data-resize-column]',table).forEach(el=>el.setAttribute('aria-valuenow',columnWidth(el.dataset.resizeColumn)));}
 function renderPagination(){const count=filteredGroups().reduce((s,g)=>s+g.children.length,0),pages=Math.max(1,Math.ceil(count/state.pageSize));$('.pagination').innerHTML=`<span class="page-total">共 ${count} 条</span><button type="button" data-page="${state.page-1}" ${state.page===1?'disabled':''} aria-label="上一页">‹</button>${Array.from({length:pages},(_,i)=>`<button type="button" data-page="${i+1}" class="${state.page===i+1?'active':''}" aria-label="第${i+1}页">${i+1}</button>`).join('')}<button type="button" data-page="${state.page+1}" ${state.page===pages?'disabled':''} aria-label="下一页">›</button><select class="control" id="pageSize" aria-label="每页条数" style="width:82px;height:28px">${[5,20,50].map(n=>`<option value="${n}" ${state.pageSize===n?'selected':''}>${n} / 页</option>`).join('')}</select>`;}
 const inheritedRender=render;
-render=function(){inheritedRender();const select=$('#batchSelect'),active=activeForecastBatchDate(),batches=availableForecastBatches();if(select){select.innerHTML=batches.map(batch=>`<option value="${batch}">${formatKey(batch)} ${batch===active?'· 本批次':'历史批次'}</option>`).join('');select.value=state.batch;}$$('[data-view]').forEach(el=>{el.classList.toggle('active',el.dataset.view===state.view);el.setAttribute('aria-pressed',el.dataset.view===state.view);});$('.range-title > span').textContent=state.view==='target'?'对比可查范围':'预测覆盖范围';$('#batchStatus').textContent=state.batch===active?'本批次 · 填报中':'历史批次 · 只读';};
+render=function(){inheritedRender();const select=$('#batchSelect'),active=activeForecastBatchDate(),batches=availableForecastBatches();if(select){select.innerHTML=batches.map(batch=>`<option value="${batch}">${formatKey(batch)} ${batch===active?'· 本批次':'历史批次'}</option>`).join('');select.value=state.batch;}$$('.view-switch [data-view]').forEach(el=>{el.classList.toggle('active',el.dataset.view===state.view);el.setAttribute('aria-pressed',el.dataset.view===state.view);});$('.range-title > span').textContent=state.view==='target'?'对比可查范围':'预测覆盖范围';$('#batchStatus').textContent=state.batch===active?'本批次 · 填报中':'历史批次 · 只读';};
 
 function commitManual(input){const c=findChild(input.dataset.manual),key=allDays[Number(input.dataset.index)]&&dateKey(allDays[Number(input.dataset.index)]);if(!c||!canEdit(key)||window.canEditForecastDate?.(c.id,key)===false){state.editing=null;renderTable();return false;}const draft=batchDraft(c,state.batch),raw=input.value.trim(),value=raw===''?null:Number(raw);if(value!=null&&(!Number.isInteger(value)||value<0)){input.value=draft.manual[key]??'';toast('请输入大于等于0的整数');return false;}const before=draft.manual[key]??null;if(value==null)delete draft.manual[key];else draft.manual[key]=value;if(before!==value)draft.changes.push({date:key,line:'人工预测',before,after:value,reason:draft.reason});state.editing=null;persistCurrent();renderTable();return true;}
 const inheritedOpenEvent=openEventModal;
 openEventModal=function(id,key){if(!canEdit(key))return;const c=findChild(id),draft=batchDraft(c,state.batch),baseline={manual:c.manual,manualReasons:c.manualReasons,activity:c.activity,reason:c.reason,changes:c.changes};Object.assign(c,draft);inheritedOpenEvent(id,key);Object.assign(c,baseline);$('#modalTitle').textContent=draft.activity[key]?'编辑活动预测':'添加活动预测';$('#modalBody input[disabled]').value=c.asin;$('#modalBody').insertAdjacentHTML('beforeend','<div class="event-error" role="alert"></div>');if(draft.activity[key])$('#modalBody').insertAdjacentHTML('beforeend',`<button class="toolbar-link" type="button" data-delete-event="${id}" data-date="${key}">删除此活动预测</button>`);$('#eventQty').focus();};
 applyModal=function(){if(state.modalMode!=='event')return;const {asin:id,date:key}=state.modalData,c=findChild(id);if(!c||!canEdit(key))return;const draft=batchDraft(c,state.batch),raw=$('#eventQty').value.trim(),qty=Number(raw),name=$('#eventName').value.trim();if(raw===''||!Number.isInteger(qty)||qty<0||!name){$('.event-error').textContent='请填写活动名称及大于等于0的整数销量';return;}const before=draft.activity[key]?.qty??null;draft.activity[key]={qty,name,type:$('#eventType').value,note:$('#eventNote').value.trim()};draft.changes.push({date:key,line:'活动预测',before,after:qty,reason:draft.activity[key].note||draft.reason||name});persistCurrent();closeOverlays();renderTable();};
 function revealDrawer(title,sub,body){hideCodeTooltip();hideImagePreview();clearCross();$('#drawerTitle').textContent=title;$('#drawerSub').textContent=sub;$('#drawerBody').innerHTML=body;$('#drawerBody').scrollTop=0;$('#mask').classList.add('show');$('#drawer').classList.add('show');$('#drawer').setAttribute('aria-hidden','false');$('.drawer-head .close').focus();}
-openDrawer=function(id,index){const c=findChild(id),d=allDays[index],f=forecastAt(c,state.batch,dateKey(d));if(!f)return;revealDrawer(`${fullDate(d)} 预测详情`,`${c.asin} · ${formatKey(state.batch)} 批次`,`<section class="drawer-section"><h3>取值关系</h3><div class="formula">${[['规则预测',f.ai],['人工预测',f.manual??'未填写'],['活动预测',f.activity?f.activity.qty+' · '+f.activity.name:'未填写'],['最终预测 · '+source(c,d)[1],f.final]].map(([k,v],i)=>`<div class="formula-row ${i===3?'total':''}"><span>${k}</span><strong>${esc(v)}</strong></div>`).join('')}</div></section><section class="drawer-section"><h3>SKU映射</h3><table class="mapping-table"><tr><th>SKU / 业务识别码</th><th>有效期</th></tr><tr><td>${copyable(c.sku,'SKU')}<br/>${businessCode(c,groups.find(g=>g.children.includes(c)))}</td><td>2026/09/01 - 2026/10/15</td></tr><tr><td>${copyable(c.historicSku,'SKU')}</td><td>2026/07/01 - 2026/08/31</td></tr></table></section>${insightDetails([['可售库存',num(c.stock+c.fba)],['DOI',c.doi+'天'],['预计耗尽',c.exhausted],['预计到货',c.arrival]])}`);};
+openDrawer=function(id,index){const c=findChild(id),g=groups.find(g=>g.children.includes(c)),d=allDays[index],f=forecastAt(c,state.batch,dateKey(d));if(!f)return;revealDrawer(`${fullDate(d)} 预测详情`,`${c.asin} · ${formatKey(state.batch)} 批次`,`<section class="drawer-section"><h3>取值关系</h3><div class="formula">${[['规则预测',f.ai],['人工预测',f.manual??'未填写'],['活动预测',f.activity?f.activity.qty+' · '+f.activity.name:'未填写'],['最终预测 · '+source(c,d)[1],f.final]].map(([k,v],i)=>`<div class="formula-row ${i===3?'total':''}"><span>${k}</span><strong>${esc(v)}</strong></div>`).join('')}</div></section><section class="drawer-section"><h3>SKU映射</h3><table class="mapping-table"><tr><th>SKU / 业务编码</th><th>有效期</th></tr><tr><td>${copyable(c.sku,'SKU')}<br/>${businessIdentifier(c,g,{interactive:false})}</td><td>2026/09/01 - 2026/10/15</td></tr><tr><td>${copyable(c.historicSku,'SKU')}</td><td>2026/07/01 - 2026/08/31</td></tr></table></section>${insightDetails([['可售库存',num(c.stock+c.fba)],['DOI',c.doi+'天'],['预计耗尽',c.exhausted],['预计到货',c.arrival]])}`);};
 const inheritedInsight=openInsight;
 openInsight=function(id,view,trigger){const c=findChild(id),g=groups.find(g=>g.children.includes(c));if(!c)return;
-  if(view==='mapping'){insightReturnTarget=trigger;return revealDrawer('SKU映射',`${c.asin} · ${g.market}`,`<table class="mapping-table"><tr><th>SKU / 业务识别码</th><th>有效期</th></tr><tr><td>${copyable(c.sku,'SKU')}<br/>${businessCode(c,g)}</td><td>2026/09/01 - 2026/10/15</td></tr><tr><td>${copyable(c.historicSku,'SKU')}</td><td>2026/07/01 - 2026/08/31</td></tr></table>`);}
+  if(view==='mapping'){insightReturnTarget=trigger;return revealDrawer('SKU映射',`${c.asin} · ${g.market}`,`<table class="mapping-table"><tr><th>SKU / 业务编码</th><th>有效期</th></tr><tr><td>${copyable(c.sku,'SKU')}<br/>${businessIdentifier(c,g,{interactive:false})}</td><td>2026/09/01 - 2026/10/15</td></tr><tr><td>${copyable(c.historicSku,'SKU')}</td><td>2026/07/01 - 2026/08/31</td></tr></table>`);}
   inheritedInsight(id,view,trigger);$$('#drawer [data-asin]').forEach(el=>el.dataset.asin=c.id);
-  if(view==='product')$('.profile-codes').insertAdjacentHTML('beforeend',businessCode(c,g)+copyable(c.combo,'销售组合'));if(view==='product')$('#drawerBody').insertAdjacentHTML('beforeend',`<section class="drawer-section"><h3>销售组合组成</h3>${copyable(c.combo,'销售组合')}：${copyable(c.sku,'SKU')} × 2</section>`);
+  if(view==='product')$('.profile-codes').insertAdjacentHTML('beforeend',businessIdentifier(c,g,{interactive:false})+(window.getSalesComboDefinition?.(c)?.isCombo?'':copyable(c.combo,'销售组合编码')));if(view==='product')$('#drawerBody').insertAdjacentHTML('beforeend',`<section class="drawer-section"><h3>销售组合组成</h3>${copyable(c.combo,'销售组合编码')}：${copyable(c.sku,'SKU')} × 2</section>`);
 };
 const inheritedWeekDetail=openWeekDetail;
 openWeekDetail=function(id,key,trigger){inheritedWeekDetail(id,key,trigger);const c=findChild(id);if(c){$('#drawerSub').textContent=$('#drawerSub').textContent.replace(id,c.asin+' · '+id.split('-')[0]);$$('#drawerBody td').forEach(td=>{if(td.textContent==='null')td.textContent='—';});}};

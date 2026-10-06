@@ -20,6 +20,7 @@
 .activity-preview-field > div {white-space:pre-wrap;overflow-wrap:anywhere;}
 .activity-preview-field:nth-child(2) > div {font-size:12px;font-weight:600;}
 .app .forecast-table .product-identifiers .biz-code::before,
+.app .forecast-table .product-identifiers .sales-combo-code::before,
 .app .forecast-table .child-store::before,
 .app .forecast-table .inline-separator,
 .app .range-section-separator {
@@ -28,8 +29,11 @@
   font:400 12px/18px Arial,sans-serif;color:var(--muted-2);vertical-align:middle;
 }
 .app .forecast-table .product-identifiers {column-gap:0;}
-.app .forecast-table .product-identifiers > .code-value {display:inline-flex;align-items:center;}
-.app .forecast-table .product-identifiers .biz-code::before {flex:0 0 auto;width:auto;margin:0 5px;}
+.app .forecast-table .product-identifiers > .code-value,
+.app .forecast-table .product-identifiers > .sales-combo-code-host {display:inline-flex;align-items:center;}
+.app .forecast-table .product-identifiers .biz-code::before,
+.app .forecast-table .product-identifiers .sales-combo-code::before {flex:0 0 auto;width:auto;margin:0 5px;}
+.app .forecast-table .product-identifiers > .sales-combo-code-host:first-child .sales-combo-code::before {content:none;display:none;}
 .app .forecast-table .store-first-line {
   display:flex;
   align-items:center;
@@ -69,6 +73,7 @@
 .sales-workbench-context {min-width:0;display:flex;align-items:center;gap:8px;}
 .sales-workbench-context .ant-btn {flex:0 0 auto;height:28px;padding-inline:6px;font-size:12px;}
 .sales-workbench-context .pmc-muted {overflow:hidden;max-width:240px;text-overflow:ellipsis;white-space:nowrap;}
+.sales-scope-switch {display:flex;align-items:center;gap:8px;white-space:nowrap;}
 .pmc-workspace {flex:1;min-height:0;overflow:auto;background:var(--surface);padding:12px 16px;}
 .pmc-workspace[hidden] {display:none;}
 .pmc-toolbar {display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap;}
@@ -90,6 +95,17 @@
 .app .forecast-table .adjustment-entry .cell-reason {font-size:10px;font-weight:400;color:var(--blue);}
 .app .forecast-table .forecast-entry-wrap .entry-number {font-size:12px;font-weight:400;}
 .app .forecast-table .product-title {font-size:13px;font-weight:600;}
+.app .forecast-table .sales-combo-name {font-size:11px;line-height:17px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.app .forecast-table .sales-combo-trigger.ant-btn {display:inline-flex;align-items:center;height:20px;min-height:20px;margin:0;padding:0;border:0;background:transparent;vertical-align:middle;}
+.app .forecast-table .sales-combo-trigger.ant-btn:hover,
+.app .forecast-table .sales-combo-trigger.ant-btn:focus-visible {background:transparent;}
+.sales-combo-popover {font-size:12px;line-height:18px;}
+.sales-combo-popover-label {color:var(--muted);font-size:11px;line-height:16px;}
+.sales-combo-popover-name {display:block;margin-top:2px;color:var(--text);font-size:13px;font-weight:600;line-height:20px;}
+.sales-combo-lines-label {margin-top:10px;}
+.sales-combo-lines {display:grid;gap:4px;margin-top:4px;}
+.sales-combo-line {display:flex;align-items:center;justify-content:space-between;gap:16px;color:var(--text);font-variant-numeric:tabular-nums;}
+.sales-combo-line strong {font-weight:600;}
 .app .forecast-table .code-value,
 .app .forecast-table .code-text,
 .app .forecast-table .parent-code,

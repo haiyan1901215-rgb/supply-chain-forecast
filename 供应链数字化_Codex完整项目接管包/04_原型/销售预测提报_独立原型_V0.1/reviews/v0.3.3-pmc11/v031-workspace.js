@@ -8,7 +8,7 @@
     const t=document.createElement('template');t.innerHTML='<table><tbody><tr>'+oldProduct(g,c,span)+'</tr></tbody></table>';
     const cell=t.content.querySelector('td'),store=Array.from(cell.querySelectorAll('.product-meta')).find(e=>e.querySelector('[data-hint^="账号 / 店铺"]'));
     if(store){const label=store.firstElementChild;label.classList.add('child-store');cell.querySelector('.child-asin-line').append(label);store.remove();}
-    cell.querySelectorAll('.product-identifiers .code-text').forEach(el=>{const link=document.createElement('a');link.className='code-text sku-detail-link';link.href='#sku='+encodeURIComponent(c.sku);link.dataset.skuLink=c.sku;link.textContent=el.textContent;link.setAttribute('aria-label',el.getAttribute('aria-label')+'，查看SKU详情列表');el.replaceWith(link);});
+    cell.querySelectorAll('.product-identifiers > .code-value:not(.biz-code):not(.sales-combo-code) > .code-text').forEach(el=>{const link=document.createElement('a');link.className='code-text sku-detail-link';link.href='#sku='+encodeURIComponent(c.sku);link.dataset.skuLink=c.sku;link.textContent=el.textContent;link.setAttribute('aria-label',el.getAttribute('aria-label')+'，查看SKU详情列表');el.replaceWith(link);});
     return cell.outerHTML;
   };
   const previousWidth=columnWidth;
@@ -25,7 +25,7 @@
     const jump=()=>{if(destination==null)return;change(Math.max(1,Math.min(Math.ceil(total/pageSize)||1,Math.trunc(destination))));setDestination(null);};
     return h('div',{className:'forecast-pagination-bar'},
       h(Pagination,{current,pageSize,total,size:'small',locale,showSizeChanger:true,showQuickJumper:false,hideOnSinglePage:false,pageSizeOptions:[5,20,50],
-        showTotal:()=>h('span',{className:'forecast-page-total'},'共 ',h('b',null,num(parentCount)),' 个父ASIN / ',h('b',null,num(total)),' 个子ASIN，当前页 ',h('b',null,num(visible)),' 个子ASIN'),
+        showTotal:()=>h('span',{className:'forecast-page-total'},'共 ',h('b',null,num(parentCount)),' 个父ASIN / ',h('b',null,num(total)),' 个ASIN，当前页 ',h('b',null,num(visible)),' 个ASIN'),
         onChange:change}),
       h('label',{className:'forecast-page-jump'},'跳至',h(InputNumber,{'aria-label':'跳转页码',min:1,max:Math.max(1,Math.ceil(total/pageSize)),precision:0,controls:false,disabled:!total,value:destination,onChange:setDestination,onPressEnter:jump,onBlur:jump,style:{width:44},size:'small'}),'页'));
   }
@@ -52,7 +52,7 @@
     return h('div',{className:'sku-list-surface'},h('div',{className:'sku-list-toolbar'},h('h2',null,'SKU详情列表'),h(Input.Search,{value:draft,onChange:e=>setDraft(e.target.value),onSearch:v=>setQuery(v.trim()),allowClear:true,'aria-label':'搜索SKU或业务识别码',placeholder:'SKU / 业务识别码',style:{width:300}}),h(Typography.Link,{href:'#forecast'},'返回销售预测')),
       h(Table,{size:'small',rowKey:'sku',pagination:false,scroll:{x:1080},locale:{emptyText:'没有匹配的SKU'},dataSource:data,columns:[
         {title:'SKU',dataIndex:'sku',width:110},{title:'业务识别码',dataIndex:'businessCode',width:190},{title:'商品名称',dataIndex:'name',width:180},{title:'SPU',dataIndex:'spu',width:100},{title:'SKC',dataIndex:'skc',width:130},{title:'颜色',dataIndex:'color',width:90},{title:'尺码',dataIndex:'size',width:70}],
-        expandable:{defaultExpandedRowKeys:skuRows().some(r=>r.sku===sku)?[sku]:[],expandedRowRender:r=>h(Table,{size:'small',rowKey:'id',pagination:false,dataSource:groups.flatMap(g=>g.children.filter(c=>c.sku===r.sku).map(c=>({id:c.id,site:g.market,account:g.account,parent:g.parent,child:c.asin}))),columns:[{title:'国家 / 站点',dataIndex:'site'},{title:'账号 / 店铺',dataIndex:'account'},{title:'父ASIN',dataIndex:'parent'},{title:'子ASIN',dataIndex:'child'}]})}}));
+        expandable:{defaultExpandedRowKeys:skuRows().some(r=>r.sku===sku)?[sku]:[],expandedRowRender:r=>h(Table,{size:'small',rowKey:'id',pagination:false,dataSource:groups.flatMap(g=>g.children.filter(c=>c.sku===r.sku).map(c=>({id:c.id,site:g.market,account:g.account,parent:g.parent,child:c.asin}))),columns:[{title:'国家 / 站点',dataIndex:'site'},{title:'账号 / 店铺',dataIndex:'account'},{title:'父ASIN',dataIndex:'parent'},{title:'ASIN',dataIndex:'child'}]})}}));
   }
   function drawRoute(){
     tabs.classList.remove('planning-system-tabs');
@@ -63,5 +63,12 @@
   function route(){const m=location.hash.match(/^#sku=(.*)$/);if(m){try{currentSku=decodeURIComponent(m[1]);}catch{currentSku='';}active='sku';skuOpen=true;hideCodeTooltip();hideImagePreview();}else active='forecast';drawRoute();}
   document.addEventListener('click',e=>{const a=e.target.closest('[data-sku-link]');if(a&&!e.ctrlKey&&!e.metaKey&&!e.shiftKey&&!e.altKey){returnTarget=a;if(location.hash===a.getAttribute('href'))route();}});
   window.forecastWorkspaceTabsRedraw=drawRoute;
-  window.addEventListener('hashchange',route);render();route();
+  window.addEventListener('hashchange',route);
+  if(document.querySelector('.portal-shell')){
+    content.hidden=true;
+    content.style.display='none';
+  }else{
+    render();
+    route();
+  }
 })();

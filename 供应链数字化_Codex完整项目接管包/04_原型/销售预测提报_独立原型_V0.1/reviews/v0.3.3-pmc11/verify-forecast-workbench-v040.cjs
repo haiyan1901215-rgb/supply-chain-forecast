@@ -1,7 +1,7 @@
 const assert = require('node:assert/strict');
 const { chromium } = require('playwright');
 
-const url = process.argv[2] || 'http://127.0.0.1:8816/index.html?v=0.3.47-workbench-table-governance';
+const url = process.argv[2] || 'http://127.0.0.1:8816/index.html?v=0.3.48-forecast-batch-flow';
 const chrome = process.env.PLAYWRIGHT_CHROME || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const domClick = locator => locator.waitFor({ state: 'attached' }).then(() => locator.evaluate(node => node.click()));
 const dismissPopover = async page => {
@@ -23,6 +23,11 @@ const dismissPopover = async page => {
     });
     await page.addInitScript(() => localStorage.clear());
     await page.goto(url, { waitUntil: 'networkidle' });
+    await page.locator('.forecast-batch-list-root').waitFor();
+    await page.evaluate(() => {
+      const batch = window.ForecastBatchContract.getCurrentMeta();
+      window.pmcWorkflow.openForecastWorkbenchBatch(batch.id, batch.calibrationStatus);
+    });
 
     const workbench = page.locator('.forecast-workbench-root');
     await workbench.waitFor();

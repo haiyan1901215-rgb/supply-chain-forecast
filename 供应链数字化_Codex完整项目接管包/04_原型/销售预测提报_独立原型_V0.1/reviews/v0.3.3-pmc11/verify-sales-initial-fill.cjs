@@ -1,7 +1,7 @@
 const assert = require('node:assert/strict');
 const { chromium } = require('playwright');
 
-const url = process.argv[2] || 'http://127.0.0.1:8816/index.html?v=0.3.41-component-parity';
+const url = process.argv[2] || 'http://127.0.0.1:8816/index.html?v=0.3.49-forecast-lifecycle';
 const chrome = process.env.PLAYWRIGHT_CHROME || chromium.executablePath();
 
 (async () => {
@@ -14,10 +14,27 @@ const chrome = process.env.PLAYWRIGHT_CHROME || chromium.executablePath();
       if (message.type() === 'error') errors.push(message.text());
     });
 
+    await page.addInitScript(() => {
+      localStorage.clear();
+      const NativeDate = Date;
+      const fixed = NativeDate.parse('2026-09-29T10:00:00+08:00');
+      window.Date = class extends NativeDate {
+        constructor(...args) { super(...(args.length ? args : [fixed])); }
+        static now() { return fixed; }
+      };
+    });
     await page.goto(url, { waitUntil: 'domcontentloaded' });
     await page.locator('.app').waitFor({ state: 'visible' });
+    await page.evaluate(() => {
+      const batch = window.ForecastBatchContract.getCurrentMeta();
+      window.ForecastBatchContract.launchSalesSubmission(batch.id, '2026-09-29T10:00:00+08:00');
+    });
     await page.locator('[data-view="sales"][data-menu-origin="top-sales"]').click();
+    const salesList = page.locator('.sales-forecast-list-root');
+    await salesList.waitFor();
+    await salesList.getByRole('button', { name: '查看' }).first().evaluate(button => button.click());
     await page.locator('.forecast-table:visible').waitFor();
+    assert.deepEqual((await page.locator('.workspace-tabs-v028 .ant-tabs-tab').allTextContents()).map(value => value.replace('×', '').trim()), ['销售预测列表', '销售预测详情']);
 
     const initial = await page.evaluate(() => ({
       windowState: window.ForecastWindow.current(),
@@ -28,10 +45,10 @@ const chrome = process.env.PLAYWRIGHT_CHROME || chromium.executablePath();
       submitDisabled: document.querySelector('.sales-window-actions .ant-btn-primary')?.disabled ?? true
     }));
 
-    assert.equal(initial.windowState.key, 'initial', 'sales page should open in initial submission state');
-    assert.equal(initial.windowState.editable, true, 'initial submission state should be editable');
+    assert.equal(initial.windowState.key, 'open', 'sales page should open in the launched submission window');
+    assert.equal(initial.windowState.editable, true, 'launched submission window should be editable');
     assert.equal(initial.isOpen, true, 'ForecastWindow.isOpen should allow editing');
-    assert.match(initial.statusText, /初始填报/, 'top status should tell users this is the initial fill state');
+    assert.match(initial.statusText, /销售填报中/, 'top status should show the batch lifecycle state');
     assert.ok(initial.manualEntries > 0, 'manual forecast cells should expose edit actions');
     assert.ok(initial.activityEntries > 0, 'activity forecast cells should expose edit actions');
     assert.equal(initial.submitDisabled, false, 'sales submit action should be enabled in initial fill state');

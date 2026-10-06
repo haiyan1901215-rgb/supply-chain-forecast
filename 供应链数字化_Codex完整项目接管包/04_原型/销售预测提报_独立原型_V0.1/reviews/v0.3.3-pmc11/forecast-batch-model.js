@@ -6,8 +6,15 @@
 })(typeof window === 'undefined' ? globalThis : window, function (root) {
   'use strict';
 
-  const STORAGE_KEY = 'pmc-forecast-batch-v5-step1';
+  const STORAGE_KEY = 'pmc-forecast-batch-v6-sales-demo';
   const clone = value => JSON.parse(JSON.stringify(value));
+  const workbenchDraft = value => ({
+    manual: { ...(value?.manual || {}) },
+    manualReasons: { ...(value?.manualReasons || {}) },
+    activity: clone(value?.activity || {}),
+    reason: String(value?.reason || ''),
+    changes: clone(value?.changes || [])
+  });
   const sum = values => values.reduce((total, value) => total + (Number(value) || 0), 0);
   const isoDate = value => String(value).slice(0, 10);
   const shanghaiDate = value => {
@@ -18,6 +25,61 @@
     const date = new Date(`${isoDate(value)}T00:00:00Z`);
     date.setUTCDate(date.getUTCDate() + amount);
     return date.toISOString().slice(0, 10);
+  };
+  const BUSINESS_CALENDAR = Object.freeze({
+    version: 'CN-BUSINESS-CALENDAR-2026-V1',
+    source: '国务院办公厅关于2026年部分节假日安排的通知（国办发明电〔2025〕7号）',
+    holidays: Object.freeze([
+      '2026-01-01', '2026-01-02', '2026-01-03',
+      '2026-02-15', '2026-02-16', '2026-02-17', '2026-02-18', '2026-02-19', '2026-02-20', '2026-02-21', '2026-02-22', '2026-02-23',
+      '2026-04-04', '2026-04-05', '2026-04-06',
+      '2026-05-01', '2026-05-02', '2026-05-03', '2026-05-04', '2026-05-05',
+      '2026-06-19', '2026-06-20', '2026-06-21',
+      '2026-09-25', '2026-09-26', '2026-09-27',
+      '2026-10-01', '2026-10-02', '2026-10-03', '2026-10-04', '2026-10-05', '2026-10-06', '2026-10-07'
+    ]),
+    workingWeekends: Object.freeze(['2026-01-04', '2026-02-14', '2026-02-28', '2026-05-09', '2026-09-20', '2026-10-10'])
+  });
+  const holidaySet = new Set(BUSINESS_CALENDAR.holidays);
+  const workingWeekendSet = new Set(BUSINESS_CALENDAR.workingWeekends);
+  const isBusinessDay = date => {
+    if (workingWeekendSet.has(date)) return true;
+    if (holidaySet.has(date)) return false;
+    const day = new Date(`${date}T00:00:00Z`).getUTCDay();
+    return day !== 0 && day !== 6;
+  };
+  const nextBusinessDate = (date, includeCurrent = false) => {
+    let cursor = includeCurrent ? isoDate(date) : shiftDate(date, 1);
+    while (!isBusinessDay(cursor)) cursor = shiftDate(cursor, 1);
+    return cursor;
+  };
+  const addBusinessDays = (date, amount) => {
+    let cursor = isoDate(date);
+    for (let count = 0; count < amount; count += 1) cursor = nextBusinessDate(cursor);
+    return cursor;
+  };
+  const shanghaiParts = value => Object.fromEntries(new Intl.DateTimeFormat('en', {
+    timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
+  }).formatToParts(new Date(value)).map(part => [part.type, part.value]));
+  const scheduleSubmissionWindow = (launchedAt = new Date().toISOString()) => {
+    const parts = shanghaiParts(launchedAt);
+    let startDate = `${parts.year}-${parts.month}-${parts.day}`;
+    let startClock = `${parts.hour}:${parts.minute}:00`;
+    if (!isBusinessDay(startDate) || startClock >= '18:00:00') {
+      startDate = nextBusinessDate(startDate);
+      startClock = '09:00:00';
+    } else if (startClock < '09:00:00') startClock = '09:00:00';
+    const deadlineDate = addBusinessDays(startDate, 4);
+    const freezeDate = nextBusinessDate(deadlineDate);
+    return {
+      submissionStartTime: `${startDate}T${startClock}+08:00`,
+      submissionDeadlineTime: `${deadlineDate}T18:00:00+08:00`,
+      submissionFreezeTime: `${freezeDate}T00:00:00+08:00`,
+      ruleEffectiveTime: `${freezeDate}T09:00:00+08:00`,
+      calendarVersion: BUSINESS_CALENDAR.version,
+      status: '填报中',
+      autoFreeze: true
+    };
   };
   const dateRange = (start, end) => {
     const result = [];
@@ -39,6 +101,7 @@
     sku: child.sku,
     historicSku: child.historicSku,
     salesCombo: child.combo,
+    salesComboMeta: child.salesComboMeta ? clone(child.salesComboMeta) : null,
     businessCode: child.businessCode,
     typeCode: child.typeCode || group.typeCode || 'F03',
     size: child.size,
@@ -78,15 +141,18 @@
       snapshot: source.comboSnapshot ? clone(source.comboSnapshot) : null,
       history: source.comboVersionHistory ? clone(source.comboVersionHistory) : []
     };
-    const demoCombo = row.country === 'US' && row.childASIN === 'B0GRG6H2KL';
-    if (demoCombo) {
-      const lines = [{ sku: 'SKU-A', quantity: 1 }, { sku: 'SKU-B', quantity: 2 }];
+    const comboMeta = source?.salesComboMeta || row.salesComboMeta || root.getSalesComboDefinition?.(row.childRef || row.childASIN);
+    // The existing demo split is part of the legacy validation flow. New combo
+    // metadata is display-only and must not create a new forecast object.
+    const supportsForecastDecomposition = row.country === 'US' && row.childASIN === 'B0GRG6H2KL';
+    if (comboMeta?.isCombo && supportsForecastDecomposition) {
+      const lines = clone(comboMeta.lines || []);
       return {
         type: 'COMBO',
-        code: 'COMB-001',
-        version: 'V1',
-        snapshot: { code: 'COMB-001', version: 'V1', effectiveFrom: '2026-09-01', effectiveTo: '2026-09-30', lines: clone(lines) },
-        history: comboHistory('COMB-001', 'V1', lines)
+        code: comboMeta.code || row.salesCombo || row.sellerSku || '—',
+        version: comboMeta.version || 'V1',
+        snapshot: { code: comboMeta.code || row.salesCombo || '—', version: comboMeta.version || 'V1', name: comboMeta.name || comboMeta.description || '销售组合', description: comboMeta.description || comboMeta.name || '销售组合', effectiveFrom: '2026-09-01', effectiveTo: '2026-09-30', lines },
+        history: comboHistory(comboMeta.code || row.salesCombo || '—', comboMeta.version || 'V1', lines)
       };
     }
     return { type: 'SKU', code: row.childRef?.sku || row.sellerSku || '—', version: 'SKU-MASTER-V01', snapshot: null, history: [] };
@@ -106,6 +172,7 @@
         sku: row.sku,
         historicSku: row.historicSku,
         salesCombo: row.salesCombo,
+        salesComboMeta: row.salesComboMeta ? clone(row.salesComboMeta) : null,
         businessCode: row.businessCode,
         typeCode: row.typeCode,
         size: row.size,
@@ -138,8 +205,13 @@
     submissionStartTime: `${batch}T09:00:00+08:00`,
     submissionDeadlineTime: `${shiftDate(batch, 4)}T18:00:00+08:00`,
     submissionFreezeTime: `${shiftDate(batch, 5)}T00:00:00+08:00`,
-    status: '填报中'
+    ruleEffectiveTime: `${shiftDate(batch, 5)}T09:00:00+08:00`,
+    calendarVersion: BUSINESS_CALENDAR.version,
+    status: '待发起',
+    autoFreeze: true
   });
+  const calibrationComplete = batch => ['待发起销售填报', '销售填报中', '已冻结'].includes(batch?.calibrationStatus)
+    || ['待发起销售填报', '销售填报中', '已冻结'].includes(batch?.status);
   const defaultParams = id => ({
     version: id,
     historyShareWindow: 84,
@@ -156,7 +228,7 @@
   });
   const defaultSplitRule = id => ({
     version: id,
-    name: '标准子ASIN份额拆解',
+    name: '标准ASIN份额拆解',
     scope: 'US / UK · Amazon · 普通父ASIN',
     priority: 10,
     historyWindow: 84,
@@ -349,6 +421,7 @@
         sku: row.sku || item.child.sku,
         historicSku: row.historicSku || item.child.historicSku,
         salesCombo: row.salesCombo || item.child.combo,
+        salesComboMeta: row.salesComboMeta || (item.child.salesComboMeta ? clone(item.child.salesComboMeta) : null) || root.getSalesComboDefinition?.(row.childASIN) || null,
         businessCode: row.businessCode || item.child.businessCode,
         typeCode: row.typeCode || item.child.typeCode || item.group.typeCode || 'F03',
         size: row.size || item.child.size,
@@ -367,6 +440,7 @@
         sku: row.sku || item.child.sku,
         historicSku: row.historicSku || item.child.historicSku,
         salesCombo: row.salesCombo || item.child.combo,
+        salesComboMeta: row.salesComboMeta || (item.child.salesComboMeta ? clone(item.child.salesComboMeta) : null) || root.getSalesComboDefinition?.(row.childASIN) || null,
         businessCode: row.businessCode || item.child.businessCode,
         typeCode: row.typeCode || item.child.typeCode || item.group.typeCode || 'F03',
         size: row.size || item.child.size,
@@ -503,7 +577,7 @@
     const items = [
       ['预测日期缺少数值或明确状态', missingDays],
       ['父子关系完整', unparentedChildren],
-      ['一个子ASIN多个父ASIN', duplicateChildren],
+      ['一个ASIN多个父ASIN', duplicateChildren],
       ['无父ASIN子体', unparentedChildren],
       ['父ASIN预测缺失', parentMissing],
       ['子体份额合计异常', shareAnomalies],
@@ -550,6 +624,7 @@
         businessObjectType: row.businessObjectType,
         businessObjectCode: row.businessObjectCode,
         businessObjectVersion: row.businessObjectVersion,
+        salesComboMeta: row.salesComboMeta ? clone(row.salesComboMeta) : null,
         comboSnapshot: row.comboSnapshot ? clone(row.comboSnapshot) : null,
         comboVersionHistory: clone(row.comboVersionHistory || []),
         comboLines: clone(row.comboLines || []),
@@ -658,6 +733,10 @@
       scope: input.scope || { country: '全部', platform: '全部' },
       previousBatchId: previous?.id || input.previousBatchId || null,
       status: input.status || '草稿',
+      calibrationStatus: input.calibrationStatus || (input.status === '已完成' || input.status === '已冻结' ? '已冻结' : '待校准'),
+      calibrationStartedAt: input.calibrationStartedAt || null,
+      calibrationCompletedAt: input.calibrationCompletedAt || null,
+      workbenchEntries: clone(input.workbenchEntries || {}),
       currentStep: input.currentStep || 'assessment',
       createdBy: 'PMC计划员',
       createdAt: `${batchDate}T09:00:00+08:00`,
@@ -689,6 +768,10 @@
       workflowState: input.workflowState || '草稿',
       submissionWindow: input.submissionWindow || defaultWindow(batchDate),
       submissionState: input.submissionState || '待发布',
+      frozenAt: input.frozenAt || null,
+      frozenResultVersion: input.frozenResultVersion || null,
+      frozenForecastSnapshot: input.frozenForecastSnapshot || null,
+      downstreamReady: Boolean(input.downstreamReady),
       actualSales: input.actualSales || actualSnapshot(rows, batchDate, services),
       forecastVsActual: [],
       sourceReferences: input.sourceReferences || {},
@@ -707,6 +790,7 @@
   }
   function seed(services = {}) {
     const historicalDates = ['2026-09-08', '2026-09-15', '2026-09-22'];
+    const demoSalesSubmissionDate = '2026-09-22';
     const currentDate = '2026-09-29';
     const previousDate = historicalDates.at(-1);
     const localPrototypeReady = !services.groups && !services.forecastAt && !services.actualAt;
@@ -721,19 +805,39 @@
       const suffix = batchDate.replaceAll('-', '');
       const previous = batches.at(-1);
       const relations = rowsFromGroups(sourceGroups(services), batchDate, services).map(row => relationFromRow(row, batchDate));
+      const demoSalesSubmission = batchDate === demoSalesSubmissionDate;
       const batch = createBatch({
         id: `FB-${suffix}-01`, batchVersion: `V${suffix}-01`, name: `${batchDate} 预测批次`, batchDate,
-        dataCutoffDate: shiftDate(batchDate, -1), status: '已完成', currentStep: 'review', submissionState: '已冻结', workflowState: '已完成', relationConfirmed: true, splitConfirmed: true, resultGenerated: true, resultVersion: `RESULT-${suffix}-V01`,
+        dataCutoffDate: shiftDate(batchDate, -1),
+        status: demoSalesSubmission ? '销售填报中' : '已冻结',
+        calibrationStatus: demoSalesSubmission ? '销售填报中' : '已冻结',
+        currentStep: demoSalesSubmission ? 'submission' : 'review',
+        submissionState: demoSalesSubmission ? '填报中' : '已冻结',
+        workflowState: demoSalesSubmission ? '填报进行中' : '填报已冻结',
+        relationConfirmed: true, splitConfirmed: true, resultGenerated: true, resultVersion: `RESULT-${suffix}-V01`,
+        frozenAt: demoSalesSubmission ? null : `${shiftDate(batchDate, 5)}T00:00:00+08:00`,
+        frozenResultVersion: demoSalesSubmission ? null : `FROZEN-${suffix}-V01`,
+        downstreamReady: !demoSalesSubmission,
+        submissionWindow: demoSalesSubmission ? {
+          submissionStartTime: '2026-10-06T00:00:00+08:00',
+          submissionDeadlineTime: '2026-10-10T18:00:00+08:00',
+          submissionFreezeTime: '2026-10-12T00:00:00+08:00',
+          ruleEffectiveTime: '2026-10-12T09:00:00+08:00',
+          calendarVersion: BUSINESS_CALENDAR.version,
+          status: '填报中',
+          autoFreeze: true
+        } : undefined,
         relationVersion: `REL-${suffix}-V01`, forecastRuleVersion: `FORECAST-${suffix}-V01`, splitRuleVersion: `SPLIT-${suffix}-V01`, parameterVersion: `PARAM-${suffix}-V01`, deferResultSnapshot: true,
         relations
       }, services, previous);
+      if (demoSalesSubmission) batch.auditTimeline.push({ at: '2026-10-06T00:00:00+08:00', action: '销售预测演示批次已开启', actor: '系统', reason: '用于演示销售预测列表待填报与多人协同入口' });
       batches.push(batch);
       return batches;
     }, []);
     const previous = historical.at(-1);
     const current = createBatch({
       id: 'FB-20260929-01', batchVersion: 'V20260929-01', name: '2026-09-29 预测批次', batchDate: currentDate,
-      dataCutoffDate: '2026-09-28', status: localPrototypeReady ? '规则预测待确认' : '评估中', currentStep: localPrototypeReady ? 'forecast' : 'assessment', submissionState: '待发布', previousBatchId: previous.id, workflowState: localPrototypeReady ? '规则预测待确认' : '评估中', relationConfirmed: localPrototypeReady, splitConfirmed: localPrototypeReady, resultGenerated: localPrototypeReady, resultConfirmed: false, resultVersion: localPrototypeReady ? `RESULT-${currentDate.replaceAll('-', '')}-V01` : null,
+      dataCutoffDate: '2026-09-28', status: localPrototypeReady ? '待校准' : '评估中', currentStep: localPrototypeReady ? 'forecast' : 'assessment', submissionState: '待发布', previousBatchId: previous.id, workflowState: localPrototypeReady ? '待校准' : '评估中', relationConfirmed: localPrototypeReady, splitConfirmed: localPrototypeReady, resultGenerated: localPrototypeReady, resultConfirmed: false, resultVersion: localPrototypeReady ? `RESULT-${currentDate.replaceAll('-', '')}-V01` : null,
       relationVersion: 'REL-20260929-V02', forecastRuleVersion: 'FORECAST-20260929-V01', splitRuleVersion: 'SPLIT-20260929-V01', parameterVersion: 'PARAM-20260929-V01',
       relations: currentRelations,
       relationChanges: currentRelationChanges,
@@ -770,17 +874,91 @@
       if (!batch.dataUpdatedAt) batch.dataUpdatedAt = `${batch.dataCutoffDate}T08:30:00+08:00`;
       if (!batch.seasonRuleVersion) batch.seasonRuleVersion = 'SEASON-V3';
       if (!batch.seasonRuleMode) batch.seasonRuleMode = '常规季节指数';
+      const legacyCompleted = batch.calibrationStatus === '已完成' || batch.status === '已完成';
+      if (batch.submissionState === '已冻结') {
+        batch.calibrationStatus = '已冻结';
+        batch.status = '已冻结';
+        batch.workflowState = '填报已冻结';
+      } else if (legacyCompleted) {
+        batch.calibrationStatus = '待发起销售填报';
+        batch.status = '待发起销售填报';
+        batch.workflowState = 'PMC校准已完成';
+        batch.submissionState = '待发起销售填报';
+      } else if (!batch.calibrationStatus) batch.calibrationStatus = batch.status === '销售填报中' ? '销售填报中' : '待校准';
+      if (!('calibrationStartedAt' in batch)) batch.calibrationStartedAt = null;
+      if (!('calibrationCompletedAt' in batch)) batch.calibrationCompletedAt = calibrationComplete(batch) ? batch.updatedAt : null;
+      batch.submissionWindow ||= defaultWindow(batch.batchDate);
+      batch.submissionWindow.calendarVersion ||= BUSINESS_CALENDAR.version;
+      batch.submissionWindow.autoFreeze ??= true;
+      if (!('ruleEffectiveTime' in batch.submissionWindow)) batch.submissionWindow.ruleEffectiveTime = `${shiftDate(batch.batchDate, 5)}T09:00:00+08:00`;
+      if (!('frozenAt' in batch)) batch.frozenAt = batch.status === '已冻结' ? batch.updatedAt : null;
+      if (!('frozenResultVersion' in batch)) batch.frozenResultVersion = batch.status === '已冻结' ? `FROZEN-${batch.batchDate.replaceAll('-', '')}-V01` : null;
+      if (!('frozenForecastSnapshot' in batch)) batch.frozenForecastSnapshot = null;
+      if (!('downstreamReady' in batch)) batch.downstreamReady = batch.status === '已冻结';
+      batch.workbenchEntries ||= {};
     });
     const listeners = new Set();
     const save = () => { try { storage?.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (error) { /* demo continues in memory */ } listeners.forEach(listener => listener(getState())); if (root.dispatchEvent && typeof Event !== 'undefined') root.dispatchEvent(new Event('forecast-batch-change')); };
     const getBatchRaw = batchId => { const value = batchId || state.currentBatchId; const batch = state.batches.find(item => item.id === value || item.batchDate === value || item.batchVersion === value); if (batch) hydrateProductFields(batch, services); return batch; };
     const getActiveResult = batch => batch?.resultSnapshots?.find(snapshot => snapshot.version === batch.activeResultVersion) || null;
+    const finalizeWorkbenchCalibration = (batch, at = new Date().toISOString()) => {
+      materializeResultSnapshot(batch);
+      const activeResult = getActiveResult(batch);
+      const dates = dateRange(batch.forecastStartDate, batch.forecastEndDate);
+      batch.childForecastResults.forEach(row => {
+        const baselineRow = activeResult?.rows.find(item => item.childId === row.childId || item.childASIN === row.childASIN);
+        const draft = workbenchDraft(batch.workbenchEntries?.[row.childId]);
+        row.dailyFinalForecast = Object.fromEntries(dates.map(date => {
+          if (row.dailyForecastStatus?.[date]) return [date, null];
+          const baseline = baselineRow?.daily?.[date] ?? row.dailyFinalForecast?.[date] ?? row.dailyRuleForecast?.[date] ?? null;
+          const activity = draft.activity?.[date];
+          return [date, activity?.qty ?? draft.manual?.[date] ?? baseline];
+        }));
+        row.workbenchCalibrationSnapshot = clone(draft);
+      });
+      batch.parentForecastResults.forEach(parent => {
+        const children = batch.childForecastResults.filter(row => relationKey(row) === parent.key);
+        parent.baselineDaily = Object.fromEntries(dates.map(date => {
+          const values = children.map(row => row.dailyFinalForecast?.[date]).filter(value => typeof value === 'number' && Number.isFinite(value));
+          return [date, values.length ? sum(values) : null];
+        }));
+        parent.baselineTotal = sum(Object.values(parent.baselineDaily));
+      });
+      const version = `RESULT-${batch.batchDate.replaceAll('-', '')}-V${String(batch.resultSnapshots.length + 1).padStart(2, '0')}`;
+      const snapshot = makeResultSnapshot(batch, version, at);
+      snapshot.workbenchEntries = clone(batch.workbenchEntries || {});
+      batch.resultSnapshots.push(snapshot);
+      batch.activeResultVersion = version;
+      batch.resultGeneratedAt = at;
+      batch.resultState = '已生成';
+      batch.resultConfirmed = true;
+      batch.calibrationStatus = '待发起销售填报';
+      batch.calibrationStartedAt ||= at;
+      batch.calibrationCompletedAt = at;
+      batch.status = '待发起销售填报';
+      batch.submissionState = '待发起销售填报';
+      batch.workflowState = 'PMC校准已完成';
+      batch.currentStep = 'submission';
+      batch.auditTimeline.push({ at, action: '完成PMC批次校准', actor: 'PMC计划员', reason: `${batch.childForecastResults.length} 个ASIN最终预测已形成 · ${version}` });
+    };
+    const fallbackFrozenSnapshot = (batch, at) => {
+      materializeResultSnapshot(batch);
+      const result = getActiveResult(batch);
+      return {
+        batchId: batch.id,
+        batchVersion: batch.batchVersion,
+        resultVersion: result?.version || batch.activeResultVersion,
+        frozenAt: at,
+        source: '规则预测',
+        rows: (result?.rows || []).map(row => ({ childId: row.childId, childASIN: row.childASIN, parentASIN: row.parentASIN, country: row.country, store: row.store, daily: clone(row.daily || {}) }))
+      };
+    };
     const getState = () => ({ revision: state.revision, currentBatchId: state.currentBatchId });
     const write = (batchId, mutator, allowPublished = false) => {
       const original = getBatchRaw(batchId);
       if (!original) throw Error('预测批次不存在');
       const batch = clone(original);
-      if (batch.status === '已冻结' || batch.status === '已完成') throw Error('已冻结批次不可直接修改，请创建新的预测批次');
+      if (batch.status === '已冻结') throw Error('已冻结批次不可直接修改，请创建新的预测批次');
       if (batch.submissionState === '填报中' && !allowPublished) throw Error('已发布基准不可修改，请新建预测批次');
       mutator(batch);
       const allocationConfig = value => value.childForecastResults.map(row => ({ childId: row.childId, finalShare: row.finalShare, combo: (row.comboLines || []).map(line => ({ sku: line.sku, ratio: line.pmcRatio ?? line.defaultRatio })) }));
@@ -802,7 +980,7 @@
     const moveRelation = (batch, childId, targetParent, reason) => {
       const row = batch.relationSnapshot.find(item => item.childId === childId || item.childASIN === childId);
       const child = batch.childForecastResults.find(item => item.childId === childId || item.childASIN === childId);
-      if (!row || !child) throw Error('子ASIN关系不存在');
+      if (!row || !child) throw Error('ASIN关系不存在');
       const before = row.parentASIN;
       if (before === targetParent) return 0;
       row.previousParentASIN ||= before;
@@ -833,7 +1011,7 @@
       getBatchMeta: batchId => {
         const raw = getBatchRaw(batchId);
         if (!raw) return null;
-        return { id: raw.id, batchId: raw.id, batchVersion: raw.batchVersion, name: raw.name, batchDate: raw.batchDate, forecastStartDate: raw.forecastStartDate, forecastEndDate: raw.forecastEndDate, dataCutoffDate: raw.dataCutoffDate, dataUpdatedAt: raw.dataUpdatedAt, status: raw.status, currentStep: raw.currentStep, submissionState: raw.submissionState, resultState: raw.resultState, activeResultVersion: raw.activeResultVersion, relationVersion: raw.relationVersion, parameterVersion: raw.parameterSnapshot.version, forecastRuleVersion: raw.forecastRuleSnapshot.version, seasonRuleVersion: raw.seasonRuleVersion, seasonRuleMode: raw.seasonRuleMode, splitRuleVersion: raw.splitRuleSnapshot.version, childForecastResults: raw.childForecastResults.map(row => ({ childId: row.childId, childASIN: row.childASIN })) };
+        return { id: raw.id, batchId: raw.id, batchVersion: raw.batchVersion, name: raw.name, batchDate: raw.batchDate, forecastStartDate: raw.forecastStartDate, forecastEndDate: raw.forecastEndDate, dataCutoffDate: raw.dataCutoffDate, dataUpdatedAt: raw.dataUpdatedAt, status: raw.status, calibrationStatus: raw.calibrationStatus, calibrationStartedAt: raw.calibrationStartedAt, calibrationCompletedAt: raw.calibrationCompletedAt, currentStep: raw.currentStep, submissionState: raw.submissionState, submissionWindow: clone(raw.submissionWindow), frozenAt: raw.frozenAt, frozenResultVersion: raw.frozenResultVersion, downstreamReady: raw.downstreamReady, resultState: raw.resultState, activeResultVersion: raw.activeResultVersion, relationVersion: raw.relationVersion, parameterVersion: raw.parameterSnapshot.version, forecastRuleVersion: raw.forecastRuleSnapshot.version, seasonRuleVersion: raw.seasonRuleVersion, seasonRuleMode: raw.seasonRuleMode, splitRuleVersion: raw.splitRuleSnapshot.version, childForecastResults: raw.childForecastResults.map(row => ({ childId: row.childId, childASIN: row.childASIN })) };
       },
       getCurrentMeta: () => {
         const raw = getBatchRaw();
@@ -849,6 +1027,50 @@
         return clone(raw);
       },
       list: () => state.batches.slice().sort((a, b) => b.batchDate.localeCompare(a.batchDate)).map(clone),
+      getWorkbenchDraft: (batchId, childId) => {
+        const batch = getBatchRaw(batchId);
+        if (!batch) return workbenchDraft();
+        return workbenchDraft(batch.workbenchEntries?.[childId]);
+      },
+      startWorkbenchCalibration: batchId => write(batchId, batch => {
+        if (calibrationComplete(batch)) return;
+        if (batch.calibrationStatus !== '校准中') {
+          batch.calibrationStatus = '校准中';
+          batch.status = '校准中';
+          batch.workflowState = 'PMC校准中';
+          batch.calibrationStartedAt = new Date().toISOString();
+          batch.auditTimeline.push({ at: batch.calibrationStartedAt, action: '开始PMC批次校准', actor: 'PMC计划员', reason: '从预测批次列表进入详情' });
+        }
+      }),
+      saveWorkbenchDrafts: (batchId, entries) => write(batchId, batch => {
+        if (calibrationComplete(batch)) throw Error('PMC校准已结束，当前批次仅支持查看');
+        if (!Array.isArray(entries) || !entries.length) throw Error('没有可保存的PMC校准内容');
+        batch.workbenchEntries ||= {};
+        entries.forEach(entry => {
+          const row = batch.childForecastResults.find(item => item.childId === entry.childId || item.childASIN === entry.childId);
+          if (!row) throw Error('预测对象不存在');
+          batch.workbenchEntries[row.childId] = workbenchDraft(entry.draft);
+        });
+        if (batch.calibrationStatus !== '校准中') {
+          batch.calibrationStatus = '校准中';
+          batch.status = '校准中';
+          batch.workflowState = 'PMC校准中';
+          batch.calibrationStartedAt ||= new Date().toISOString();
+        }
+      }),
+      saveWorkbenchCalibration: (batchId, savedAt = new Date().toISOString()) => write(batchId, batch => {
+        if (calibrationComplete(batch)) throw Error('销售填报已发起，当前批次不可继续保存PMC校准');
+        batch.workbenchEntries ||= {};
+        batch.calibrationStatus = '校准中';
+        batch.status = '校准中';
+        batch.workflowState = 'PMC校准中';
+        batch.calibrationStartedAt ||= savedAt;
+        batch.auditTimeline.push({ at: savedAt, action: '保存PMC批次校准草稿', actor: 'PMC计划员', reason: '仅保存当前校准内容，未发起销售填报' });
+      }),
+      completeWorkbenchCalibration: (batchId, completedAt) => write(batchId, batch => {
+        if (calibrationComplete(batch)) return;
+        finalizeWorkbenchCalibration(batch, completedAt || new Date().toISOString());
+      }),
       createNextBatch: input => {
         const previous = getBatchRaw(input?.inheritFromBatchId) || getBatchRaw();
         const nextDate = input?.batchDate || shiftDate(previous.batchDate, 7);
@@ -861,7 +1083,7 @@
           const current = defaultRelations.find(row => row.childId === relation.childId);
           return { ...clone(relation), childRef: current?.childRef, ...(inherit.combo ? {} : { businessObjectType: current?.businessObjectType, businessObjectCode: current?.businessObjectCode, businessObjectVersion: current?.businessObjectVersion, comboSnapshot: current?.comboSnapshot, comboVersionHistory: current?.comboVersionHistory }) };
         }) : defaultRelations.filter(inScope);
-        if (!relations.length) throw Error('所选范围内没有可创建的子ASIN关系');
+        if (!relations.length) throw Error('所选范围内没有可创建的ASIN关系');
         const pendingIsEffective = previous.pendingParameterSnapshot && previous.parameterEffectiveAt && Date.parse(previous.parameterEffectiveAt) <= Date.parse(`${nextDate}T00:00:00+08:00`);
         const inheritedParameters = pendingIsEffective ? previous.pendingParameterSnapshot : previous.parameterSnapshot;
         const parameters = inherit.parameters ? { ...clone(inheritedParameters), version: `PARAM-${suffix}-V01`, inheritedFrom: inheritedParameters.version } : defaultParams(`PARAM-${suffix}-V01`);
@@ -980,7 +1202,7 @@
           if (existing) return moveRelation(batch, childId, payload.parentASIN, reason);
           const removed = (batch.removedRelations || []).find(item => item.childId === childId || item.childASIN === childId);
           const relation = removed || sourceRelation(childId, batch.batchDate);
-          if (!relation) throw Error(`未找到子ASIN ${childId}`);
+          if (!relation) throw Error(`未找到ASIN ${childId}`);
           const nextRelation = { ...clone(relation), country: payload.country || relation.country, parentASIN: payload.parentASIN, previousParentASIN: removed?.parentASIN || null, relationState: '新增待确认', effectiveFrom: batch.batchDate, effectiveTo: null, childRef: undefined };
           batch.relationSnapshot.push(nextRelation);
           const source = sourceRelation(childId, batch.batchDate) || relation;
@@ -993,7 +1215,7 @@
       }),
       batchAdjustRelations: (batchId, childIds, targetParent, reason) => write(batchId, batch => {
         const changed = childIds.reduce((count, childId) => count + moveRelation(batch, childId, targetParent, reason), 0);
-        if (!changed) throw Error('所选子ASIN与目标父ASIN关系相同');
+        if (!changed) throw Error('所选ASIN与目标父ASIN关系相同');
         finalizeRelationMutation(batch, reason);
       }),
       removeRelations: (batchId, childIds, reason) => write(batchId, batch => {
@@ -1139,11 +1361,11 @@
         batch.adjustmentLog.unshift({ at: new Date().toISOString(), type: '父ASIN季节指数', parentASIN: parent.parentASIN, before, after: value, reason, actor: 'PMC计划员' });
         batch.auditTimeline.push({ at: new Date().toISOString(), action: '调整父ASIN季节指数', actor: 'PMC计划员', reason: `${parent.parentASIN} ${before} → ${value} · ${reason}` });
       }),
-      confirmRelations: batchId => write(batchId, batch => { if (batch.relationSnapshot.some(row => !row.parentASIN)) throw Error('仍有子ASIN未关联父ASIN'); batch.relationConfirmed = true; batch.status = '关系已确认'; batch.workflowState = '关系已确认'; batch.currentStep = 'split'; batch.auditTimeline.push({ at: new Date().toISOString(), action: '确认本批次父子关系', actor: 'PMC计划员', reason: `${batch.relationSnapshot.length} 条关系已确认，按当前关系重新归集历史销量` }); }),
+      confirmRelations: batchId => write(batchId, batch => { if (batch.relationSnapshot.some(row => !row.parentASIN)) throw Error('仍有ASIN未关联父ASIN'); batch.relationConfirmed = true; batch.status = '关系已确认'; batch.workflowState = '关系已确认'; batch.currentStep = 'split'; batch.auditTimeline.push({ at: new Date().toISOString(), action: '确认本批次父子关系', actor: 'PMC计划员', reason: `${batch.relationSnapshot.length} 条关系已确认，按当前关系重新归集历史销量` }); }),
       saveSplitRule: (batchId, rule) => write(batchId, batch => { const next = { ...rule, id: rule.id || `SPLIT-TPL-${Date.now()}` }; const index = batch.splitRuleTemplates.findIndex(item => item.id === next.id); if (index >= 0) batch.splitRuleTemplates[index] = next; else batch.splitRuleTemplates.push(next); batch.splitRuleSnapshot.version = nextVersion(batch.splitRuleSnapshot.version); batch.splitConfirmed = false; batch.status = '拆解规则确认中'; batch.currentStep = 'split'; invalidateResult(batch, '拆解待确认'); batch.auditTimeline.push({ at: new Date().toISOString(), action: '更新子体拆解规则', actor: 'PMC计划员', reason: next.name }); }),
       adjustComboLines: (batchId, childId, adjustments, reason) => write(batchId, batch => {
         const row = batch.childForecastResults.find(item => item.childId === childId || item.childASIN === childId);
-        if (!row || row.businessObjectType !== 'COMBO') throw Error('当前子ASIN不是销售组合');
+        if (!row || row.businessObjectType !== 'COMBO') throw Error('当前ASIN不是销售组合');
         const total = sum(Object.values(row.dailyFinalForecast || {}));
         const before = clone(row.comboLines || []);
         const next = (row.comboLines || []).map(line => {
@@ -1151,7 +1373,7 @@
           return { ...line, pmcAdjustment: adjustment, finalForecast: line.systemSuggested + adjustment, adjustmentReason: adjustment ? reason : null, source: adjustment ? 'PMC人工调整' : '系统自动' };
         });
         if (next.some(line => line.pmcAdjustment) && !String(reason || '').trim()) throw Error('销售组合明细有人工作调整时必须填写调整原因');
-        if (sum(next.map(line => Number(line.finalForecast) || 0)) !== total) throw Error(`销售组合拆解后必须等于子ASIN预测 ${total} 件，请平衡人工调整`);
+        if (sum(next.map(line => Number(line.finalForecast) || 0)) !== total) throw Error(`销售组合拆解后必须等于ASIN预测 ${total} 件，请平衡人工调整`);
         row.comboLines = next;
         batch.splitConfirmed = false;
         batch.status = '拆解规则确认中';
@@ -1163,7 +1385,7 @@
       }),
       adjustComboRatios: (batchId, childId, ratios, reason) => write(batchId, batch => {
         const row = batch.childForecastResults.find(item => item.childId === childId || item.childASIN === childId);
-        if (!row || row.businessObjectType !== 'COMBO') throw Error('当前子ASIN不是销售组合');
+        if (!row || row.businessObjectType !== 'COMBO') throw Error('当前ASIN不是销售组合');
         if (!String(reason || '').trim()) throw Error('请填写组合比例调整原因');
         const values = row.comboLines.map(line => normalizeRatio(ratios?.[line.sku] ?? line.defaultRatio));
         if (sum(values) !== 10000) throw Error('组合SKU比例必须合计100%');
@@ -1176,11 +1398,11 @@
         batch.adjustmentLog.unshift({ at: new Date().toISOString(), type: '销售组合比例', childASIN: row.childASIN, before, after: clone(row.comboLines), reason, actor: 'PMC计划员' });
         batch.auditTimeline.push({ at: new Date().toISOString(), action: '调整组合SKU比例', actor: 'PMC计划员', reason: `${row.businessObjectCode} · ${reason}` });
       }),
-      adjustShares: (batchId, key, shares, reason) => write(batchId, batch => { const siblings = batch.childForecastResults.filter(row => relationKey(row) === key); if (!siblings.length) throw Error('父ASIN预测池不存在'); if (!String(reason || '').trim()) throw Error('请填写份额调整原因'); const total = sum(siblings.map(row => normalizeRatio(shares[row.childASIN] ?? shares[row.childId]))); if (total !== 10000) throw Error('当前父ASIN下子ASIN最终份额必须合计100%'); const before = siblings.map(row => ({ childASIN: row.childASIN, finalShare: row.finalShare })); siblings.forEach(row => { row.finalShare = normalizeRatio(shares[row.childASIN] ?? shares[row.childId]); row.manualReason = row.finalShare !== row.systemShare ? reason : null; }); recalculateSplit(batch); batch.splitConfirmed = batch.relationConfirmed; batch.status = batch.relationConfirmed ? '拆解已确认' : '关系确认中'; batch.workflowState = batch.relationConfirmed ? '拆解已确认' : '关系待确认'; batch.currentStep = batch.relationConfirmed ? 'forecast' : 'relations'; invalidateResult(batch, batch.workflowState); batch.adjustmentLog.unshift({ at: new Date().toISOString(), type: '子ASIN份额', before, after: siblings.map(row => ({ childASIN: row.childASIN, finalShare: row.finalShare })), reason, actor: 'PMC计划员' }); batch.auditTimeline.push({ at: new Date().toISOString(), action: '完成子ASIN人工调配', actor: 'PMC计划员', reason }); }),
+      adjustShares: (batchId, key, shares, reason) => write(batchId, batch => { const siblings = batch.childForecastResults.filter(row => relationKey(row) === key); if (!siblings.length) throw Error('父ASIN预测池不存在'); if (!String(reason || '').trim()) throw Error('请填写份额调整原因'); const total = sum(siblings.map(row => normalizeRatio(shares[row.childASIN] ?? shares[row.childId]))); if (total !== 10000) throw Error('当前父ASIN下ASIN最终份额必须合计100%'); const before = siblings.map(row => ({ childASIN: row.childASIN, finalShare: row.finalShare })); siblings.forEach(row => { row.finalShare = normalizeRatio(shares[row.childASIN] ?? shares[row.childId]); row.manualReason = row.finalShare !== row.systemShare ? reason : null; }); recalculateSplit(batch); batch.splitConfirmed = batch.relationConfirmed; batch.status = batch.relationConfirmed ? '拆解已确认' : '关系确认中'; batch.workflowState = batch.relationConfirmed ? '拆解已确认' : '关系待确认'; batch.currentStep = batch.relationConfirmed ? 'forecast' : 'relations'; invalidateResult(batch, batch.workflowState); batch.adjustmentLog.unshift({ at: new Date().toISOString(), type: 'ASIN份额', before, after: siblings.map(row => ({ childASIN: row.childASIN, finalShare: row.finalShare })), reason, actor: 'PMC计划员' }); batch.auditTimeline.push({ at: new Date().toISOString(), action: '完成ASIN人工调配', actor: 'PMC计划员', reason }); }),
       adjustChildForecast: (batchId, childId, targetValue, reason) => write(batchId, batch => {
         if (!String(reason || '').trim()) throw Error('请填写初始预测调整原因');
         const row = batch.childForecastResults.find(item => item.childId === childId || item.childASIN === childId);
-        if (!row) throw Error('子ASIN预测不存在');
+        if (!row) throw Error('ASIN预测不存在');
         const siblings = batch.childForecastResults.filter(item => relationKey(item) === relationKey(row));
         const parent = batch.parentForecastResults.find(item => item.key === relationKey(row));
         const parentTotal = Number(parent?.total || 0);
@@ -1206,12 +1428,12 @@
         batch.currentStep = batch.relationConfirmed ? 'forecast' : 'relations';
         invalidateResult(batch, '初始预测调整');
         const after = siblings.map(item => ({ childASIN: item.childASIN, total: sum(Object.values(item.dailyFinalForecast || {})), finalShare: item.finalShare }));
-        batch.adjustmentLog.unshift({ at: new Date().toISOString(), type: '子ASIN初始预测', before, after, reason: String(reason).trim(), actor: 'PMC计划员' });
-        batch.auditTimeline.push({ at: new Date().toISOString(), action: '调整子ASIN初始预测', actor: 'PMC计划员', reason: `${row.childASIN} · ${target} 件` });
+        batch.adjustmentLog.unshift({ at: new Date().toISOString(), type: 'ASIN初始预测', before, after, reason: String(reason).trim(), actor: 'PMC计划员' });
+        batch.auditTimeline.push({ at: new Date().toISOString(), action: '调整ASIN初始预测', actor: 'PMC计划员', reason: `${row.childASIN} · ${target} 件` });
       }),
       adjustChildDailyForecast: (batchId, childId, date, targetValue, reason) => write(batchId, batch => {
         const row = batch.childForecastResults.find(item => item.childId === childId || item.childASIN === childId);
-        if (!row) throw Error('子ASIN预测不存在');
+        if (!row) throw Error('ASIN预测不存在');
         const parent = batch.parentForecastResults.find(item => item.key === relationKey(row));
         if (!parent || !(date in (parent.daily || {}))) throw Error('当前日期不在本批次预测范围内');
         const parentDaily = Math.max(0, Math.round(Number(parent.daily[date]) || 0));
@@ -1219,7 +1441,7 @@
         if (target > parentDaily) throw Error(`当日调整值不能超过父ASIN预测池 ${parentDaily} 件`);
         const siblings = batch.childForecastResults.filter(item => relationKey(item) === relationKey(row));
         const others = siblings.filter(item => item.childId !== row.childId);
-        if (!others.length && target !== parentDaily) throw Error('唯一子ASIN必须与父ASIN当日预测一致');
+        if (!others.length && target !== parentDaily) throw Error('唯一ASIN必须与父ASIN当日预测一致');
         const before = siblings.map(item => ({ childASIN: item.childASIN, value: Number(item.dailyFinalForecast?.[date] || 0) }));
         const weights = others.map(item => Math.max(0, Number(item.dailyRuleForecast?.[date] ?? item.dailyFinalForecast?.[date]) || 0));
         const allocated = allocateComboTotal(parentDaily - target, others.map((item, index) => ({ quantity: weights[index] || 1 })));
@@ -1245,14 +1467,14 @@
         batch.status = batch.relationConfirmed ? '拆解已确认' : '关系确认中';
         batch.workflowState = batch.relationConfirmed ? '拆解已确认' : '关系待确认';
         batch.currentStep = batch.relationConfirmed ? 'forecast' : 'relations';
-        invalidateResult(batch, '子ASIN日预测行内调整');
-        batch.adjustmentLog.unshift({ at: new Date().toISOString(), type: '子ASIN日预测', childASIN: row.childASIN, date, before, after: siblings.map(item => ({ childASIN: item.childASIN, value: Number(item.dailyFinalForecast?.[date] || 0) })), reason: String(reason || '列表行内调整').trim(), actor: 'PMC计划员' });
-        batch.auditTimeline.push({ at: new Date().toISOString(), action: '行内调整子ASIN日预测', actor: 'PMC计划员', reason: `${row.childASIN} · ${date} · ${target} 件` });
+        invalidateResult(batch, 'ASIN日预测行内调整');
+        batch.adjustmentLog.unshift({ at: new Date().toISOString(), type: 'ASIN日预测', childASIN: row.childASIN, date, before, after: siblings.map(item => ({ childASIN: item.childASIN, value: Number(item.dailyFinalForecast?.[date] || 0) })), reason: String(reason || '列表行内调整').trim(), actor: 'PMC计划员' });
+        batch.auditTimeline.push({ at: new Date().toISOString(), action: '行内调整ASIN日预测', actor: 'PMC计划员', reason: `${row.childASIN} · ${date} · ${target} 件` });
       }),
       updateChildTags: (batchId, childId, tags, reason) => write(batchId, batch => {
         if (!String(reason || '').trim()) throw Error('请填写标签调整原因');
         const row = batch.childForecastResults.find(item => item.childId === childId || item.childASIN === childId);
-        if (!row) throw Error('子ASIN关系不存在');
+        if (!row) throw Error('ASIN关系不存在');
         const before = clone(row.tagOverrides || {});
         row.tagOverrides = clone(tags || {});
         invalidateResult(batch, '预测标签调整');
@@ -1285,7 +1507,7 @@
       },
       generateForecast: (batchId, reason = '生成本批次规则预测快照') => write(batchId, batch => { const validation = resultValidation(batch); if (!validation.passed) throw Error(`生成前校验未通过：${validation.items.find(item => !item.passed).label}`); recalculateSplit(batch); const prefix = `RESULT-${batch.batchDate.replaceAll('-', '')}-V`; const version = `${prefix}${String(batch.resultSnapshots.length + 1).padStart(2, '0')}`; const generatedAt = new Date().toISOString(); batch.resultSnapshots.push(makeResultSnapshot(batch, version, generatedAt)); batch.activeResultVersion = version; batch.resultState = '已生成'; batch.resultConfirmed = false; batch.status = '规则预测待确认'; batch.workflowState = '规则预测待确认'; batch.currentStep = 'forecast'; batch.auditTimeline.push({ at: generatedAt, action: '生成规则预测快照', actor: 'PMC计划员', reason: `${reason} · ${version}` }); }),
       confirmForecast: batchId => write(batchId, batch => { if (batch.resultState !== '已生成' || !batch.activeResultVersion) throw Error('请先生成规则预测'); if (!resultValidation(batch).passed) throw Error('发布检查未通过，请处理阻断项'); batch.resultConfirmed = true; batch.status = '规则预测已确认'; batch.workflowState = '规则预测已确认'; batch.currentStep = 'submission'; batch.auditTimeline.push({ at: new Date().toISOString(), action: 'PMC确认规则预测', actor: 'PMC计划员', reason: batch.activeResultVersion }); }),
-      recalculate: (batchId, reason = '规则参数已确认，重新生成父/子ASIN规则预测', options = {}) => {
+      recalculate: (batchId, reason = '规则参数已确认，重新生成父ASIN/ASIN规则预测', options = {}) => {
         // Work on a clone and publish one version only after all gates succeed.
         return write(batchId, batch => {
           if (options.applyPendingParameters) {
@@ -1315,7 +1537,7 @@
         });
       },
       updateSubmissionWindow: (batchId, window, reason = '保存销售填报窗口配置') => write(batchId, batch => {
-        if (batch.submissionState === '已冻结' || batch.status === '已完成') throw Error('已冻结批次不可修改填报窗口');
+        if (batch.submissionState === '已冻结') throw Error('已冻结批次不可修改填报窗口');
         const next = { ...batch.submissionWindow, ...window };
         const start = Date.parse(next.submissionStartTime);
         const deadline = Date.parse(next.submissionDeadlineTime);
@@ -1326,16 +1548,46 @@
         batch.submissionWindow = next;
         batch.auditTimeline.push({ at: new Date().toISOString(), action: '保存销售填报窗口', actor: 'PMC计划员', reason });
       }, true),
-      publishWindow: (batchId, window, reason = '规则预测完成，发布销售填报窗口') => write(batchId, batch => { if (batch.resultState !== '已生成' || !batch.activeResultVersion) throw Error('请先完成规则预测生成'); if (!batch.resultConfirmed) throw Error('请先确认本批次规则预测'); const check = resultValidation(batch); if (!check.passed) throw Error('发布检查未通过：' + check.items.find(item => !item.passed).label); const next = { ...batch.submissionWindow, ...window, status: '填报中' }; if (Date.parse(next.submissionStartTime) >= Date.parse(next.submissionDeadlineTime)) throw Error('填报开放时间必须早于截止时间'); if (Date.parse(next.submissionDeadlineTime) > Date.parse(next.submissionFreezeTime)) throw Error('填报截止时间不能晚于冻结时间'); batch.submissionWindow = next; batch.submissionState = '填报中'; batch.status = '销售填报中'; batch.workflowState = '填报进行中'; batch.currentStep = 'submission'; batch.auditTimeline.push({ at: new Date().toISOString(), action: '发布销售填报窗口', actor: 'PMC计划员', reason: `${reason} · ${batch.activeResultVersion}` }); }),
-      freeze: (batchId, reason = '到达本批次冻结时间') => write(batchId, batch => { if (batch.submissionState !== '填报中') throw Error('请先发布销售填报窗口'); batch.status = '已冻结'; batch.workflowState = '填报已冻结'; batch.submissionState = '已冻结'; batch.submissionWindow.status = '已冻结'; batch.currentStep = 'review'; batch.auditTimeline.push({ at: new Date().toISOString(), action: '冻结销售预测', actor: '系统', reason }); }, true),
+      publishWindow: (batchId, window, reason = '规则预测完成，发布销售填报窗口') => write(batchId, batch => { if (batch.resultState !== '已生成' || !batch.activeResultVersion) throw Error('请先完成规则预测生成'); if (!batch.resultConfirmed) throw Error('请先确认本批次规则预测'); const check = resultValidation(batch); if (!check.passed) throw Error('发布检查未通过：' + check.items.find(item => !item.passed).label); const next = { ...batch.submissionWindow, ...window, status: '填报中', autoFreeze: true }; if (Date.parse(next.submissionStartTime) >= Date.parse(next.submissionDeadlineTime)) throw Error('填报开放时间必须早于截止时间'); if (Date.parse(next.submissionDeadlineTime) > Date.parse(next.submissionFreezeTime)) throw Error('填报截止时间不能晚于冻结时间'); batch.submissionWindow = next; batch.submissionState = '填报中'; batch.calibrationStatus = '销售填报中'; batch.status = '销售填报中'; batch.workflowState = '填报进行中'; batch.currentStep = 'submission'; batch.auditTimeline.push({ at: new Date().toISOString(), action: '发布销售填报窗口', actor: 'PMC计划员', reason: `${reason} · ${batch.activeResultVersion}` }); }),
+      launchSalesSubmission: (batchId, launchedAt = new Date().toISOString()) => write(batchId, batch => {
+        if (!calibrationComplete(batch)) finalizeWorkbenchCalibration(batch, launchedAt);
+        if (batch.calibrationStatus !== '待发起销售填报') throw Error('当前批次不可重复发起销售填报');
+        const check = resultValidation(batch);
+        if (!check.passed) throw Error('发布检查未通过：' + check.items.find(item => !item.passed).label);
+        batch.submissionWindow = scheduleSubmissionWindow(launchedAt);
+        batch.submissionState = '填报中';
+        batch.calibrationStatus = '销售填报中';
+        batch.status = '销售填报中';
+        batch.workflowState = '填报进行中';
+        batch.currentStep = 'submission';
+        batch.auditTimeline.push({ at: launchedAt, action: '发起销售填报', actor: 'PMC计划员', reason: `系统按 ${BUSINESS_CALENDAR.version} 生成填报、截止与冻结时间 · ${batch.activeResultVersion}` });
+      }),
+      freeze: (batchId, reason = '到达本批次冻结时间', salesSnapshot = null, frozenAt = new Date().toISOString()) => write(batchId, batch => {
+        if (batch.submissionState !== '填报中') throw Error('请先发布销售填报窗口并发起销售填报');
+        const snapshot = salesSnapshot ? clone(salesSnapshot) : fallbackFrozenSnapshot(batch, frozenAt);
+        batch.status = '已冻结';
+        batch.calibrationStatus = '已冻结';
+        batch.workflowState = '填报已冻结';
+        batch.submissionState = '已冻结';
+        batch.submissionWindow.status = '已冻结';
+        batch.currentStep = 'review';
+        batch.frozenAt = frozenAt;
+        batch.frozenResultVersion = `FROZEN-${batch.batchDate.replaceAll('-', '')}-V${String((batch.freezeVersions?.length || 0) + 1).padStart(2, '0')}`;
+        batch.frozenForecastSnapshot = { ...snapshot, batchId: batch.id, batchVersion: batch.batchVersion, frozenAt, frozenResultVersion: batch.frozenResultVersion };
+        batch.freezeVersions ||= [];
+        batch.freezeVersions.push(clone(batch.frozenForecastSnapshot));
+        batch.downstreamReady = true;
+        batch.auditTimeline.push({ at: frozenAt, action: '冻结销售预测', actor: '系统', reason: `${reason} · ${batch.frozenResultVersion} · 下游备货/采购计划可读取` });
+      }, true),
       completeBatch: (batchId, confirmedCount) => {
         const batch = getBatchRaw(batchId);
         if (!batch || batch.status !== '已冻结') throw Error('请先冻结本批次销售填报');
-        if (confirmedCount !== batch.childForecastResults.length) throw Error('仍有子ASIN未完成PMC审核');
-        batch.status = '已完成';
-        batch.workflowState = '已完成';
+        if (confirmedCount !== batch.childForecastResults.length) throw Error('仍有ASIN未完成PMC审核');
+        batch.status = '已冻结';
+        batch.calibrationStatus = '已冻结';
+        batch.workflowState = '填报已冻结';
         batch.updatedAt = new Date().toISOString();
-        batch.auditTimeline.push({ at: batch.updatedAt, action: '最终确认预测批次', actor: 'PMC计划员', reason: `${confirmedCount} 个子ASIN已审核并冻结` });
+        batch.auditTimeline.push({ at: batch.updatedAt, action: '确认冻结结果', actor: 'PMC计划员', reason: `${confirmedCount} 个ASIN冻结结果已确认，下游继续读取同一快照` });
         state.revision += 1; save();
         return clone(batch);
       },
@@ -1346,6 +1598,15 @@
         getBatch: batchId => api.getBatch(batchId),
         getBatchMeta: batchId => api.getBatchMeta(batchId),
         listBatches: () => api.list(),
+        getWorkbenchDraft: (batchId, childId) => api.getWorkbenchDraft(batchId, childId),
+        startWorkbenchCalibration: batchId => api.startWorkbenchCalibration(batchId),
+        saveWorkbenchDrafts: (batchId, entries) => api.saveWorkbenchDrafts(batchId, entries),
+        saveWorkbenchCalibration: (batchId, savedAt) => api.saveWorkbenchCalibration(batchId, savedAt),
+        completeWorkbenchCalibration: (batchId, completedAt) => api.completeWorkbenchCalibration(batchId, completedAt),
+        launchSalesSubmission: (batchId, launchedAt) => api.launchSalesSubmission(batchId, launchedAt),
+        freeze: (batchId, reason, salesSnapshot, frozenAt) => api.freeze(batchId, reason, salesSnapshot, frozenAt),
+        scheduleSubmissionWindow: launchedAt => clone(scheduleSubmissionWindow(launchedAt)),
+        isBusinessDay,
         getWindow: batchId => api.getWindow(batchId),
         getDailyForecast: (batchId, childId, date) => {
           // Contract reads are frequent during table rendering. Keep the batch snapshot
@@ -1365,7 +1626,8 @@
           const daily = result ? row.daily : row.dailyFinalForecast;
           const ruleDaily = result ? row.ruleDaily : row.dailyRuleForecast;
           const ruleForecast = daily?.[date] ?? null;
-          return { batchId: batch.id, batchVersion: batch.batchVersion, resultVersion: result?.version || batch.activeResultVersion, dataCutoffDate: batch.dataCutoffDate, forecastStartDate: batch.forecastStartDate, forecastEndDate: batch.forecastEndDate, submissionStartTime: batch.submissionWindow.submissionStartTime, submissionDeadlineTime: batch.submissionWindow.submissionDeadlineTime, submissionFreezeTime: batch.submissionWindow.submissionFreezeTime, status: batch.status, parentASIN: row.parentASIN, childASIN: row.childASIN, country: row.country, site: row.country, store: row.store, salesOwner: row.salesOwner, tags: [...(row.tags || [])], businessObjectType: row.businessObjectType, businessObjectCode: row.businessObjectCode, businessObjectVersion: row.businessObjectVersion, forecastDate: date, parentRuleForecast: parent?.daily?.[date] ?? null, systemSplitForecast: ruleDaily?.[date] ?? null, ai: ruleDaily?.[date] ?? null, systemForecast: ruleDaily?.[date] ?? null, pmcBaseline: ruleForecast, forecastStatus: row.dailyForecastStatus?.[date] || null, pmcCalibration: row.pmcCalibration ? clone(row.pmcCalibration) : null, manual: null, activity: null, final: ruleForecast, ruleForecast, forecastSource: '规则预测', forecastRuleVersion: result?.forecastRuleVersion || batch.forecastRuleSnapshot.version, seasonRuleVersion: result?.seasonRuleVersion || batch.seasonRuleVersion, splitRuleVersion: result?.splitRuleVersion || batch.splitRuleSnapshot.version, relationVersion: result?.relationVersion || batch.relationVersion, parameterVersion: result?.parameterVersion || batch.parameterSnapshot.version, reason: row.manualAdjustment ? 'PMC已完成本批次子ASIN份额调配' : row.dailyReason?.[date] || '沿用本批次拆解规则' };
+          const salesRuleForecast = calibrationComplete(batch) ? ruleForecast : ruleDaily?.[date] ?? null;
+          return { batchId: batch.id, batchVersion: batch.batchVersion, resultVersion: result?.version || batch.activeResultVersion, dataCutoffDate: batch.dataCutoffDate, forecastStartDate: batch.forecastStartDate, forecastEndDate: batch.forecastEndDate, submissionStartTime: batch.submissionWindow.submissionStartTime, submissionDeadlineTime: batch.submissionWindow.submissionDeadlineTime, submissionFreezeTime: batch.submissionWindow.submissionFreezeTime, status: batch.status, calibrationStatus: batch.calibrationStatus, parentASIN: row.parentASIN, childASIN: row.childASIN, country: row.country, site: row.country, store: row.store, salesOwner: row.salesOwner, tags: [...(row.tags || [])], businessObjectType: row.businessObjectType, businessObjectCode: row.businessObjectCode, businessObjectVersion: row.businessObjectVersion, salesComboMeta: row.salesComboMeta ? clone(row.salesComboMeta) : null, comboSnapshot: row.comboSnapshot ? clone(row.comboSnapshot) : null, forecastDate: date, parentRuleForecast: parent?.daily?.[date] ?? null, systemSplitForecast: ruleDaily?.[date] ?? null, ai: ruleDaily?.[date] ?? null, systemForecast: ruleDaily?.[date] ?? null, salesRuleForecast, pmcBaseline: ruleForecast, forecastStatus: row.dailyForecastStatus?.[date] || null, pmcCalibration: row.pmcCalibration ? clone(row.pmcCalibration) : null, manual: null, activity: null, final: ruleForecast, ruleForecast, forecastSource: '规则预测', forecastRuleVersion: result?.forecastRuleVersion || batch.forecastRuleSnapshot.version, seasonRuleVersion: result?.seasonRuleVersion || batch.seasonRuleVersion, splitRuleVersion: result?.splitRuleVersion || batch.splitRuleSnapshot.version, relationVersion: result?.relationVersion || batch.relationVersion, parameterVersion: result?.parameterVersion || batch.parameterSnapshot.version, reason: row.manualAdjustment ? 'PMC已完成本批次ASIN份额调配' : row.dailyReason?.[date] || '沿用本批次拆解规则' };
         },
         getForecastIndex: batchId => {
           const batch = getBatchRaw(batchId);
@@ -1381,6 +1643,7 @@
             children[key] = {
               childId: row.childId,
               childASIN: row.childASIN,
+              salesComboMeta: row.salesComboMeta ? clone(row.salesComboMeta) : null,
               parentASIN: row.parentASIN,
               country: row.country,
               store: row.store,
@@ -1407,8 +1670,13 @@
           const result = getActiveResult(getBatchRaw(batchId)); if (!result) return [];
           return result.rows.flatMap(row => {
             const parent = result.parents.find(item => item.key === relationKey(row));
-            return dateRange(batch.forecastStartDate, batch.forecastEndDate).map(date => ({ batchId: batch.id, batchVersion: batch.batchVersion, resultVersion: result.version, dataCutoffDate: batch.dataCutoffDate, forecastStartDate: batch.forecastStartDate, forecastEndDate: batch.forecastEndDate, submissionStartTime: batch.submissionWindow.submissionStartTime, submissionDeadlineTime: batch.submissionWindow.submissionDeadlineTime, submissionFreezeTime: batch.submissionWindow.submissionFreezeTime, status: batch.status, parentASIN: row.parentASIN, childASIN: row.childASIN, childId: row.childId, country: row.country, site: row.country, store: row.store, salesOwner: row.salesOwner, tags: row.tags, businessObjectType: row.businessObjectType, businessObjectCode: row.businessObjectCode, businessObjectVersion: row.businessObjectVersion, forecastDate: date, parentRuleForecast: parent?.daily?.[date] ?? null, systemSplitForecast: row.ruleDaily[date] ?? null, systemForecast: row.ruleDaily[date] ?? null, pmcBaseline: row.daily[date] ?? null, forecastStatus: row.dailyForecastStatus?.[date] || null, ruleForecast: row.daily[date] ?? null, forecastSource: '规则预测', forecastRuleVersion: result.forecastRuleVersion, seasonRuleVersion: result.seasonRuleVersion || batch.seasonRuleVersion, splitRuleVersion: result.splitRuleVersion, relationVersion: result.relationVersion, parameterVersion: result.parameterVersion }));
+            return dateRange(batch.forecastStartDate, batch.forecastEndDate).map(date => ({ batchId: batch.id, batchVersion: batch.batchVersion, resultVersion: result.version, dataCutoffDate: batch.dataCutoffDate, forecastStartDate: batch.forecastStartDate, forecastEndDate: batch.forecastEndDate, submissionStartTime: batch.submissionWindow.submissionStartTime, submissionDeadlineTime: batch.submissionWindow.submissionDeadlineTime, submissionFreezeTime: batch.submissionWindow.submissionFreezeTime, status: batch.status, calibrationStatus: batch.calibrationStatus, parentASIN: row.parentASIN, childASIN: row.childASIN, childId: row.childId, country: row.country, site: row.country, store: row.store, salesOwner: row.salesOwner, tags: row.tags, businessObjectType: row.businessObjectType, businessObjectCode: row.businessObjectCode, businessObjectVersion: row.businessObjectVersion, salesComboMeta: row.salesComboMeta ? clone(row.salesComboMeta) : null, comboSnapshot: row.comboSnapshot ? clone(row.comboSnapshot) : null, forecastDate: date, parentRuleForecast: parent?.daily?.[date] ?? null, systemSplitForecast: row.ruleDaily[date] ?? null, systemForecast: row.ruleDaily[date] ?? null, salesRuleForecast: calibrationComplete(batch) ? row.daily[date] ?? null : row.ruleDaily[date] ?? null, pmcBaseline: row.daily[date] ?? null, forecastStatus: row.dailyForecastStatus?.[date] || null, ruleForecast: row.daily[date] ?? null, forecastSource: '规则预测', forecastRuleVersion: result.forecastRuleVersion, seasonRuleVersion: result.seasonRuleVersion || batch.seasonRuleVersion, splitRuleVersion: result.splitRuleVersion, relationVersion: result.relationVersion, parameterVersion: result.parameterVersion }));
           });
+        },
+        getDownstreamSnapshot: batchId => {
+          const batch = getBatchRaw(batchId);
+          if (!batch || batch.status !== '已冻结' || !batch.downstreamReady) return null;
+          return clone(batch.frozenForecastSnapshot || fallbackFrozenSnapshot(batch, batch.frozenAt || batch.updatedAt));
         },
         getSnapshot: batchId => api.getSnapshot(batchId),
         subscribe: listener => api.subscribe(listener)
@@ -1416,5 +1684,5 @@
     };
     return api;
   }
-  return { STORAGE_KEY, clone, dateRange, createStore, seed };
+  return { STORAGE_KEY, BUSINESS_CALENDAR, clone, dateRange, isBusinessDay, scheduleSubmissionWindow, createStore, seed };
 });

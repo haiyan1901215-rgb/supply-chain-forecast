@@ -4,7 +4,8 @@
   const { Alert, Button, Checkbox, DatePicker, Descriptions, Drawer, Dropdown, Form, Input, InputNumber, List, Modal, Pagination, Popover, Select, Space, Table, Tag, Tooltip, Tree } = antd;
   const designTokens = antd.theme.getDesignToken(enterpriseThemeV020);
   const uiStandards = window.EnterpriseUiStandards || {};
-  const forecastTableStandards = uiStandards.forecastTable || {
+  const forecastTableStandards = {
+    ...(uiStandards.forecastTable || {
     headerBackground: '#f7f9fc',
     weekHeaderBackground: '#e9eef8',
     dayHeaderBackground: '#f2f5fb',
@@ -31,6 +32,7 @@
     gridBorder: '#e5eaf2',
     weekBoundary: '#b4c3df',
     parentBoundary: '#ced8eb'
+    })
   };
 
   const marketNames = { US: '美国 / US', UK: '英国 / UK', DE: '德国 / DE' };
@@ -191,9 +193,9 @@
     }, []);
   }
 
-  function currentMeta() {
+  function currentMeta(batchId) {
     const contract = window.ForecastBatchContract;
-    const meta = contract?.getCurrentMeta?.() || contract?.getCurrent?.();
+    const meta = batchId ? contract?.getBatchMeta?.(batchId) || contract?.getBatch?.(batchId) : contract?.getCurrentMeta?.() || contract?.getCurrent?.();
     if (meta) return meta;
     return {
       id: typeof currentBatch === 'string' ? currentBatch : '2026-09-29',
@@ -293,26 +295,109 @@
   }
 
   function forecastValue(child, batchDate, date, metric) {
-    const result = typeof forecastAt === 'function' ? forecastAt(child, batchDate, date) : null;
+    const planned = window.ForecastBatchContract?.getDailyForecast?.(batchDate, child.id, date) || null;
+    const result = planned || (typeof forecastAt === 'function' ? forecastAt(child, batchDate, date) : null);
     if (!result || result.forecastStatus) return { value: null, status: result?.forecastStatus || null };
-    if (metric === 'system') return { value: result.ai ?? result.systemForecast ?? result.systemSplitForecast ?? null, status: null };
-    if (metric === 'manual') return { value: result.manual ?? null, status: null };
-    if (metric === 'activity') return { value: result.activity?.qty ?? result.activity ?? null, status: null };
-    return { value: result.final ?? result.pmc ?? result.pmcBaseline ?? result.ai ?? null, status: null };
+    if (metric === 'system') return { value: result.systemForecast ?? result.systemSplitForecast ?? result.ai ?? null, status: null };
+    return { value: result.ruleForecast ?? result.pmcBaseline ?? result.final ?? result.ai ?? null, status: null };
   }
 
-  function forecastLines(child, batchDate, date) {
-    const result = typeof forecastAt === 'function' ? forecastAt(child, batchDate, date) : null;
+  function forecastLines(child, batchDate, date, workbenchEntry) {
+    const planned = window.ForecastBatchContract?.getDailyForecast?.(batchDate, child.id, date) || null;
+    const result = planned || (typeof forecastAt === 'function' ? forecastAt(child, batchDate, date) : null);
     const status = result?.forecastStatus || null;
-    const system = status ? null : result?.ai ?? result?.systemForecast ?? result?.systemSplitForecast ?? null;
-    const manual = status ? null : result?.manual ?? null;
-    const activity = status ? null : result?.activity?.qty ?? result?.activity ?? null;
-    const final = status ? null : result?.final ?? result?.pmc ?? result?.pmcBaseline ?? system;
-    const source = window.ForecastLedgerValues?.sourceOf?.(result) || (activity != null ? 'activity' : manual != null ? 'manual' : 'system');
+    const system = status ? null : result?.systemForecast ?? result?.systemSplitForecast ?? result?.ai ?? null;
+    const baseline = status ? null : result?.ruleForecast ?? result?.pmcBaseline ?? result?.final ?? system;
+    const manual = status ? null : workbenchEntry?.manual?.[date] ?? (!planned ? result?.manual : null) ?? null;
+    const activityEntry = status ? null : workbenchEntry?.activity?.[date] ?? (!planned ? result?.activity : null) ?? null;
+    const activity = activityEntry?.qty ?? activityEntry ?? null;
+    const final = status ? null : activity ?? manual ?? baseline;
+    const source = activity != null ? 'activity' : manual != null ? 'manual' : 'system';
     return { system, manual, activity, final, source, status };
   }
 
-  function ForecastWorkbench({ onOpenBinding, onOpenSales, navigationContext } = {}) {
+  const batchListContext = {
+    draft: { batch: '', period: null, status: undefined },
+    filters: { batch: '', period: null, status: undefined },
+    page: 1,
+    pageSize: 10
+  };
+  const calibrationStatusOf = batch => batch?.calibrationStatus || (batch?.status === '已冻结' ? '已冻结' : '待校准');
+  const calibrationPendingCount = batch => {
+    if (!['待校准', '校准中'].includes(calibrationStatusOf(batch))) return 0;
+    const touched = new Set(Object.entries(batch?.workbenchEntries || {}).filter(([, draft]) => Object.keys(draft?.manual || {}).length || Object.keys(draft?.activity || {}).length || (draft?.changes || []).length).map(([childId]) => childId));
+    return Math.max(0, Number(batch?.childForecastResults?.length || 0) - touched.size);
+  };
+  const calibrationWindow = batch => {
+    const start = batch?.calibrationWindowStart || batch?.forecastStartDate || batch?.batchDate;
+    const periodEnd = batch?.forecastEndDate || start;
+    const defaultEnd = dateKey(makeDates(start, 14).at(-1));
+    return [start, batch?.calibrationWindowEnd || (defaultEnd < periodEnd ? defaultEnd : periodEnd)];
+  };
+  const dateTimeText = value => value ? dayjs(value).format('YYYY/MM/DD HH:mm') : '—';
+
+  function ForecastBatchList({ onOpenBatch } = {}) {
+    const [, setRevision] = useState(0);
+    const [draft, setDraft] = useState(() => ({ ...batchListContext.draft, period: batchListContext.draft.period ? [...batchListContext.draft.period] : null }));
+    const [filters, setFilters] = useState(() => ({ ...batchListContext.filters, period: batchListContext.filters.period ? [...batchListContext.filters.period] : null }));
+    const [page, setPage] = useState(batchListContext.page);
+    const [pageSize, setPageSize] = useState(batchListContext.pageSize);
+    const filterItemStyle = { marginInlineEnd: designTokens.marginSM, marginBottom: 0 };
+    const allBatches = window.ForecastBatchContract?.listBatches?.() || [];
+    useEffect(() => window.ForecastBatchContract?.subscribe?.(() => setRevision(value => value + 1)), []);
+    const applyFilters = () => {
+      const next = { ...draft, batch: draft.batch.trim(), period: draft.period ? [...draft.period] : null };
+      batchListContext.draft = { ...next, period: next.period ? [...next.period] : null };
+      batchListContext.filters = { ...next, period: next.period ? [...next.period] : null };
+      batchListContext.page = 1;
+      setFilters(next);
+      setPage(1);
+    };
+    const resetFilters = () => {
+      const next = { batch: '', period: null, status: undefined };
+      batchListContext.draft = next;
+      batchListContext.filters = next;
+      batchListContext.page = 1;
+      setDraft(next);
+      setFilters(next);
+      setPage(1);
+    };
+    const rows = allBatches.filter(batch => {
+      const query = filters.batch.trim().toLowerCase();
+      const periodMatches = !filters.period || batch.forecastStartDate <= filters.period[1] && batch.forecastEndDate >= filters.period[0];
+      return (!query || [batch.name, batch.id, batch.batchVersion].some(value => String(value || '').toLowerCase().includes(query)))
+        && periodMatches
+        && (!filters.status || calibrationStatusOf(batch) === filters.status);
+    });
+    const columns = [
+      { title: '预测批次', key: 'batch', width: 220, render: (_, row) => h('div', { className: 'fpb-batch-name' }, h('strong', null, row.name), h('span', null, row.id)) },
+      { title: '预测周期', key: 'period', width: 210, render: (_, row) => `${dateText(row.forecastStartDate)} ~ ${dateText(row.forecastEndDate)}` },
+      { title: '当前窗口', key: 'window', width: 190, render: (_, row) => { const range = calibrationWindow(row); return `${dateText(range[0])} ~ ${dateText(range[1])}`; } },
+      { title: '预测对象', key: 'objects', width: 100, align: 'right', render: (_, row) => `${formatNumber(row.childForecastResults?.length || 0)} 个` },
+      { title: '待校准', key: 'pending', width: 100, align: 'right', render: (_, row) => { const count = calibrationPendingCount(row); return h('strong', { className: count ? 'fpb-pending-count' : '' }, `${formatNumber(count)} 个`); } },
+      { title: '创建时间', dataIndex: 'createdAt', width: 150, render: dateTimeText },
+      { title: '状态', key: 'status', width: 130, render: (_, row) => { const status = calibrationStatusOf(row); const color = status === '已冻结' ? 'success' : status === '销售填报中' || status === '校准中' ? 'processing' : status === '待发起销售填报' ? 'cyan' : 'warning'; return h(Tag, { color, style: { margin: 0 } }, status); } },
+      { title: '操作', key: 'action', width: 110, fixed: 'right', render: (_, row) => { const status = calibrationStatusOf(row); const label = status === '待校准' ? '开始校准' : status === '校准中' ? '继续校准' : '查看详情'; return h(Button, { type: ['待校准', '校准中'].includes(status) ? 'link' : 'text', size: 'small', onClick: () => onOpenBatch?.(row.id, status) }, label); } }
+    ];
+    const pagedRows = rows.slice((page - 1) * pageSize, page * pageSize);
+    return h('div', { className: 'forecast-batch-list-root' },
+      h('header', { className: 'fpb-page-header' }, h('h1', null, '预测批次')),
+      h('section', { className: 'fpb-filter-panel', 'aria-label': '预测批次筛选' },
+        h(Form, { layout: 'inline', size: 'small', onFinish: applyFilters, style: { rowGap: designTokens.paddingXS } },
+          h(Form.Item, { label: '预测批次', style: filterItemStyle }, h(Input, { allowClear: true, value: draft.batch, placeholder: '批次名称 / 批次编号', onChange: event => setDraft(current => ({ ...current, batch: event.target.value })), onPressEnter: applyFilters, style: { width: 220 } })),
+          h(Form.Item, { label: '预测周期', style: filterItemStyle }, h(DatePicker.RangePicker, { allowClear: true, value: draft.period ? draft.period.map(value => dayjs(value)) : null, format: 'YYYY/MM/DD', onChange: values => setDraft(current => ({ ...current, period: values?.length ? values.map(value => value.format('YYYY-MM-DD')) : null })), style: { width: 224 } })),
+          h(Form.Item, { label: '批次状态', style: filterItemStyle }, h(Select, { allowClear: true, value: draft.status, placeholder: '全部', options: ['待校准', '校准中', '待发起销售填报', '销售填报中', '已冻结'].map(value => ({ value, label: value })), onChange: value => setDraft(current => ({ ...current, status: value })), style: { width: 150 } })),
+          h(Form.Item, { style: filterItemStyle }, h(Space, { size: 8 }, h(Button, { type: 'primary', htmlType: 'submit' }, '查询'), h(Button, { onClick: resetFilters }, '重置')))
+        )
+      ),
+      h('section', { className: 'fpb-table-panel' },
+        h(Table, { className: 'fpb-table', size: 'small', rowKey: 'id', columns, dataSource: pagedRows, pagination: false, scroll: { x: 1180, y: 'calc(100vh - 306px)' }, locale: { emptyText: '暂无符合条件的预测批次' } }),
+        h('footer', { className: 'fpb-footer' }, h('span', null, `共 ${rows.length} 个预测批次`), h(Pagination, { size: 'small', current: page, pageSize, total: rows.length, showSizeChanger: true, pageSizeOptions: [10, 20, 50], onChange: (nextPage, nextSize) => { const safePage = nextSize !== pageSize ? 1 : nextPage; batchListContext.page = safePage; batchListContext.pageSize = nextSize; setPage(safePage); setPageSize(nextSize); } }))
+      )
+    );
+  }
+
+  function ForecastWorkbench({ batchId, readOnly = false, onBackToBatches, onBatchCompleted, onOpenBinding, onOpenSales, navigationContext } = {}) {
     const { message, modal } = antd.App.useApp();
     const [shareForm] = Form.useForm();
     const emptyFilters = { platform: '', market: '', account: '', owner: '', status: '', keyword: '' };
@@ -360,8 +445,10 @@
     const draggedColumn = useRef(null);
     const restoredLocation = useRef(false);
 
-    const meta = useMemo(() => currentMeta(), [revision]);
-    const batchSnapshot = useMemo(() => window.ForecastBatchContract?.getCurrent?.() || null, [revision]);
+    const meta = useMemo(() => currentMeta(batchId), [batchId, revision]);
+    const batchSnapshot = useMemo(() => batchId ? window.ForecastBatchContract?.getBatch?.(batchId) || null : window.ForecastBatchContract?.getCurrent?.() || null, [batchId, revision]);
+    const lifecycleStatus = batchSnapshot?.calibrationStatus || batchSnapshot?.status || '校准中';
+    const isReadOnly = readOnly || !['待校准', '校准中'].includes(lifecycleStatus);
     const batchDate = meta.batchDate || meta.forecastStartDate;
     const coverageStart = meta.forecastStartDate || batchDate;
     const coverageEnd = meta.forecastEndDate || dateKey(makeDates(coverageStart, 182).at(-1));
@@ -423,10 +510,6 @@
             const childKey = `child:${group.id}|${child.id}`;
             const excluded = treeExcludedKeys.has(childKey);
             const menuItems = [
-              { key: 'heading', label: '在变体列表中', disabled: true },
-              { type: 'divider' },
-              { key: 'visibility', icon: excluded ? icon('CheckOutlined') : null, label: excluded ? '显示' : '排除' },
-              { type: 'divider' },
               { key: 'edit', label: '修改绑定' },
               { key: 'remove', label: '移除绑定', danger: true }
             ];
@@ -435,14 +518,10 @@
               title: h('div', { className: `fpw-tree-child-title ${excluded ? 'is-excluded' : ''}` },
                 h('span', null, child.asin),
                 excluded && h(Tag, { bordered: false }, '已排除'),
-                h(Dropdown, {
+                !isReadOnly && h(Dropdown, {
                   trigger: ['click'],
                   menu: { items: menuItems, onClick: ({ key, domEvent }) => {
                     domEvent?.stopPropagation?.();
-                    if (key === 'visibility') {
-                      setTreeExcludedKeys(current => { const next = new Set(current); next.has(childKey) ? next.delete(childKey) : next.add(childKey); return next; });
-                      return;
-                    }
                     openTreeBindingAction(group, child, key === 'remove' ? 'remove' : 'edit');
                   } }
                 }, h(Button, { type: 'text', size: 'small', className: 'fpw-tree-more', icon: icon('MoreOutlined'), 'aria-label': `管理 ${child.asin} 变体`, onClick: event => event.stopPropagation() }))
@@ -450,7 +529,7 @@
               isLeaf: true
             };
           })
-        })), [onOpenBinding, treeExcludedKeys, treeGroups]);
+        })), [isReadOnly, onOpenBinding, treeExcludedKeys, treeGroups]);
 
     const allTreeKeys = useMemo(() => treeData.map(parent => parent.key), [treeData]);
     const allTreeLeafKeys = useMemo(() => treeData.flatMap(parent => parent.children.map(child => child.key)), [treeData]);
@@ -518,7 +597,8 @@
       });
       const normalizedSystemShares = allocateBasisPoints(10000, shareSources.map(source => source.system));
       const children = group.children.map((child, childIndex) => {
-        const forecast = Object.fromEntries(dates.map(date => [dateKey(date), forecastLines(child, batchDate, dateKey(date))]));
+        const workbenchEntry = window.ForecastBatchContract?.getWorkbenchDraft?.(batchSnapshot?.id || batchDate, child.id) || null;
+        const forecast = Object.fromEntries(dates.map(date => [dateKey(date), forecastLines(child, batchDate, dateKey(date), workbenchEntry)]));
         const daily = Object.fromEntries(dates.map(date => {
           const key = dateKey(date);
           return [key, { value: forecast[key].final, status: forecast[key].status }];
@@ -658,8 +738,19 @@
       setDrawerRow(row);
     };
 
+    const renderStatusTags = (tags, limit = Infinity) => [...new Set(tags || [])].slice(0, limit).map(tag => {
+      const definition = tagDefinitions[tag] || { tone: '', hint: `商品标签：${tag}` };
+      const category = (definition.hint || `商品标签：${tag}`).split('：')[0];
+      const color = { green: 'success', blue: 'processing', amber: 'warning', purple: 'default' }[definition.tone] || 'default';
+      return h(Tooltip, { key: tag, title: category, mouseEnterDelay: 0.25 }, h(Tag, { color, 'data-tag-category': category, style: { ...salesTagPalette[definition.tone], fontSize: 12, lineHeight: '18px', fontWeight: 400, paddingInline: 3, marginInlineEnd: 0, borderRadius: 3 } }, tag));
+    });
+
     const identity = row => {
       const value = row.type === 'parent' ? row.group.parent : row.child.asin;
+      const comboMeta = row.type === 'child' ? window.getSalesComboDefinition?.(row.child) : null;
+      const childListedAt = row.type === 'child' ? row.child.listedAt || row.group.listedAt : null;
+      const childListingDays = row.type === 'child' ? row.child.listingDays ?? row.group.listingDays : null;
+      const childTags = row.type === 'child' ? row.child.tags || row.group.tags || [] : [];
       const entityKey = row.entityKey || row.key;
       const expanded = expandedRowKeys.includes(entityKey);
       const toggleVariant = event => {
@@ -679,7 +770,7 @@
           h('div', { className: 'fpw-code-line' },
             row.type === 'parent' && h('button', { type: 'button', className: 'collapse fpw-parent-collapse', 'aria-label': `${expanded ? '收起' : '展开'} ${value} 变体`, 'aria-expanded': expanded, onClick: toggleVariant }, stateToggleGlyph(expanded)),
             row.type === 'parent' && h('span', { className: 'country-flag fpw-country-flag', 'aria-hidden': true }, marketFlag(row.group.market)),
-            codeValue(value, row.type === 'parent' ? '父ASIN' : '子ASIN', event => openDrawer(row, event)),
+            codeValue(value, row.type === 'parent' ? '父ASIN' : 'ASIN', event => openDrawer(row, event)),
             row.type === 'parent' && h('span', { className: 'fpw-inline-separator', 'aria-hidden': true }, '丨'),
             row.type === 'parent' && codeValue(row.group.spu, 'SPU')
           ),
@@ -692,13 +783,17 @@
                   h('span', { className: 'fpw-inline-separator', 'aria-hidden': true }, '丨'),
                   h('span', null, `销售：${row.group.owner}`)
                 ),
-                h('div', { className: 'fpw-parent-tags product-tags' }, (row.group.tags || []).slice(0, 3).map(tag => {
-                  const definition = tagDefinitions[tag] || { tone: '', hint: `商品标签：${tag}` };
-                  const color = { green: 'success', blue: 'processing', amber: 'warning', purple: 'default' }[definition.tone] || 'default';
-                  return h(Tooltip, { key: tag, title: definition.hint.split('：')[0], mouseEnterDelay: 0.25 }, h(Tag, { color, 'data-tag-category': definition.hint.split('：')[0], style: { ...salesTagPalette[definition.tone], fontSize: 12, lineHeight: '18px', fontWeight: 400, paddingInline: 3, marginInlineEnd: 0, borderRadius: 3 } }, tag));
-                }))
+                h('div', { className: 'fpw-parent-tags product-tags' }, renderStatusTags(row.group.tags, 3))
               )
-            : h(Tooltip, { title: '业务识别码', mouseEnterDelay: 0.2 }, h('span', { className: 'fpw-child-meta', tabIndex: 0 }, row.child.businessCode || row.child.sku))
+            : h(React.Fragment, null,
+                h('div', { className: 'fpw-child-product-name' }, row.group.name),
+                comboMeta && h('div', { className: 'fpw-child-combo-name' }, comboMeta.name || comboMeta.description),
+                comboMeta && window.SalesComboCode
+                  ? h('div', { className: 'fpw-child-meta-line' }, h(window.SalesComboCode, { child: row.child, code: row.child.combo, placement: 'bottomLeft', className: 'fpw-child-meta-code' }))
+                  : h('span', { className: 'fpw-child-meta' }, row.child.businessCode || row.child.sku),
+                childListedAt && h('div', { className: 'fpw-child-listing sales-listing' }, `上架时间：${dateText(childListedAt)}${childListingDays != null ? ` · ${formatNumber(childListingDays)} 天` : ''}`),
+                Boolean(childTags.length) && h('div', { className: 'fpw-child-tags product-tags sales-tags' }, renderStatusTags(childTags))
+              )
         )
       );
     };
@@ -730,6 +825,7 @@
       { key: 'final', label: '最终预测', value: drawerLineTotals.final, note: sourceSummary }
     ] : [];
     const drawerNavigationContext = drawerRow ? {
+      batchId: batchSnapshot?.id || meta.id,
       batchDate,
       windowStartDate: drawerWindowStartKey,
       windowEndDate: drawerWindowEndKey,
@@ -787,9 +883,9 @@
           size: 'small',
           column: 2,
           items: [
-            { key: 'entry', label: '进入路径', span: 2, children: `预测工作台 / ${drawerRow.type === 'parent' ? '父ASIN' : '子ASIN'}` },
-            { key: 'type', label: '对象类型', children: drawerRow.type === 'parent' ? '父ASIN' : '子ASIN' },
-            { key: 'asin', label: drawerRow.type === 'parent' ? '父ASIN' : '子ASIN', children: drawerRow.type === 'parent' ? drawerRow.group.parent : drawerRow.child.asin },
+            { key: 'entry', label: '进入路径', span: 2, children: `预测批次 / ${drawerRow.type === 'parent' ? '父ASIN' : 'ASIN'}` },
+            { key: 'type', label: '对象类型', children: drawerRow.type === 'parent' ? '父ASIN' : 'ASIN' },
+            { key: 'asin', label: drawerRow.type === 'parent' ? '父ASIN' : 'ASIN', children: drawerRow.type === 'parent' ? drawerRow.group.parent : drawerRow.child.asin },
             { key: 'parent', label: '所属父ASIN', children: drawerRow.group.parent },
             { key: 'sku', label: drawerRow.type === 'parent' ? 'SPU' : 'SKU', children: drawerRow.type === 'parent' ? drawerRow.group.spu : drawerRow.child.sku },
             { key: 'site', label: '平台 / 站点', children: `${drawerRow.group.platform} / ${drawerRow.group.market}` },
@@ -816,7 +912,7 @@
           items: [
             { key: 'recent-sales', label: '近30天销量', children: `${formatNumber(drawerRow.recentSales)} 件` },
             { key: 'daily-sales', label: '近30天日均', children: `${formatNumber(drawerRow.dailySales)} 件` },
-            { key: 'share', label: drawerRow.type === 'child' ? '子ASIN份额占比' : '子ASIN范围', children: drawerRow.type === 'child' ? formatShare(currentShare) : `${drawerRow.group.children.length} 个子ASIN` },
+            { key: 'share', label: drawerRow.type === 'child' ? 'ASIN份额占比' : 'ASIN范围', children: drawerRow.type === 'child' ? formatShare(currentShare) : `${drawerRow.group.children.length} 个ASIN` },
             { key: 'tags', label: '商品标签', children: h('span', { className: 'fpw-drawer-tags' }, drawerTags.length ? drawerTags.map(tag => h(Tag, { key: tag }, tag)) : '—') },
             { key: 'forecast-rule', label: '预测规则快照', children: batchSnapshot?.forecastRuleSnapshot?.version || meta.forecastRuleVersion || '—' },
             { key: 'season-rule', label: '季节规则快照', children: batchSnapshot?.seasonRuleVersion || meta.seasonRuleVersion || '—' },
@@ -828,7 +924,7 @@
     );
 
     const metricHints = {
-      recentSales: '当前子ASIN近30天销量；父ASIN为可见子体汇总',
+      recentSales: '当前ASIN近30天销量；父ASIN为可见ASIN汇总',
       dailySales: '近30天销量除以有效天数后的日均销量',
       fbaAvailable: '当前FBA可售库存',
       fbaInbound: '已发往FBA但尚未入库的在途库存',
@@ -872,13 +968,22 @@
 
     const openSharedForecastEditor = (row, line, date, event) => {
       event?.stopPropagation?.();
+      if (isReadOnly) return message.info('当前批次状态仅支持查看');
       const key = dateKey(date);
-      if (typeof canEdit === 'function' && !canEdit(key)) return message.warning('当前日期不可编辑');
+      if (key < coverageStart || key > coverageEnd) return message.warning('当前日期不可编辑');
       if (!window.openForecastEditor) return message.error('预测编辑器未就绪，请刷新后重试');
+      const contract = window.ForecastBatchContract;
+      const calibrationBatchId = batchSnapshot?.id || meta.id || batchDate;
       const target = row.type === 'child'
         ? { id: row.child.id }
         : { ids: row.variantChildren.map(childRow => childRow.child.id), weights: row.variantChildren.map(childRow => childRow.share), label: row.group.parent };
-      window.openForecastEditor({ kind: line === 'manual' ? 'manual' : 'activity', key, ...target });
+      const adapter = {
+        readOnly: isReadOnly,
+        getDraft: child => contract?.getWorkbenchDraft?.(calibrationBatchId, child.id),
+        canEditDate: (child, targetDate) => !contract?.getDailyForecast?.(calibrationBatchId, child.id, targetDate)?.forecastStatus,
+        save: ({ targets, drafts }) => contract?.saveWorkbenchDrafts?.(calibrationBatchId, targets.map((child, index) => ({ childId: child.id, draft: drafts[index] })))
+      };
+      window.openForecastEditor({ kind: line === 'manual' ? 'manual' : 'activity', key, batchDate, adapter, ...target });
     };
     const lineValue = (row, days, line) => {
       const values = days.map(date => row.forecast[dateKey(date)]?.[line]);
@@ -887,7 +992,7 @@
     const signedForecastValue = value => `${value > 0 ? '+' : ''}${formatNumber(value)}`;
     const adjustmentDetails = (row, line, key, value) => {
       const children = row.type === 'child' ? [row.child] : row.variantChildren.map(item => item.child);
-      const drafts = children.map(child => batchDraft(child, batchDate));
+      const drafts = children.map(child => window.ForecastBatchContract?.getWorkbenchDraft?.(batchSnapshot?.id || batchDate, child.id) || batchDraft(child, batchDate));
       const expectedLine = line === 'manual' ? '人工预测' : '活动预测';
       const changes = drafts.flatMap(draft => draft.changes || []).filter(item => item.date === key && item.line === expectedLine);
       const latest = [...changes].sort((a, b) => String(b.at || '').localeCompare(String(a.at || '')))[0];
@@ -924,7 +1029,7 @@
       const date = days[0];
       const status = singleDay ? row.forecast[dateKey(date)]?.status : null;
       const value = lineValue(row, days, line);
-      const editable = singleDay && (line === 'manual' || line === 'activity') && (typeof canEdit !== 'function' || canEdit(dateKey(date)));
+      const editable = !isReadOnly && singleDay && (line === 'manual' || line === 'activity') && dateKey(date) >= coverageStart && dateKey(date) <= coverageEnd;
       if (editable) {
         const key = dateKey(date);
         const forecast = row.forecast[key] || {};
@@ -1005,9 +1110,9 @@
 
     const allVariantsExpanded = allParentKeys.length > 0 && allParentKeys.every(key => expandedRowKeys.includes(key));
     const variantHeaderAction = h('span', { className: 'fpw-variant-header-actions' },
-      h(Tooltip, { title: allVariantsExpanded ? '收起全部父子ASIN' : '展开全部父子ASIN' }, h(Button, {
+      h(Tooltip, { title: allVariantsExpanded ? '收起全部ASIN层级' : '展开全部ASIN层级' }, h(Button, {
         type: 'text', size: 'small', className: 'forecast-state-toggle tree-tool', icon: stateToggleGlyph(allVariantsExpanded),
-        'aria-label': allVariantsExpanded ? '一键收起全部父子ASIN' : '一键展开全部父子ASIN', 'aria-expanded': allVariantsExpanded,
+        'aria-label': allVariantsExpanded ? '一键收起全部ASIN层级' : '一键展开全部ASIN层级', 'aria-expanded': allVariantsExpanded,
         onClick: event => { event.stopPropagation(); setExpandedRowKeys(allVariantsExpanded ? [] : allParentKeys); }
       }))
     );
@@ -1022,6 +1127,7 @@
 
     const openShareEditor = (row, event) => {
       event?.stopPropagation?.();
+      if (isReadOnly) return message.info('当前批次状态仅支持查看');
       setShareEditor(row);
       shareForm.setFieldsValue({ share: Number((row.share / 100).toFixed(2)), reason: row.shareReason || '' });
     };
@@ -1030,7 +1136,7 @@
       const parent = rows.find(row => row.type === 'parent' && row.group.id === shareEditor.group.id);
       if (!parent) return message.error('未找到当前父ASIN变体');
       const target = Math.round(Number(values.share) * 100);
-      if (!Number.isFinite(target) || target < 0 || target > 10000) return message.error('子ASIN份额占比必须在0%至100%之间');
+      if (!Number.isFinite(target) || target < 0 || target > 10000) return message.error('ASIN份额占比必须在0%至100%之间');
       const reason = values.reason.trim();
       const sharesByAsin = Object.fromEntries(parent.children.map(row => [row.child.asin, row.key === shareEditor.key ? target : row.share]));
       const shareTotal = Object.values(sharesByAsin).reduce((sum, value) => sum + value, 0);
@@ -1047,8 +1153,8 @@
         shareForm.resetFields();
         setRevision(value => value + 1);
         const totalText = formatShare(shareTotal);
-        if (shareTotal > 10000) message.warning(`子ASIN份额占比已保存，当前父ASIN合计 ${totalText}，已超过100%`);
-        else message.success(`子ASIN份额占比已保存，当前父ASIN合计 ${totalText}`);
+        if (shareTotal > 10000) message.warning(`ASIN份额占比已保存，当前父ASIN合计 ${totalText}，已超过100%`);
+        else message.success(`ASIN份额占比已保存，当前父ASIN合计 ${totalText}`);
       } catch (error) {
         message.error(error.message || '占比保存失败，请重试');
       }
@@ -1057,15 +1163,17 @@
     const shareContent = row => {
       if (row.type === 'parent') {
         const over = row.share > 10000;
-        return h(Tooltip, { title: over ? '子ASIN份额占比合计超过100%，请检查并调整' : null }, h('strong', { className: `fpw-parent-share ${over ? 'is-over' : ''}` },
+        return h(Tooltip, { title: over ? 'ASIN份额占比合计超过100%，请检查并调整' : null }, h('strong', { className: `fpw-parent-share ${over ? 'is-over' : ''}` },
           over && h('span', { className: 'fpw-share-warning', 'aria-label': '份额占比合计超过100%' }, icon('WarningOutlined')),
           formatShare(row.share)
         ));
       }
-      const trigger = h(Button, { type: 'text', size: 'small', className: 'fpw-share-entry', 'aria-label': `编辑子ASIN ${row.child.asin} 份额占比`, onClick: event => openShareEditor(row, event) },
-        h('span', { className: 'fpw-share-value' }, formatShare(row.share)),
-        h('span', { className: 'fpw-share-edit-slot', 'aria-hidden': true }, icon('EditOutlined'))
-      );
+      const trigger = isReadOnly
+        ? h('span', { className: 'fpw-share-entry is-readonly' }, h('span', { className: 'fpw-share-value' }, formatShare(row.share)))
+        : h(Button, { type: 'text', size: 'small', className: 'fpw-share-entry', 'aria-label': `编辑ASIN ${row.child.asin} 份额占比`, onClick: event => openShareEditor(row, event) },
+          h('span', { className: 'fpw-share-value' }, formatShare(row.share)),
+          h('span', { className: 'fpw-share-edit-slot', 'aria-hidden': true }, icon('EditOutlined'))
+        );
       if (!row.shareReason) return trigger;
       return h(Popover, { trigger: ['hover', 'focus'], placement: 'top', content: h('div', { className: 'fpw-share-reason' }, h('strong', null, '份额占比调整'), h('span', null, `系统份额占比：${formatShare(row.systemShare)}`), h('span', null, `最终份额占比：${formatShare(row.share)}`), h('span', null, `调整原因：${row.shareReason}`)) }, trigger);
     };
@@ -1167,6 +1275,7 @@
       setPage(1);
     };
     const openBindingPage = action => {
+      if (isReadOnly) return message.info('当前批次状态仅支持查看');
       if (action) ForecastBindingStore.requestAction(action);
       onOpenBinding?.();
     };
@@ -1392,18 +1501,70 @@
       '--forecast-final-row-height': `${forecastTableStandards.finalRowHeight}px`
     };
 
+    const calibrationStatus = lifecycleStatus;
+    const submissionWindow = batchSnapshot?.submissionWindow || {};
+    const hasSubmissionWindow = ['销售填报中', '已冻结'].includes(calibrationStatus);
+    const statusColor = calibrationStatus === '已冻结' ? 'success' : ['校准中', '销售填报中'].includes(calibrationStatus) ? 'processing' : calibrationStatus === '待发起销售填报' ? 'cyan' : 'warning';
+    const openSalesBatch = () => onOpenSales?.({ batchId: batchSnapshot?.id || meta.id, batchDate, windowStartDate: coverageStart, windowEndDate: coverageEnd });
+    const saveWorkbenchCalibration = () => {
+      try {
+        const saved = window.ForecastBatchContract?.saveWorkbenchCalibration?.(batchSnapshot?.id || meta.id);
+        setRevision(value => value + 1);
+        onBatchCompleted?.(saved);
+        message.success('预测批次已保存，尚未发起销售填报');
+      } catch (error) {
+        message.error(error.message || '保存预测批次失败，请重试');
+      }
+    };
+    const launchSalesSubmission = () => modal.confirm({
+      title: '发起销售填报？',
+      content: '系统将保存本批次PMC校准结果，并按工作日与节假日规则自动生成填报开始、截止及冻结时间。',
+      okText: '确认发起',
+      cancelText: '取消',
+      onOk: () => {
+        try {
+          const launched = window.ForecastBatchContract?.launchSalesSubmission?.(batchSnapshot?.id || meta.id);
+          setRevision(value => value + 1);
+          onBatchCompleted?.(launched);
+          message.success('销售填报已发起，系统已生成填报与冻结时间');
+        } catch (error) {
+          message.error(error.message || '发起销售填报失败，请重试');
+          throw error;
+        }
+      }
+    });
+
     return h('div', { className: 'forecast-workbench-root', style: sharedVisualStyle },
+      h('header', { className: 'fpw-batch-context', 'aria-label': '预测批次上下文' },
+        h('div', { className: 'fpw-batch-context-info' },
+          h('span', null, '预测批次：', h('strong', null, batchSnapshot?.name || meta.name || meta.batchVersion || meta.id)),
+          h('i', { 'aria-hidden': true }, '丨'),
+          h('span', null, '预测周期：', h('strong', null, `${dateText(coverageStart)} ~ ${dateText(coverageEnd)}`)),
+          h('i', { 'aria-hidden': true }, '丨'),
+          h('span', null, '状态：', h(Tag, { color: statusColor, style: { margin: 0 } }, calibrationStatus)),
+          h('i', { 'aria-hidden': true }, '丨'),
+          h('span', null, '填报开始：', h('strong', null, hasSubmissionWindow ? dateTimeText(submissionWindow.submissionStartTime) : '—')),
+          h('span', null, '填报截止：', h('strong', null, hasSubmissionWindow ? dateTimeText(submissionWindow.submissionDeadlineTime) : '—')),
+          h('span', null, '冻结时间：', h('strong', null, hasSubmissionWindow ? dateTimeText(submissionWindow.submissionFreezeTime) : '—'))
+        ),
+        h(Space, { size: 8, className: 'fpw-batch-context-actions' },
+          ['待校准', '校准中'].includes(calibrationStatus) && h(Button, { onClick: saveWorkbenchCalibration }, '保存'),
+          ['待校准', '校准中', '待发起销售填报'].includes(calibrationStatus) && h(Button, { type: 'primary', onClick: launchSalesSubmission }, '发起销售填报'),
+          calibrationStatus === '销售填报中' && h(Button, { type: 'primary', onClick: openSalesBatch }, '查看销售填报'),
+          calibrationStatus === '已冻结' && h(Button, { type: 'primary', onClick: openSalesBatch }, '查看冻结结果')
+        )
+      ),
       h('div', { className: `fpw-body ${treePanelCollapsed ? 'fpw-tree-is-collapsed' : ''}` },
         h('aside', { className: `fpw-tree-panel ${treePanelCollapsed ? 'is-collapsed' : ''}`, 'aria-label': '变体' },
           h(Button, { type: 'primary', className: 'fpw-tree-divider-toggle', icon: icon(treePanelCollapsed ? 'RightOutlined' : 'LeftOutlined'), 'aria-label': treePanelCollapsed ? '展开变体栏' : '收起变体栏', onClick: () => setTreePanelCollapsed(value => !value) }),
           !treePanelCollapsed && h('div', { className: 'fpw-tree-head' },
             h('h2', null, '变体'),
-            h('div', { className: 'fpw-tree-head-actions' },
+            !isReadOnly && h('div', { className: 'fpw-tree-head-actions' },
               h(Tooltip, { title: '变体关系管理' }, h(Button, { type: 'text', size: 'small', icon: icon('SettingOutlined'), 'aria-label': '变体关系管理', onClick: () => openBindingPage({ mode: 'manage' }) }))
             )
           ),
           !treePanelCollapsed && h(React.Fragment, null,
-            h(Input, { allowClear: true, prefix: icon('SearchOutlined'), placeholder: '搜索父/子ASIN', 'aria-label': '搜索变体', value: treeQuery, onChange: event => { setTreeQuery(event.target.value); setPage(1); } }),
+            h(Input, { allowClear: true, prefix: icon('SearchOutlined'), placeholder: '搜索父ASIN / ASIN', 'aria-label': '搜索变体', value: treeQuery, onChange: event => { setTreeQuery(event.target.value); setPage(1); } }),
             h('div', { className: 'fpw-tree-selection-actions' },
               h(Button, { type: 'link', size: 'small', onClick: selectAllVariants }, '全选'),
               h('span', { 'aria-hidden': true }, '丨'),
@@ -1428,7 +1589,7 @@
               selectFilter('status', '预测状态', [{ value: 'normal', label: '预测正常' }, { value: 'pending', label: '待实际销量' }])
             ),
             h('div', { className: 'fpw-search-row' },
-              h(Input, { allowClear: true, prefix: icon('SearchOutlined'), placeholder: '父ASIN / 子ASIN / SKU / SPU', 'aria-label': '父ASIN、子ASIN、SKU或SPU', value: filterDraft.keyword, onChange: event => setFilterDraft(current => ({ ...current, keyword: event.target.value })), onPressEnter: applyFilters }),
+              h(Input, { allowClear: true, prefix: icon('SearchOutlined'), placeholder: '父ASIN / ASIN / SKU / SPU', 'aria-label': '父ASIN、ASIN、SKU或SPU', value: filterDraft.keyword, onChange: event => setFilterDraft(current => ({ ...current, keyword: event.target.value })), onPressEnter: applyFilters }),
               h(Button, { type: 'primary', icon: icon('SearchOutlined'), onClick: applyFilters }, '查询'),
               h(Button, { onClick: resetFilters }, '重置')
             )
@@ -1482,12 +1643,12 @@
               scroll: { x: Math.max(1, tableScrollWidth), y: Math.max(280, viewportHeight - 320) },
               rowClassName: row => [row.type === 'parent' ? 'fpw-parent-row' : 'fpw-child-row', 'fpw-prediction-row', `fpw-prediction-${row.forecastLine}`, row.lineIndex === 0 ? 'fpw-entity-start' : '', row.lineIndex === row.lineCount - 1 ? 'fpw-entity-end' : '', hoveredRow === row.key ? 'fpw-cross-row' : ''].filter(Boolean).join(' '),
               onRow: row => ({ onClick: () => setSelectedKey(row.entityKey) }),
-              locale: { emptyText: '暂无符合条件的父子ASIN' }
+              locale: { emptyText: '暂无符合条件的ASIN' }
             })
           ),
           h('footer', { className: 'fpw-footer' },
             h('div', { className: 'forecast-pagination-bar' },
-              h(Pagination, { size: 'small', current: page, pageSize, total: rows.length, showSizeChanger: true, showQuickJumper: false, hideOnSinglePage: false, pageSizeOptions: [5, 20, 50], showTotal: count => h('span', { className: 'forecast-page-total' }, '共 ', h('b', null, count), ' 个父ASIN / ', h('b', null, childCount), ' 个子ASIN，当前页 ', h('b', null, pageRows.reduce((sum, row) => sum + row.children.length, 0)), ' 个子ASIN'), onChange: (nextPage, nextSize) => { setPage(nextSize !== pageSize ? 1 : nextPage); setPageSize(nextSize); } }),
+              h(Pagination, { size: 'small', current: page, pageSize, total: rows.length, showSizeChanger: true, showQuickJumper: false, hideOnSinglePage: false, pageSizeOptions: [5, 20, 50], showTotal: count => h('span', { className: 'forecast-page-total' }, '共 ', h('b', null, count), ' 个父ASIN / ', h('b', null, childCount), ' 个ASIN，当前页 ', h('b', null, pageRows.reduce((sum, row) => sum + row.children.length, 0)), ' 个ASIN'), onChange: (nextPage, nextSize) => { setPage(nextSize !== pageSize ? 1 : nextPage); setPageSize(nextSize); } }),
               h('label', { className: 'forecast-page-jump' }, '跳至', h(InputNumber, { 'aria-label': '跳转页码', min: 1, max: Math.max(1, Math.ceil(rows.length / pageSize)), precision: 0, controls: false, disabled: !rows.length, value: pageDestination, onChange: setPageDestination, onPressEnter: () => { if (pageDestination != null) setPage(Math.max(1, Math.min(Math.ceil(rows.length / pageSize) || 1, Math.trunc(pageDestination)))); }, onBlur: () => { if (pageDestination != null) setPage(Math.max(1, Math.min(Math.ceil(rows.length / pageSize) || 1, Math.trunc(pageDestination)))); }, style: { width: 44 }, size: 'small' }), '页')
             )
           )
@@ -1503,16 +1664,16 @@
           h('strong', null, '预测批次详情'),
           h('span', null, `· ${drawerRow.type === 'parent' ? drawerRow.group.parent : drawerRow.child.asin}`)
         ),
-        extra: drawerRow && h(Tag, { color: 'default', style: { marginInlineEnd: 0 } }, drawerRow.type === 'parent' ? '父ASIN' : '子ASIN'),
+        extra: drawerRow && h(Tag, { color: 'default', style: { marginInlineEnd: 0 } }, drawerRow.type === 'parent' ? '父ASIN' : 'ASIN'),
         footer: drawerRow && h('div', { className: 'fpw-drawer-footer' },
           h(Button, { icon: icon('LeftOutlined'), onClick: closeDrawerAndLocate }, '返回列表并定位'),
-          h(Button, { type: 'primary', icon: icon('EditOutlined'), onClick: enterSalesForecast }, '进入销售预测填报')
+          h(Button, { type: 'primary', icon: icon('EditOutlined'), disabled: !['销售填报中', '已冻结'].includes(lifecycleStatus), onClick: enterSalesForecast }, '进入销售预测填报')
         ),
         styles: { header: { padding: '14px 18px' }, body: { padding: '0 18px 18px' }, footer: { padding: '10px 18px' } }
       }, forecastBasisPanel),
       h(Modal, {
         open: Boolean(shareEditor),
-        title: '调整子ASIN份额占比',
+        title: '调整ASIN份额占比',
         width: 440,
         maskClosable: false,
         destroyOnHidden: true,
@@ -1524,7 +1685,7 @@
       }, shareEditor && h(React.Fragment, null,
         h('div', { className: 'forecast-editor-context' }, `${shareEditor.group.parent} · ${shareEditor.child.asin}`),
         h(Form, { form: shareForm, layout: 'vertical', onFinish: saveShare, scrollToFirstError: true, validateTrigger: ['onChange', 'onBlur'] },
-          h(Form.Item, { name: 'share', label: '子ASIN份额占比', rules: [{ required: true, message: '请输入子ASIN份额占比' }, { type: 'number', min: 0, max: 100, message: '份额占比必须在0%至100%之间' }] }, h(InputNumber, { min: 0, max: 100, precision: 2, controls: false, addonAfter: '%', style: { width: '100%' }, 'aria-label': '子ASIN份额占比' })),
+          h(Form.Item, { name: 'share', label: 'ASIN份额占比', rules: [{ required: true, message: '请输入ASIN份额占比' }, { type: 'number', min: 0, max: 100, message: '份额占比必须在0%至100%之间' }] }, h(InputNumber, { min: 0, max: 100, precision: 2, controls: false, addonAfter: '%', style: { width: '100%' }, 'aria-label': 'ASIN份额占比' })),
           h(Form.Item, { name: 'reason', label: '调整原因', rules: [{ required: true, whitespace: true, message: '请填写份额占比调整原因' }, { max: 200, message: '最多200字' }] }, h(Input.TextArea, { ...(window.ForecastEditorStandards?.countedTextAreaProps || { showCount: true, maxLength: 200, autoSize: { minRows: 3, maxRows: 5 } }), 'aria-label': '份额占比调整原因' }))
         )
       )),
@@ -1559,10 +1720,10 @@
     }, [query, rows]);
 
     const confirmRemove = keys => {
-      if (!keys.length) return message.warning('请先选择需要移除的子ASIN');
+      if (!keys.length) return message.warning('请先选择需要移除的ASIN');
       modal.confirm({
         title: `移除 ${keys.length} 项变体绑定？`,
-        content: '移除后，对应子ASIN将不再参与当前预测工作台的父体汇总，可通过“新增绑定”恢复。',
+        content: '移除后，对应ASIN将不再参与当前预测批次的父体汇总，可通过“新增绑定”恢复。',
         okText: '确认移除',
         okButtonProps: { danger: true },
         cancelText: '取消',
@@ -1600,7 +1761,7 @@
     }, []);
 
     const openManage = keys => {
-      if (!keys.length) return message.warning('请先选择需要管理的子ASIN');
+      if (!keys.length) return message.warning('请先选择需要管理的ASIN');
       const first = rows.find(row => row.key === keys[0]);
       setDialog({ mode: keys.length > 1 ? 'manage' : 'edit', keys, targetGroupId: first?.currentGroupId, childKey: first?.key });
     };
@@ -1613,7 +1774,7 @@
     const compatibleGroups = groupOptions.filter(option => !dialogMarket || (option.market === dialogMarket && option.account === dialogAccount));
     const saveBinding = () => {
       const keys = dialog.mode === 'add' ? [dialog.childKey].filter(Boolean) : dialog.keys;
-      if (!keys.length || !dialog.targetGroupId) return message.warning('请选择子ASIN和目标父ASIN');
+      if (!keys.length || !dialog.targetGroupId) return message.warning('请选择ASIN和目标父ASIN');
       ForecastBindingStore.bind(keys, dialog.targetGroupId);
       setDialog(null);
       setSelectedKeys([]);
@@ -1623,7 +1784,7 @@
     const columns = [
       { title: '国家 / 站点', dataIndex: 'market', width: 110, render: value => marketNames[value] || value },
       { title: '账号 / 店铺', dataIndex: 'account', width: 130 },
-      { title: '子ASIN', dataIndex: 'childASIN', width: 150 },
+      { title: 'ASIN', dataIndex: 'childASIN', width: 150 },
       { title: 'SKU', dataIndex: 'sku', width: 130 },
       { title: '原父ASIN', dataIndex: 'originalParent', width: 150 },
       { title: '当前父ASIN', dataIndex: 'currentParent', width: 150 },
@@ -1636,11 +1797,11 @@
 
     return h('div', { className: 'fpw-binding-workspace' },
       h('header', { className: 'fpw-binding-head' },
-        h('div', null, h('h2', null, '变体绑定管理'), h('p', null, '管理当前预测工作台中父ASIN与子ASIN的绑定关系。')),
-        h(Button, { type: 'link', onClick: onBack }, '返回预测工作台')
+        h('div', null, h('h2', null, '变体绑定管理'), h('p', null, '管理当前预测批次中父ASIN与ASIN的绑定关系。')),
+        h(Button, { type: 'link', onClick: onBack }, '返回预测批次')
       ),
       h('section', { className: 'fpw-binding-toolbar' },
-        h(Input.Search, { allowClear: true, value: query, onChange: event => setQuery(event.target.value), placeholder: '父ASIN / 子ASIN / SKU', 'aria-label': '搜索变体绑定', style: { width: 320 } }),
+        h(Input.Search, { allowClear: true, value: query, onChange: event => setQuery(event.target.value), placeholder: '父ASIN / ASIN / SKU', 'aria-label': '搜索变体绑定', style: { width: 320 } }),
         h(Space, null,
           h(Button, { type: 'primary', icon: icon('PlusOutlined'), onClick: () => setDialog({ mode: 'add', keys: [], targetGroupId: undefined, childKey: undefined }) }, '新增绑定'),
           h(Button, { icon: icon('SettingOutlined'), disabled: !selectedKeys.length, onClick: () => openManage(selectedKeys) }, '管理已选'),
@@ -1667,11 +1828,11 @@
         onCancel: () => setDialog(null),
         destroyOnHidden: true
       }, dialog && h('div', { className: 'fpw-binding-form' },
-        dialog.mode === 'add' && h('label', null, h('span', null, '子ASIN'), h(Select, {
+        dialog.mode === 'add' && h('label', null, h('span', null, 'ASIN'), h(Select, {
           showSearch: true,
           optionFilterProp: 'label',
           value: dialog.childKey,
-          placeholder: '选择需要绑定的子ASIN',
+          placeholder: '选择需要绑定的ASIN',
           options: rows.map(row => ({ value: row.key, label: `${row.childASIN} 丨 ${row.sku}${row.active ? '' : ' 丨 已移除'}` })),
           onChange: childKey => {
             const row = rows.find(item => item.key === childKey);
@@ -1686,11 +1847,12 @@
           options: compatibleGroups,
           onChange: targetGroupId => setDialog(current => ({ ...current, targetGroupId }))
         })),
-        dialog.mode !== 'add' && h('p', null, `本次将更新 ${dialog.keys.length} 个子ASIN的父体绑定。`)
+        dialog.mode !== 'add' && h('p', null, `本次将更新 ${dialog.keys.length} 个ASIN的父体绑定。`)
       ))
     );
   }
 
+  window.ForecastBatchList = ForecastBatchList;
   window.ForecastWorkbench = ForecastWorkbench;
   window.ForecastBindingWorkspace = ForecastBindingWorkspace;
 })();

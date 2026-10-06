@@ -152,7 +152,7 @@ let incompleteError = false;
 try { store.completeBatch(next.id, 0); } catch (error) { incompleteError = /PMC审核/.test(error.message); }
 assert(incompleteError, 'final confirmation requires all child forecasts to pass PMC review');
 store.completeBatch(next.id, store.getBatch(next.id).childForecastResults.length);
-assert(store.getBatch(next.id).status === '已完成' && store.getBatch(next.id).auditTimeline.at(-1).action === '最终确认预测批次', 'final confirmation completes and audits batch');
+assert(store.getBatch(next.id).status === '已冻结' && store.getBatch(next.id).auditTimeline.at(-1).action === '确认冻结结果', 'final confirmation retains the frozen lifecycle state and audits the snapshot');
 const snapshot = store.contract.getSnapshot(next.id);
 snapshot.name = '外部修改不应回写';
 assert(store.getBatch(next.id).name !== snapshot.name, 'immutable snapshot read');

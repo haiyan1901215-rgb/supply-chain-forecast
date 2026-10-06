@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { chromium } = require('playwright');
 
-const url = process.argv[2] || 'http://127.0.0.1:8816/index.html?v=0.3.47-workbench-table-governance';
+const url = process.argv[2] || 'http://127.0.0.1:8816/index.html?v=0.3.49-forecast-lifecycle';
 const chrome = process.env.PLAYWRIGHT_CHROME || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const projectRoot = path.resolve(__dirname, '../../../..');
 
@@ -46,10 +46,19 @@ for (const relativePath of requiredGuidelines) {
     });
     await page.addInitScript(() => localStorage.clear());
     await page.goto(url, { waitUntil: 'networkidle' });
+    await page.locator('.forecast-batch-list-root').waitFor();
+    await page.evaluate(() => {
+      const batch = window.ForecastBatchContract.getCurrentMeta();
+      window.pmcWorkflow.openForecastWorkbenchBatch(batch.id, batch.calibrationStatus);
+    });
 
     const workbench = page.locator('.forecast-workbench-root');
     await workbench.waitFor();
-    assert.equal((await page.locator('.ant-tabs-tab-active').innerText()).trim(), '预测工作台');
+    await page.waitForFunction(() => {
+      const label = document.querySelector('.ant-tabs-tab-active')?.textContent?.replace('×', '').trim() || '';
+      return label.includes('预测批次') && label !== '预测批次列表';
+    });
+    assert.match((await page.locator('.ant-tabs-tab-active').innerText()).replace('×', '').trim(), /预测批次$/);
     assert.equal(await page.locator('.app-sider').getByText('计划配置', { exact: true }).count(), 0, '主菜单不得出现计划配置');
 
     const workbenchContract = await workbench.locator('.fpw-table').evaluate(node => {
@@ -130,7 +139,7 @@ for (const relativePath of requiredGuidelines) {
     assert.ok(workbenchForecastGeometry.buttonLeft >= workbenchForecastGeometry.titleRight, '工作台预测线按钮必须在标题右侧');
     assert.ok(workbenchForecastGeometry.buttonLeft - workbenchForecastGeometry.titleRight <= 10, '工作台预测线按钮必须紧跟标题');
     assert.equal(await workbench.locator('th.fpw-line-header .fpw-forecast-toggle').count(), 1, '工作台预测线只能保留一个表头级开关');
-    assert.equal(await workbench.locator('tbody tr[data-row-key] .fpw-forecast-toggle').count(), 0, '父子ASIN行内不得重复出现预测线开关');
+    assert.equal(await workbench.locator('tbody tr[data-row-key] .fpw-forecast-toggle').count(), 0, 'ASIN行内不得重复出现预测线开关');
 
     const workbenchWeekToggle = workbench.locator('.fpw-week-title .fpw-week-toggle').first();
     await workbenchWeekToggle.click();
@@ -195,7 +204,7 @@ for (const relativePath of requiredGuidelines) {
     const fixedBusinessBackgrounds = await fixedBusinessCells.evaluateAll(cells => cells.map(cell => getComputedStyle(cell).backgroundColor));
     await firstExpandedChildManual.locator('td.fpw-forecast-cell').first().hover();
     assert.deepEqual(await fixedBusinessCells.evaluateAll(cells => cells.map(cell => getComputedStyle(cell).backgroundColor)), fixedBusinessBackgrounds, '十字高亮不得越过预测线污染固定业务列');
-    assert.ok(fixedBusinessBackgrounds.every(color => color === 'rgb(255, 255, 255)'), '子ASIN的变体、占比、销量 / 库存必须保持白底');
+    assert.ok(fixedBusinessBackgrounds.every(color => color === 'rgb(255, 255, 255)'), 'ASIN的变体、占比、销量 / 库存必须保持白底');
     const expandedRows = await workbench.locator('tr.fpw-child-row').evaluateAll(rows => {
       const entityKeyOf = row => row.getAttribute('data-row-key')?.replace(/\|(system|manual|activity|final)$/, '');
       const entityKey = entityKeyOf(rows[0]);
@@ -244,7 +253,7 @@ for (const relativePath of requiredGuidelines) {
     });
     for (const row of childLineBackgrounds) {
       const expected = 'rgb(255, 255, 255)';
-      assert.ok(row.colors.length > 1 && row.colors.every(color => color === expected), `子ASIN ${row.line} 行不得出现周末条纹或单元格杂色：${JSON.stringify(row)}`);
+      assert.ok(row.colors.length > 1 && row.colors.every(color => color === expected), `ASIN ${row.line} 行不得出现周末条纹或单元格杂色：${JSON.stringify(row)}`);
     }
     const foregroundBackgrounds = await workbench.locator('tr.fpw-child-row .fpw-line-value, tr.fpw-child-row .fpw-entry-button').evaluateAll(nodes => nodes.map(node => getComputedStyle(node).backgroundColor));
     assert.ok(foregroundBackgrounds.every(color => color === 'rgba(0, 0, 0, 0)'), '预测值与编辑按钮不得用白底遮断十字高亮');
@@ -279,7 +288,11 @@ for (const relativePath of requiredGuidelines) {
     assert.equal(await workbench.locator('.fpw-cross-row, .fpw-cross-column, .fpw-cross-cell').count(), 0, '移出表格后不得残留十字高亮');
     await page.screenshot({ path: 'evidence/ui-consistency-workbench.png', fullPage: false });
 
-    await page.locator('[data-view="sales"][data-menu-origin="top-sales"]').click();
+    await page.evaluate(() => {
+      const batch = window.ForecastBatchContract.getCurrentMeta();
+      window.ForecastBatchContract.launchSalesSubmission(batch.id, '2026-09-29T10:00:00+08:00');
+      window.pmcWorkflow.openSalesBatch(batch.id);
+    });
     const salesTable = page.locator('.forecast-table:visible');
     await salesTable.waitFor();
     assert.equal((await page.locator('.range-right').innerText()).includes('null'), false, '日期工具栏不得显示 null 占位文本');
